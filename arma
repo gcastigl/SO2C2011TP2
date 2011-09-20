@@ -1,0 +1,6 @@
+#!/bin/sh
+./compila
+cd ./bin
+mmount -V a:
+mcd a:
+mcopy -o kernel.bin A:/boot/kernel.bin
