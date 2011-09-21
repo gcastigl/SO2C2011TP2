@@ -6,7 +6,7 @@
 ;******************************************************
 
 
-%include "grub.inc" 
+%include "../include/grub.inc" 
 
 [BITS 32]
 

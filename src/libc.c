@@ -1,5 +1,5 @@
-#include "kc.h"
-#include "defs.h"
+#include "../include/kc.h"
+#include "../include/defs.h"
 
 extern int movimiento;
 extern TTY tty[8];

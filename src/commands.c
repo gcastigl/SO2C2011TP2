@@ -1,5 +1,5 @@
-#include "defs.h"
-#include "kc.h"
+#include "../include/defs.h"
+#include "../include/kc.h"
 
 //Comando Kill que mata tareas.
 void kill(char* buffer)

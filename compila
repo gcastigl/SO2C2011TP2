@@ -1,21 +1,20 @@
 #!/bin/sh
-cd ./src
+cd ./bin
 rm -rf *.bin
 rm -rf *.o
-nasm -f aout ./libasm.asm -o libasm.o
-nasm -f aout ./kstart.asm -o kstart.o
+nasm -f aout ../src/libasm.asm -o libasm.o
+nasm -f aout ../src/kstart.asm -o kstart.o
 
-gcc -m32 -g -c ./kernel.c -o 		kernel.o -fno-builtin -fno-stack-protector 
-gcc -m32 -g -c ./commands.c -o		commands.o -fno-builtin -fno-stack-protector 
-gcc -m32 -g -c ./exceptions.c -o 	exceptions.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ./libc.c -o 			libc.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ./malloc.c -o 		malloc.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ./output.c -o 		output.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ./process.c -o 		process.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ./sched.c -o 		sched.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ./shell.c -o 		shell.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ./top.c -o 			top.o -fno-builtin -fno-stack-protector
+gcc -m32 -g -c ../src/kernel.c -o 		kernel.o -fno-builtin -fno-stack-protector 
+gcc -m32 -g -c ../src/commands.c -o		commands.o -fno-builtin -fno-stack-protector 
+gcc -m32 -g -c ../src/exceptions.c -o 	exceptions.o -fno-builtin -fno-stack-protector
+gcc -m32 -g -c ../src/libc.c -o 			libc.o -fno-builtin -fno-stack-protector
+gcc -m32 -g -c ../src/malloc.c -o 		malloc.o -fno-builtin -fno-stack-protector
+gcc -m32 -g -c ../src/output.c -o 		output.o -fno-builtin -fno-stack-protector
+gcc -m32 -g -c ../src/process.c -o 		process.o -fno-builtin -fno-stack-protector
+gcc -m32 -g -c ../src/sched.c -o 		sched.o -fno-builtin -fno-stack-protector
+gcc -m32 -g -c ../src/shell.c -o 		shell.o -fno-builtin -fno-stack-protector
+gcc -m32 -g -c ../src/top.c -o 			top.o -fno-builtin -fno-stack-protector
 
-ld -melf_i386 -T ./link.ld -o kernel.bin *.o
-
-rm *.o
+ld -melf_i386 -T ../src/link.ld -o kernel.bin *.o
+rm -rf *.o

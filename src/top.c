@@ -1,5 +1,5 @@
-#include "defs.h"
-#include "kc.h"
+#include "../include/defs.h"
+#include "../include/kc.h"
 extern int last100[100];
 
 //Proceso Top

@@ -1,6 +1,6 @@
-#include "kasm.h"
-#include "defs.h"
-#include "kc.h"
+#include "../include/kasm.h"
+#include "../include/defs.h"
+#include "../include/kc.h"
 #define MAX(a,b) ((a)>(b))?(a):(b)
 
 DESCR_INT idt[0xF];	

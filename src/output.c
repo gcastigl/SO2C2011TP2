@@ -1,5 +1,5 @@
-#include "defs.h"
-#include "kc.h"
+#include "../include/defs.h"
+#include "../include/kc.h"
 
 #define ENTER 0x1C
 #define BACKSPACE 0x0E

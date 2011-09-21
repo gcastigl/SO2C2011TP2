@@ -1,4 +1,4 @@
-#include "kc.h"
+#include "../include/kc.h"
 
 void bounds(void);
 void invop(void);

@@ -1,5 +1,5 @@
-#include "defs.h"
-#include "kc.h"
+#include "../include/defs.h"
+#include "../include/kc.h"
 #define MAX(a,b) ((a)>(b))?(a):(b)
 extern PROCESS procesos[64];
 extern int CurrentPID;
