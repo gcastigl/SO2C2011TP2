@@ -1,49 +1,25 @@
 #include "../include/stdlib.h"
 
+int nextfree = 0x300000;
 
-void setMemory() {
-	memoryNode firstMemoryNode = MEM_START;
-	firstMemoryNode->next = firstMemoryNode;
-	firstMemoryNode->size = MEM_LENGTH;
-	firstMemoryNode->reserved = FALSE;
+void* malloc(size_t size) {
+	void* temp = (void*) nextfree;
+	nextfree = nextfree + size;
+	return temp;
 }
 
-void * malloc(size_t neededMem) {
-	memoryNode node, firstNode;
-	int chunkFound = FALSE;
-	node = firstNode = MEM_START;
-	do {
-		if (node->reserved == FALSE && node->size >= neededMem) {
-			chunkFound = TRUE;
-			node->reserved = TRUE;
-			if (node->size > neededMem) {
-				memoryNode newNode = (memoryNode)(node + sizeof(memoryHeader_t)
-					 + neededMem);
-				newNode->next = node->next;
-				newNode->size = node->size - neededMem - sizeof(memoryHeader_t);
-				newNode->reserved = FALSE;
-				node->next = newNode;
-				node->size = neededMem;
-			}
-		} else {
-			node = node->next;
-		}
-	} while (!chunkFound && node != firstNode);
-	
-	if (chunkFound) {
-		return (void *)(node + 1);
-	}
-	return NULL;
+// Malloc inicializado en 0
+void* calloc(size_t size) {
+	char* temp;
+	int i;
+	temp = (char*) malloc(size);
+	for(i=0;i<size;i++)
+		temp[i] = 0;
+	return (void*) temp;
 }
 
 void free(void * pointer) {
-	memoryNode node = (memoryNode)(pointer - sizeof(memoryHeader_t));
-	node->reserved = FALSE;
-	memoryNode startingNode = node;
-	while(node->next != startingNode && node->next->reserved == FALSE) {
-		node->size = node->size + node->next->size + sizeof(memoryHeader_t);
-		node->next = node->next->next;
-	}
+	// TODO: implementame!
 }
 
 char getchar() {
@@ -171,10 +147,12 @@ void printf(const char *fmt, ...) {
 	va_end(args);
 }
 
-void memcpy(void* from, void* src, size_t count) {
+void memcpy(void* from, void* to, size_t count) {
 	size_t i;
+	char* cfrom = (char *)from;
+	char* cto = (char *)to;
 	for (i = 0; i < count; i++) {
-		*((char *)src + i) = *((char *)from + i);
+		cto[i] = cfrom[i];
 	}
 }
 

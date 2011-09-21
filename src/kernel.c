@@ -1,40 +1,104 @@
 #include "../include/kernel.h"
 
+#define MAX_PROCESS	64
+
 DESCR_INT idt[0x81];			/* IDT de 81h entradas*/
 IDTR idtr;						/* IDTR */
 
+static TTY tty[8];
+static int currentTTY;
+static PROCESS procesos[MAX_PROCESS];
+static PROCESS idle;
+static int currentPID = 0;
+static int nextPID = 1;
+
 void doubleFlagsFix(double n);
+void setupIDT();
+void createProcessAt(char* name, int (*process)(int,char**),int tty, int argc,
+	char** argv, int stacklength, int priority, int isFront);
+
+int GetPID(void);
+PROCESS* getProcessByPID(int pid);
 
 kmain() {
 	int i,num;
-	
-	/* CARGA DE IDT CON LA RUTINA DE ATENCION DE IRQ0    */
-	setup_IDT_entry (&idt[0x08], 0x08, (dword)&_int_08_hand, ACS_INT, 0);
-	setup_IDT_entry (&idt[0x09], 0x08, (dword)&_int_09_hand, ACS_INT, 0);
-	setup_IDT_entry (&idt[0x80], 0x08, (dword)&_int_80_hand, ACS_INT, 0);
-	/* Carga de IDTR    */
-	idtr.base = 0;
-	idtr.base +=(dword) &idt;
-	idtr.limit = sizeof(idt)-1;
-
-	_lidt (&idtr);
-
 	_Cli();
-
+	setupIDT();
+	currentTTY = 0;
+	nextPID = 0;
 	/* Habilito interrupcion de timer tick*/
-	//_mascaraPIC1(INT_08 & INT_09 & INT_80);
-	_mascaraPIC1(0x00);
-	_mascaraPIC2(NONE);
-	_Sti();
-	
+	_mascaraPIC1(0xFC);
+	_mascaraPIC2(0xFF);
+	doubleFlagsFix(1.1);
 	initKeyBoard();
 	initVideo();
+	createProcessAt("Shell 0", NULL, 0, 0, NULL, 1 << 10, 2, 1);
 	initShell();
-	doubleFlagsFix(1.1);
+	_Sti();
 	while (1) {
 		updateShell();
 	}
 	
+}
+
+void setupIDT() {
+	/* CARGA DE IDT CON LA RUTINA DE ATENCION DE IRQ0    */
+	setup_IDT_entry (&idt[0x08], 0x08, (dword)&_int_08_hand, ACS_INT, 0);
+	setup_IDT_entry (&idt[0x09], 0x08, (dword)&_int_09_hand, ACS_INT, 0);
+	setup_IDT_entry (&idt[0x80], 0x08, (dword)&_int_80_hand, ACS_INT, 0);
+	/*Carga de IDTR*/
+	idtr.base = 0;
+	idtr.base +=(dword) &idt;
+	idtr.limit = sizeof(idt)-1;
+	_lidt (&idtr);
+}
+
+void createProcessAt(char* name, int (*process)(int,char**),int tty, int argc,
+	char** argv, int stacklength, int priority, int isFront) {
+	PROCESS* newprocess;
+	void* stack = malloc(stacklength);
+	int i;
+	for(i = 0; i < MAX_PROCESS;i++) {
+		if(procesos[i].free == 1)
+			break;
+	}
+	procesos[i].pid = getPID();
+	procesos[i].foreground = isFront;
+	procesos[i].priority = priority;
+	memcpy(procesos[i].name, name, strlen(name) + 1);
+	procesos[i].sleep = 0;
+	procesos[i].blocked = 0;
+	procesos[i].tty = tty;
+	procesos[i].lastCalled = 0;
+	procesos[i].stacksize = stacklength;  //FIXME: WHY DOES THE SYSTEM RESTARTS HERE??!!!
+	procesos[i].stackstart = (int) stack;
+	procesos[i].free = 0;
+	// procesos[i].ESP = loadStackFrame(process, argc, argv,(int)(stack+stacklength-1), Cleaner);
+	procesos[i].parent = 0;
+	if(isFront && currentPID >= 1 && 0) {
+		PROCESS* proc = getProcessByPID(currentPID);
+		proc->blocked = 2;
+		procesos[i].parent = currentPID;
+	}
+}
+
+// Retorna un PID no utilizado
+int getPID() {
+	return nextPID++;
+}
+
+// Retorna un proceso a partir de su PID
+PROCESS* getProcessByPID(int pid) {
+	int i;
+	if (pid==0) {
+		return &idle;
+	}
+	for(i = 0;i < MAX_PROCESS; i++) {
+		if (procesos[i].pid == pid) {
+			return &procesos[i];
+		}
+	}
+	return 0;
 }
 
 /*

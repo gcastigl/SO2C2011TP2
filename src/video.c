@@ -1,7 +1,7 @@
 #include "../include/video.h"
 
 void initVideo() {
-	video.address = (char*)VIDEO_ADDRESS;
+	video.address = (char*) VIDEO_ADDRESS;
 	setVideoColor(BLACK, GREEN);
 	cls();
 	setOffset(0);
@@ -161,7 +161,6 @@ void setCursor(ushort row, ushort column) {
 		return;
 	}
 	ushort position = (row * COLUMNS) + column;
-
 	// cursor LOW port to vga INDEX register
 	outb(0x3D4, 0x0F);
 	outb(0x3D5, (ushort)(position & 0xFF));

@@ -20,3 +20,11 @@ void setup_IDT_entry (DESCR_INT *item, byte selector, dword offset, byte access,
 	item->cero = cero;
 }
 
+void setup_GDT_entry (DESCR_SEG* item, dword base, dword limit, byte access, byte attribs) {
+	item->base_l=base & 0xffff;
+	item->base_m=(base>>16)&0xff;
+	item->base_h=(base>>24);
+	item->limit=limit & 0xffff;
+	item->attribs= attribs | ((limit>>16) &0x0f);
+	item->access=access;
+}

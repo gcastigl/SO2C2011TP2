@@ -1,10 +1,13 @@
 #ifndef _defs_
 #define _defs_
 
+#define MAX_PROCESS_NAME 32
+
 #define byte unsigned char
 #define word short int
 #define dword int
 #define ushort unsigned short
+
 typedef unsigned long long int uint64_t;
 
 /* Flags para derechos de acceso de los segmentos */
@@ -32,6 +35,8 @@ typedef unsigned long long int uint64_t;
 #define ACS_CODE        (ACS_PRESENT | ACS_CSEG | ACS_READ)
 #define ACS_DATA        (ACS_PRESENT | ACS_DSEG | ACS_WRITE)
 #define ACS_STACK       (ACS_PRESENT | ACS_DSEG | ACS_WRITE)
+
+#define VIDEO_ADDRESS 	0xb8000
 
 #define NULL	((void *)0)
 #define TRUE	1
@@ -61,12 +66,12 @@ typedef short int ssize_t;
 
 /* Descriptor de segmento */
 typedef struct {
-	word	limit,
-	base_l;
+	word 	limit,
+			base_l;
 	byte	base_m,
-	access,
-	attribs,
-	base_h;
+			access,
+			attribs,
+			base_h;
 } DESCR_SEG;
 
 
@@ -84,6 +89,41 @@ typedef struct {
   word  limit;
   dword base;
 } IDTR;
+
+typedef struct {
+	int buffer[10];
+	int head;
+	int tail;
+} BUFFERTYPE;
+
+typedef struct {
+	char* terminal;
+	int movimiento;
+	BUFFERTYPE buffer;
+} TTY;
+
+typedef struct {
+	int pid;
+	char name[MAX_PROCESS_NAME];
+	int priority;
+	int tty;
+	int foreground;
+	int lastCalled;
+	int sleep;
+	int blocked;
+	int parent;
+	int ESP;
+	int free;
+	int stackstart;
+	int stacksize;
+} PROCESS;
+
+typedef struct {
+	int EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX,  EIP, CS, EFLAGS;
+	void*retaddr;
+	int argc;
+	char** argv;
+} STACK_FRAME;
 
 #endif
 

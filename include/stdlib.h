@@ -14,20 +14,11 @@
 
 #define F_PRECISION 6
 
-#define MEM_START (void *)0x1FFE0 	//A partir de los 2 MB
-#define MEM_LENGTH 8388608 			//8 MB de RAM
-
 typedef __builtin_va_list va_list;
-typedef struct memoryHeader_t {
-	struct memoryHeader_t * next;
-	int size;
-	int reserved;
-} memoryHeader_t;
-
-typedef memoryHeader_t * memoryNode;
 
 void setMemory();
-void * malloc(size_t neededMem);
+void* malloc(size_t neededMem);
+void* calloc(size_t size);
 void free(void * pointer);
 void printf(const char *fmt, ...);
 void putc(char c, int fd);
