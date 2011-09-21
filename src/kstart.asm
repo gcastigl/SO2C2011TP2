@@ -6,7 +6,7 @@
 ;******************************************************
 
 
-%include "../include/grub.inc" 
+%include "../include/grub.inc"
 
 [BITS 32]
 
@@ -14,7 +14,7 @@
 [extern kmain] ; en kernel.c
 
 start:
-	
+
   call kmain
 
   jmp $ ; si retorna de kmain se detiene

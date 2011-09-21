@@ -1,434 +1,332 @@
-GLOBAL read_msw
-GLOBAL _lidt
-GLOBAL _lgdt
-GLOBAL _mascaraPIC1
-GLOBAL _mascaraPIC2
-GLOBAL _Cli
-GLOBAL _Sti
-GLOBAL _int8
+GLOBAL  _read_msw,_lidt
+GLOBAL  _int_08_hand
+GLOBAL	_int_09_hand
+GLOBAL _int_80_hand
+GLOBAL  _mascaraPIC1,_mascaraPIC2,_Cli,_Sti
+GLOBAL  _debug
+GLOBAL	_outb
+GLOBAL	_inb
+GLOBAL _reset
+GLOBAL _cpuIdTest
+GLOBAL _rdtscTest
+GLOBAL _rdmsrTest
+GLOBAL _SysCall
+GLOBAL _tscGetCpuSpeed
+GLOBAL _msrGetCpuSpeed
+GLOBAL _getTTCounter
+GLOBAL _initTTCounter
+EXTERN  int_08
+EXTERN	int_09
+EXTERN	int_80
 
-GLOBAL _debug
-GLOBAL _int_08_hand
-GLOBAL _int_09_hand
-GLOBAL _invop_hand
-GLOBAL _ssf_hand
-GLOBAL _snp_hand
-GLOBAL _div0_hand
-GLOBAL _gpf_hand
-GLOBAL _bounds_hand
-GLOBAL _getgdt
-GLOBAL _hacersnp
-GLOBAL _hacerbounds
-GLOBAL _hacergpf
-GLOBAL _hacerssf
-GLOBAL _hacerinvop
-GLOBAL beep
-GLOBAL _movercursor
-GLOBAL _ponerss
-GLOBAL _ponercs
-GLOBAL _ponerds
-GLOBAL _ejecutar
-GLOBAL _debugBuenaOnda
-GLOBAL _execute
-GLOBAL _GetESP
-GLOBAL _GetEBP
-GLOBAL _GetEAX
-GLOBAL _GetEBX
-GLOBAL _GetECX
-GLOBAL _GetEDX
-GLOBAL _GetESI
-GLOBAL _GetEDI
-GLOBAL _GetEFLAGS
+SECTION .data
+SEG_BIOS_DATA_AREA	equ	40h
+OFFSET_TICK_COUNT	equ 6Ch
+INTERVAL_IN_TICKS	equ 10
 
-EXTERN kmain
-EXTERN int_08
-EXTERN int_09
-EXTERN invop
-EXTERN div0
-EXTERN gpf
-EXTERN ssf
-EXTERN snp
-EXTERN bounds
-
-EXTERN backuper
-EXTERN Schedule 
-EXTERN ExecuteProcess
-EXTERN LoadESP
-EXTERN SaveESP
-EXTERN GetTemporaryESP
-EXTERN GetNextProcess
-
+SECTION .bss
+ttcounter 	resd 1
+low			resd 1
+high		resd 1
 
 SECTION .text
 
-_GetESP:
-	mov eax, esp;
-	ret
-	
-_GetEBP:
-	mov eax, ebp;
-	ret
-
-_GetEAX:
-	ret
-
-_GetEBX:
-	mov eax, ebx;
+_initTTCounter:
+	push ebp
+	mov ebp, esp
+	push ax
+	mov eax, 0
+	mov [ttcounter], eax
+	pop ax
+	mov esp, ebp
+	pop ebp
 	ret
 
-_GetECX:
-	mov eax, ecx;
-	ret
-
-_GetEDX:
-	mov eax, edx;
-	ret
-
-_GetESI:
-	mov eax, esi;
-	ret
-
-_GetEDI:
-	mov eax, edi;
-	ret
-	
-_GetFLAGS:
-	pushf
-	pop eax
-	ret	
-	
-_int8:
-	call int_08
+_getTTCounter:
+	push ebp
+	mov ebp, esp
+	mov eax, [ttcounter]
+	mov esp, ebp
+	pop ebp
 	ret
 
 _Cli:
-	cli						; limpia flag de interrupciones
+	cli	; limpia flag de interrupciones
 	ret
 
 _Sti:
-	sti						; habilita interrupciones por flag
+
+	sti	; habilita interrupciones por flag
 	ret
 
-_mascaraPIC1:				; Escribe mascara del PIC 1
-	push ebp
-	mov ebp, esp
-	mov ax, [ss:ebp + 8]	; ax = mascara de 16 bits
-	out 21h, al
-	pop ebp
+_outb:
+	push	ebp
+	mov		ebp, esp
+	mov		edx, [ss:ebp+8] ;Grab data
+	mov		eax, [ss:ebp+12] ;Grab port
+	out		dx, ax
+	pop		ebp
 	retn
 
-_mascaraPIC2:				; Escribe mascara del PIC 2
-	push ebp
-	mov ebp, esp
-	mov ax, [ss:ebp + 8]	; ax = mascara de 16 bits
-	out 0A1h, al
-	pop ebp
+_inb:
+	push	ebp
+	mov		ebp, esp
+	mov		dx, [ss:ebp+8] ;Grab port
+	in		ax, dx
+	mov		esp, ebp
+	pop		ebp
 	retn
 
-read_msw:
-	smsw ax					; Obtiene la Machine Status Word
+_mascaraPIC1:			; Escribe mascara del PIC 1
+	push	ebp
+	mov		ebp, esp
+	mov		ax, [ss:ebp+8]  ; ax = mascara de 16 bits
+	out		21h,al
+	pop		ebp
 	retn
 
-_lidt:						; Carga el IDTR
-	push ebp
-	mov ebp, esp
-	push ebx
-	mov ebx, [ss: ebp + 6]	; ds:bx = puntero a IDTR
-	rol ebx, 16
-	lidt [ds: ebx]			; carga IDTR
-	pop ebx
-	pop ebp
+_mascaraPIC2:			; Escribe mascara del PIC 2
+	push	ebp
+	mov		ebp, esp
+	mov		ax, [ss:ebp+8]  ; ax = mascara de 16 bits
+	out		0A1h,al
+	pop		ebp
 	retn
 
-_getgdt:
-	sgdt [0x1234]
+_read_msw:
+	smsw	ax		; Obtiene la Machine Status Word
 	retn
 
-_hacersnp:
-;	push 0x30
-;	pop ds
+
+_lidt:				; Carga el IDTR
+	push	ebp
+	mov		ebp, esp
+	push	ebx
+	mov		ebx, [ss: ebp + 6] ; ds:bx = puntero a IDTR
+	rol		ebx,16
+	lidt	[ds: ebx]          ; carga IDTR
+	pop		ebx
+	pop		ebp
 	retn
 
-_hacergpf:
-	mov ax, 77
-	mov ds, ax
-	retn
+
+_int_08_hand:				; Handler de INT 8 ( Timer tick)
+	push	ds
+	push	es              ; Se salvan los registros
+	pusha                   ; Carga de DS y ES con el valor del selector
 	
-_lgdt:
-	lgdt [0x1234]
-	retn
-
-_hacerssf:
-	mov ax, 0x30
-	mov ss, ax
-	retn
-
-_hacerbounds:
-	mov ax, 100
-	bound ax, [0x1234]
-	retn
-
-_hacerinvop:
-	mov ebx, 0xC8C70FF0
-	mov [0x123456], ebx
-	jmp 0x123456
-
-
-_int_08_hand:			; Handler de INT 8 ( Timer tick)
-	cli
-	pushad
-		mov eax, esp
-		push eax
-			call SaveESP
-		pop eax
-		call GetTemporaryESP
-		mov esp, eax
-		call GetNextProcess
-		push eax
-			call LoadESP
-		pop ebx
-		mov esp,eax
-		;call _debug;
-	popad
-	
-	mov al,20h			; Envio de EOI generico al PIC
-	out 20h,al
-	sti
-	iret
-
-_div0_hand:				; Handler de excepxión "Divide by zero"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax                  
-	call div0                 
-	mov al,20h			; Envio de EOI generico al PIC
-	out 20h,al
-	popf
-	popa
-	pop es
-	pop ds
-	jmp $
-	iret
-
-_bounds_hand:			; Handler de excepción "BOUND range exceeded"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax
-	call bounds
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	popf
-	popa
-	pop es
-	pop ds
-	jmp $
-	iret
-
-_gpf_hand:				; Handler de excepción "General protection exception"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov eax, 666666h
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax
-	call gpf
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	popf
-	popa
-	pop ax
-	pop ax
-	jmp $
-	iret
-
-_ssf_hand:				; Handler de excepción "Stack exception"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax                  
-	call ssf
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	popf
-	popa
-	pop ax
-	pop ax
-	jmp $
-	iret
-
-_snp_hand:				; Handler de excepción "Segment not present"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax
-	call snp
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	popf
-	popa
-	pop ax
-	pop ax
-	jmp $
-	iret
-
-_invop_hand:				; Handler de excepción "Invalid opcode"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax
-	call invop
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	pop ax
-	popa
-	pop ax
-	pop ax
-	jmp $
-	iret
-
-_int_09_hand:			; Handler de INT 9 (Teclado)
-	cli
-	pusha
-	mov eax, 0			;
-	mov [0x123450],eax
-	in al, 60h
-	push eax			; 
-	call int_09                 
+	push eax
+	mov eax, [ttcounter]
+	inc eax
+	mov [ttcounter], eax
 	pop eax
-	mov al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	popa                            
-	sti
+	
+	mov		ax, 10h			; a utilizar.
+	mov		ds, ax
+	mov		es, ax
+	call	int_08
+	mov		al,20h			; Envio de EOI generico al PIC
+	out		20h,al
+	popa
+	pop		es
+	pop		ds
 	iret
 
-beep:
-	mov al, 182			; Prepare the speaker for the
-	out 43h, al			; note.
-	mov ax, 4560		; Frequency number (in decimal)
-						;  for middle C.
-	out 42h, al			; Output low byte.
-	mov al, ah			; Output high byte.
-	out 42h, al
-	in al, 61h			; Turn on note (get value from
-						; port 61h).
-	or al, 00000011b	; Set bits 1 and 0.
-	out 61h, al			; Send new value.
-	mov bx, 25			; Pause for duration of note.
-.pause1:
-	mov cx, 65535
-.pause2:
-	dec cx
-	jne .pause2
-	dec bx
-	jne .pause1
-	in al, 61h			; Turn off note (get value from
-						; port 61h).
-	and al, 11111100b	; Reset bits 1 and 0.
-	out 61h, al			; Send new value.
-	retn
+_int_09_hand:				; Handler de INT 9 ( Teclado )
+	push	ds
+	push	es
+	pusha
+	call	int_09
+	mov		al,20h			; Envio de EOI generico al PIC
+	out		20h,al
+	popa
+	pop		es
+	pop		ds
+	iret
 
-_movercursor:
-	mov al, 0x0f
-	mov dx, 0x3b4
-	out dx,al
-	mov al, 1
-	mov dx, 0x3b5
-	out dx,al
-	retn
-
-; Debug para el BOCHS, detiene la ejecución.
-; Para continuar colocar en el BOCHSDBG: set $eax=0
-;
-
-_debug:
-	push bp
-	mov bp, sp
-	push ax
-vuelve:
-	mov ax, 1
-	cmp	ax, 0
-
-	jne	vuelve
-	pop	ax
-	pop bp
-	retn
-
-_ponerss:
-	mov ax, [0x10000]
-	mov ss, ax
-	retn
-
-
-_ponercs:
-	mov ax, [0x10000]
-	push ax
-	pop cs
-	retn
-
-
-_ponerds:
-	mov ax, [0x10000]
-	mov ds, ax
-	retn
-
-_ejecutar: 
+_int_80_hand:				; Handler de INT 80h
+	push ebp
+	mov ebp, esp			;StackFrame
 	
-	mov eax, [0x101800]
-	mov  [$+5],eax
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	retn
-
-_execute: ; QUE FUNCION MALDITA QUE SOS!
-	mov eax, esp
-	mov ebx, [ss:eax+4]
-	mov ecx, [ss:eax+8]
-	mov edx, [ss:eax+12]
-	mov esp, ebx ;
 	push edx
 	push ecx
-	;call _ExecuteProcess; esto nunca retorna
-	ret ;TODO: ESTA LINEA LA AGREGE YYO PQ NO TENOG IDEA PQ NUNCA REORNA :S
+	push ebx
 	
-_debugBuenaOnda:
-	push eax
-		mov eax, 0fdh
-		push eax
-			call _mascaraPIC1
-		pop eax
-		mov ax,1
-		mov [0x123450], ax
-	otravez:
-		mov ax, [0x123450]
-		cmp ax ,0
-		jne otravez
-		mov eax, 0fch
-		push eax
-			call _mascaraPIC1
-		pop eax
+	push esp				; Puntero al array de argumentos
+	push eax				; Numero de Systemcall
+	call int_80
+	mov	al,20h			; Envio de EOI generico al PIC
+	out	20h,al
 	pop eax
+	pop esp
 
+	pop ebx
+	pop ecx
+	pop edx
+	
+	mov esp, ebp
+	pop ebp
+	iret
+
+_SysCall:
+	push ebp
+	mov ebp, esp
+	pusha
+
+	mov eax, [ebp + 8] ; Syscall number
+	mov ebx, [ebp + 12]; file descriptor
+	mov ecx, [ebp + 16]; buffer
+	mov edx, [ebp + 20]; count
+	
+	int 80h
+
+	popa
+	mov esp, ebp
+	pop ebp
+	ret
+
+_reset:
+.wait1:
+	in		al, 64h
+	test	al, 02h
+	jne		.wait1
+	mov		al, 0FEh
+	out		64h, al
+	ret
+
+; Returns 1 if cpuid function is present.
+_cpuIdTest:
+	pushfd ; get
+	pop eax
+	mov ecx, eax ; save
+	xor eax, 0x200000 ; flip
+	push eax ; set
+	popfd
+	pushfd ; and test
+	pop eax
+	xor eax, ecx ; mask changed bits
+	shr eax, 21 ; move bit 21 to bit 0
+	and eax, 1 ; and mask others
+	push ecx
+	popfd ; restore original flags
+	ret
+
+_rdtscTest:
+	push ebp
+	mov ebp, esp
+	mov eax, 1
+	cpuid
+	mov eax, 0
+	sub dx, 10h 
+	mov ax, dx ; if eax != 0, rdtsc is supported
+	mov esp, ebp
+	pop ebp
+	ret
+	
+_rdmsrTest:
+	push ebp
+	mov ebp, esp
+	mov eax, 1
+	cpuid
+	mov eax, 0
+	sub dx, 20h 
+	mov ax, dx ; if eax != 0, rdmsr is supported
+	mov esp, ebp
+	pop ebp
+	ret
+
+_tscGetCpuSpeed:
+	push ebp
+	mov ebp, esp
+	
+	mov ebx, [ttcounter]
+.wait_irq0:
+	cmp  ebx, [ttcounter]
+	jz	.wait_irq0
+	push ebx
+	cpuid
+	rdtsc                   ; read time stamp counter
+	mov [low], eax
+	mov	[high], edx
+	pop ebx
+	add	ebx, INTERVAL_IN_TICKS + 1             ; Set time delay value ticks.
+
+.wait_for_elapsed_ticks:
+	cmp	ebx, [ttcounter] ; Have we hit the delay?
+	jnz	.wait_for_elapsed_ticks
+	mov eax, 0
+	push ebx
+	cpuid
+	rdtsc
+	sub eax, [low]  ; Calculate TSC
+	sbb edx, [high]
+	pop ebx
+	; f(total_ticks_per_Second) =  (1 / total_ticks_per_Second) * 1,000,000
+	; This adjusts for MHz.
+	; so for this: f(100) = (1/100) * 1,000,000 = 10000
+	; we use 18.2, so 1/18.2 * 1000000 = 54945
+	mov ebx, 54945 * INTERVAL_IN_TICKS
+    div ebx
+	; ax contains measured speed in MHz
+.end:
+	mov esp, ebp
+	pop ebp
+	ret
+
+_msrGetCpuSpeed:
+	push ebp
+	mov ebp, esp
+	
+	mov ebx, [ttcounter]
+.wait_irq0:
+	cmp  ebx, [ttcounter]
+	jz	.wait_irq0
+	push ebx
+	cpuid
+	mov ecx, 10h
+	rdmsr
+	mov [low], eax
+	mov	[high], edx
+	pop ebx
+	add	ebx, INTERVAL_IN_TICKS + 1             ; Set time delay value ticks.
+
+.wait_for_elapsed_ticks:
+	cmp	ebx, [ttcounter] ; Have we hit the delay?
+	jnz	.wait_for_elapsed_ticks
+	mov eax, 0
+	push ebx
+	cpuid
+	mov ecx, 10h
+	rdmsr
+	sub eax, [low]  ; Calculate TSC
+	sbb edx, [high]
+	pop ebx
+	; f(total_ticks_per_Second) =  (1 / total_ticks_per_Second) * 1,000,000
+	; This adjusts for MHz.
+	; so for this: f(100) = (1/100) * 1,000,000 = 10000
+	; we use 18.2, so 1/18.2 * 1000000 = 54945
+	mov ebx, 54945 * INTERVAL_IN_TICKS
+    div ebx
+	; ax contains measured speed in MHz
+.end:
+	mov esp, ebp
+	pop ebp
+	ret
+
+; Debug para el BOCHS, detiene la ejecuciÃ³n
+; Para continuar colocar en el BOCHSDBG: set $eax=0
+
+
+_debug:
+	push    bp
+	mov     bp, sp
+	push	ax
+vuelve:
+	mov     ax, 1
+	cmp	ax, 0
+	jne	vuelve
+	pop	ax
+	pop     bp
 	retn
+
+

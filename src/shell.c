@@ -1,181 +1,169 @@
-#include "../include/defs.h"
-#include "../include/kc.h"
-#define MAX(a,b) ((a)>(b))?(a):(b)
-extern PROCESS procesos[64];
-extern int CurrentPID;
-extern int CurrentTTY;
-extern TTY tty[8];
+#include "../include/shell.h"
 
-void InterpretarBuffer(char*);
+void excecuteCmd(char* buffer);
+int parse_cmd(char* buffer);
+int execute(int cmdId);
+char** getArguments(char* buffer, int* argc);
+void prntWelcomeMsg();
 
-//Proceso Shell
-int Shell(int argc, char* argv[])
-{
-	int a=0, i, conty;
-	int* cont;
-	BUFFERTYPE* mibuffer;
-	char* video= (char*)0xB8000;
-	k_clear_screen();
-	_Sti();
-	loadScanCodes2();
-	char este[80]; 
-	cont=(int*)Calloc(sizeof(int));
-	for (i=0;i<80;i++)
-	{
-		este[i] = 0;
+char* argv[MAX_ARG_DIM];
+int currPos;
+char shellBuffer[BUFFER_SIZE];
+
+/*
+	Tabla de comandos disponibles al usuario en esta shell
+*/
+cmd_table_entry cmd_table[] = {
+	{"help", 			HELP_HELP, help_cmd},
+	{"restart", 		HELP_RESTART, restart_cmd},
+	{"clear", 			HELP_CLEAR, clear_cmd},
+	{"getCPUspeed", 	HELP_GETCPUSPEED, getCPUspeed_cmd},
+	{"random", 			HELP_RANDOM, random_cmd},
+	{"echo", 			HELP_ECHO, echo_cmd},
+	{"setAppearance",	HELP_SETAPPEARANCE, setAppearance_cmd},
+	{"getchar", "Funcion para la catedra para testeo de getchar\n", getchar_cmd},
+	{"printf", "Funcion para la catedra para testeo de printf\n", printf_cmd},
+	{"scanf", "Funcion para la catedra para testeo de scanf\n", scanf_cmd},
+	{"", "", NULL}
+};
+
+
+void initShell() {
+	cleanBuffer();
+	prntWelcomeMsg();
+	printf(SHELL_TEXT);
+	_initTTCounter();
+}
+
+
+/*
+	Al ser invoacada se fija si se presiono una tecla (buffer del teclado 
+	no vacio) y en cuyo caso, se guaradra en el buffer de la shell y si es 
+	necesario, manda la ejecucion de un programa. 
+*/
+void updateShell() {
+	if (IS_CTRL() && IS_ALT() && IS_DEL()) {
+		_reset();
 	}
-	puterr("Para ayuda escriba help");
-	mess("==>");
-	while(1)
-	{
-		_Cli();
-			a=GetChar();
-			if(a==-1)
-			{
-				PROCESS* proc;
-				proc=GetProcessByPID(CurrentPID);
-				if (proc->blocked==0)
-					proc->blocked=1;
-
-			}
-			else
-			{
-				switch (a)
-				{
-				case 'í'://BACKSPACE
-					if (conty>0)
-					{
-						tty[CurrentTTY].movimiento -= 2;	
-						tty[CurrentTTY].terminal[tty[CurrentTTY].movimiento] = ' ';
-						este[--conty] = 0;
-					}
-					break;
-				case 'é'://ENTER:
-					este[conty]='\0';
-					messl("");
-					InterpretarBuffer(este);
-					mess("==>");
-					conty = 0;
-					for(i=0; i<80; i++)
-						este[i] = '\0';
-					break;
-				default:
-					if (conty<50)
-					{
-						este[conty++] = (char) a;
-						writechar(a);
-					}
-				}
-			}
-		_Sti();
+	if (bufferIsEmpty()) {
+		return;
+	}
+	char c = getKeyFromBuffer();
+	if (currPos >= BUFFER_SIZE) {
+		return;
+	}
+	if (c == '\n') {
+		printf("\n");
+		excecuteCmd(shellBuffer);
+		printf(SHELL_TEXT);
+		cleanBuffer();
+	} else if (c == '\b') {
+		if (currPos > 0) {
+			writeInVideo(&c, 1);
+			currPos--;
+			shellBuffer[currPos] = '\0';
+		}
+	} else {
+		writeInVideo(&c, 1);
+		shellBuffer[currPos] = c;
+		shellBuffer[currPos + 1] = '\0';
+		currPos++;
 	}
 }
 
-//Interpretador de argumentos
-void separador(char* buffer, int* argc, char** argv)
-{
-	int contador = 0, i = 0, aux = 0;
-	char prueba[111];
-	while(buffer[contador] != '\0')
-	{
-		aux = lenspace(buffer + contador);
-		argv[i] = (char*)Malloc(aux + 1);
-		memcpy2(argv[i], buffer + contador, aux);
-		contador += aux;
-		argv[i][aux] = '\0'; 
-		contador++;
+/*
+	Verifica si en el buffer recibido existe un comando valido, y de ser asi,
+	lo invoca. 
+	Imprime en pantalla un cartel de error si no se pudo enontrar un comando
+	 valido que concuerde con lo leido.
+*/
+void excecuteCmd(char* buffer) {
+	int cmdLen, argc;
+	char ** arguments;
+	
+	int cmdIndex = parse_cmd(buffer);
+	if (cmdIndex != -1) {
+		cmdLen = strlen(cmd_table[cmdIndex].name);
+		arguments = getArguments(buffer + cmdLen, &argc);
+		cmd_table[cmdIndex].func(argc, arguments);
+		printf("\n");
+	} else if(buffer[0]!='\0') {
+		printf("\n\tUnknown command\n");
+	}
+}
+
+
+int parse_cmd(char* buffer) {
+	int i, cmdLength = -1, aux;
+	int match = -1;
+
+	for(i = 0; cmd_table[i].func != NULL; i++) {
+		if (substr(cmd_table[i].name, buffer)) {
+			aux = strlen(cmd_table[i].name);
+			if (aux > cmdLength) {
+				match = i;
+				cmdLength = aux;
+			}
+		}
+	}
+	
+	if (match == -1) {
+		return -1;
+	}
+	char next = shellBuffer[strlen(cmd_table[match].name)];
+	return  (next == ' ' || next == '\0') ? match : -1;
+}
+
+/*
+	Coloca '\0' en cada espacio para poder usar el buffer como parametros de una 
+	llamada a comando
+*/
+char** getArguments(char* buffer, int* argc) {
+	int i = 0, arg = 0;
+	while(buffer[i] != '\0' && arg < MAX_ARG_DIM) {
+		if (buffer[i] == ' ') {
+			argv[arg++] = buffer + i + 1;
+			buffer[i] = '\0';
+		}
 		i++;
 	}
-	*argc = i;	
+	*argc = arg;
+	return argv;
 }
 
+/*Retorna true si s1 es subString de s2*/
+int substr(const char * s1, const char *s2) {
+	int i = 0, isSubstr = TRUE;
+	while(isSubstr && s1[i] != '\0') {
+		if(s1[i] != s2[i]) {
+			isSubstr = FALSE;
+		}
+		i++;
+	}
+	return isSubstr;
+}
 
-//Interprete de buffer
-void InterpretarBuffer(char* buffer)
-{
+void cleanBuffer() {
+	currPos = 0;
+	shellBuffer[0] = '\0';
+}
+
+cmd_table_entry* getCmdsTable() {
+	return cmd_table;
+}
+
+int getCmdIndex(char * cmdName) {
 	int i;
-	int size;
-	int argc;
-	char** argv;
-	char *video = (char*) 0xB8000;
-	
-	size = lenspace(buffer);
-	if (buffer[size] == ' ')
-		separador(buffer, &argc, argv);
-
-	if(memcmp2((char*)buffer,"payaso", MAX(6, size)))
-	{
-		CreateProcessAt("Payaso",Payaso, CurrentTTY, argc, argv, 0x400, 2, 1);
-		_Sti();
-		_int8();
-		k_clear_screen();
-		_Cli();
+	for( i=0; cmd_table[i].func != NULL; i++) {
+		if (strcmp(cmdName, cmd_table[i].name) == 0) {
+			return i;
+		}
 	}
-	else if(memcmp2((char*)buffer,"payaso.", MAX(6, size)))
-	{
-		CreateProcessAt("Payaso",Payaso, CurrentTTY, argc, argv, 0x400, 2, 0);
-	}
-	else if(memcmp2((char*)buffer, "nice", MAX(4, size)))
-	{
-		nice(buffer);
-	}
-	else if(memcmp2((char*)buffer, "kill", MAX(4, size)))
-	{
-		kill(buffer);
-	}
-	else if(memcmp2((char*)buffer, "top", MAX(3, size)))
-	{
-		CreateProcessAt("Top",Tope, CurrentTTY, argc, argv, 0x400, 2, 1);
-		_int8();
-		k_clear_screen();
-	}
-	else if(memcmp2((char*)buffer, "top.", MAX(3, size)))
-	{
-		CreateProcessAt("Top",Tope, CurrentTTY, argc, argv, 0x400, 2, 0);
-	}
-	else if(memcmp2((char*)buffer, "cls", MAX(3, size)))
-	{
-		k_clear_screen();
-		tty[CurrentTTY].movimiento=0;
-	}
-	else if(memcmp2((char*)buffer, "dancing", MAX(7, size)))
-	{
-		CreateProcessAt("dancing",DancingMessage, CurrentTTY, argc, argv, 0x400, 2, 1);
-	}
-	else if(memcmp2((char*)buffer, "dancing.", MAX(8, size)))
-	{
-		CreateProcessAt("dancing",DancingMessage, CurrentTTY, argc, argv, 0x400, 2, 0);
-	}
-	else if(memcmp2((char*)buffer, "help", MAX(4, size)))
-	{
-		messl("Comandos: ");
-		messl("cls: Limpia la pantalla");
-		messl("kill <pid>: Mata al proceso <pid>");
-		messl("nice <pid> <0-4>: Setea la prioridad del proceso <pid> en <0-4>");
-		messl("Procesos (llamarlos con . al final para que funcionen en modo back)");
-		messl("payaso: Una barra de payaso! :)");
-		messl("top [<refresh time>]: Informacion acerca del consumo de CPU de los procesos");
-		messl("dancing [param]: Muestra las palabras dancing y [param] bailando");
-
-		
-	}
-	
-	else
-		puterr("Comando no reconocido, escriba help para una lista de comandos.");
-	
-	
+	return -1;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
+void prntWelcomeMsg() {
+	//TODO: Podria mostrarse un msj con colores y logo ascii eventualmente.
+	printf(WELCOME_MSG);
+}
 

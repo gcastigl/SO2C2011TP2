@@ -1,20 +1,18 @@
 #!/bin/sh
 cd ./bin
-rm -rf *.bin
-rm -rf *.o
+rm -rf *
 nasm -f aout ../src/libasm.asm -o libasm.o
 nasm -f aout ../src/kstart.asm -o kstart.o
-
-gcc -m32 -g -c ../src/kernel.c -o 		kernel.o -fno-builtin -fno-stack-protector 
-gcc -m32 -g -c ../src/commands.c -o		commands.o -fno-builtin -fno-stack-protector 
-gcc -m32 -g -c ../src/exceptions.c -o 	exceptions.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ../src/libc.c -o 			libc.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ../src/malloc.c -o 		malloc.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ../src/output.c -o 		output.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ../src/process.c -o 		process.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ../src/sched.c -o 		sched.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ../src/shell.c -o 		shell.o -fno-builtin -fno-stack-protector
-gcc -m32 -g -c ../src/top.c -o 			top.o -fno-builtin -fno-stack-protector
-
-ld -melf_i386 -T ../src/link.ld -o kernel.bin *.o
-rm -rf *.o
+nasm -f aout ../src/loader.asm -o kstart.o
+gcc -m32 -g -c ../src/kernel.c -o kernel.o -fno-builtin
+gcc -m32 -g -c ../src/libc.c  -o libc.o -fno-builtin
+gcc -m32 -g -c ../src/video.c -o video.o -fno-builtin
+gcc -m32 -g -c ../src/interrupts.c -o interrupts.o -fno-builtin
+gcc -m32 -g -c ../src/keyboard.c -o keyboard.o -fno-builtin
+gcc -m32 -g -c ../src/io.c -o io.o -fno-builtin
+gcc -m32 -g -c ../src/string.c -o string.o -fno-builtin
+gcc -m32 -g -c ../src/stdlib.c -o stdlib.o -fno-builtin
+gcc -m32 -g -c ../src/shell.c -o shell.o -fno-builtin
+gcc -m32 -g -c ../src/command.c -o command.o -fno-builtin -fno-stack-protector
+gcc -m32 -g -c ../src/math.c -o math.o -fno-builtin
+ld -melf_i386 -T ../src/link.ld -o kernel.bin kernel.o kstart.o libc.o libasm.o video.o interrupts.o keyboard.o io.o stdlib.o string.o shell.o command.o math.o
