@@ -6,6 +6,8 @@
 #include "string.h"
 #include "interrupts.h"
 
+#define VIDEO_ADDRESS 	0xb8000
+
 #define TAB_SIZE		4
 /*
  * Color Defines
@@ -38,9 +40,9 @@ typedef struct video_info {
 
 videoInfo video;
 
-#define ROWS 25
-#define COLUMNS 80
-#define TOTAL_VIDEO_SIZE (ROWS * COLUMNS * 2)
+#define ROWS 				25
+#define COLUMNS 			80
+#define TOTAL_VIDEO_SIZE 	(ROWS * COLUMNS * 2)
 
 /* Inicializa el struct del video */
 void initVideo();

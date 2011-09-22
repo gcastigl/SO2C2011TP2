@@ -32,7 +32,6 @@
 #define ACS_DATA        (ACS_PRESENT | ACS_DSEG | ACS_WRITE)
 #define ACS_STACK       (ACS_PRESENT | ACS_DSEG | ACS_WRITE)
 
-#define VIDEO_ADDRESS 	0xb8000
 typedef enum { false = 0, true} boolean;
 
 #define NULL	((void *)0)
