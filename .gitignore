@@ -2,3 +2,4 @@ bin/*
 bochsrc.txt
 img/tpe.img
 .project
+.cproject
