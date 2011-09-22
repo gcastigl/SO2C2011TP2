@@ -1,8 +1,8 @@
 # Binary Name
 BINARY := bin/kernel.bin
 
-CFLAGS := -fno-builtin -fno-stack-protector
-LDFLAGS := -Tlink.ld
+CFLAGS := -m32 -fno-builtin -fno-stack-protector
+LDFLAGS := -melf_i386 -Tlink.ld
 
 # Directories belonging to the project
 PROJDIRS := src include
