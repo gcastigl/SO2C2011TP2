@@ -19,7 +19,7 @@ void writeInVideoColors(char *string, size_t count, int fgc, int bgc) {
 		char ascii = string[i];
 		if (!specialAscii(ascii)) {
 			video.address[getOffset()] = ascii;
-			video.address[getOffset() + 1] = bgc << 4 | fgc & 0x0F;
+			video.address[getOffset() + 1] = bgc << 4 | (fgc & 0x0F);
 			if (getOffset() == TOTAL_VIDEO_SIZE - 2) {
 				scroll(1);
 				setPosition(getCurrRow(), 0);
@@ -188,7 +188,7 @@ void cls() {
 	pantalla.
 */
 int specialAscii(char ascii) {
-	int ret = TRUE;
+	int ret = true;
 	int tab;
 	switch (ascii) {
 		case '\n':
@@ -206,7 +206,7 @@ int specialAscii(char ascii) {
 			video.address[getOffset()] = ' ';
 			break;
 		default:
-			ret = FALSE;
+			ret = false;
 			break;
 	}
 	setCursor(getCurrRow(), getCurrColumn());

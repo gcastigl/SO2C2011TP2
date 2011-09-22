@@ -7,14 +7,17 @@ int echo_cmd(int argc, char *argv[]) {
 			printf("%s ", argv[i]);
 		}
 	}
+	return 0;
 }
 
 int restart_cmd(int argc, char *argv[]) {
-	_reset();
+	_reset();		// Will neva get through this line! =P
+	return 0xCA11AB1E;
 }
 
 int clear_cmd(int argc, char *argv[]) {
 	cls();
+	return 0;
 }
 
 int help_cmd(int argc, char *argv[]) {
@@ -54,7 +57,7 @@ int getCPUspeed_cmd(int argc, char *argv[]) {
 	int speed;
 	if (_cpuIdTest() != 1) {
 		printf("error: cpuid instruction is not supported.\n");
-		return FALSE;
+		return false;
 	}
 	printf("Detected cpuid instruction...\n");
 	if (_rdtscTest() > 0) {
@@ -66,15 +69,18 @@ int getCPUspeed_cmd(int argc, char *argv[]) {
 	} else {
 		printf("error: rdtsc or rdmsr should be available to \
 			perform this command\n");
-			return FALSE;
+			return false;
 	}
 	
 	printf("Detected CPU speed: %iMHz\n", speed);
+	return 0;
 }
 
 
 int random_cmd(int argc, char *argv[]) {
-	printf("%d", random());
+	int rand = random();
+	printf("%d", rand);
+	return rand;
 }
 
 int setAppearance_cmd(int argc, char *argv[]) {
@@ -90,16 +96,17 @@ int setAppearance_cmd(int argc, char *argv[]) {
 			|| bg == -1) {
 			printf("Both arguments must be a hexadecimal number between 0 \
 				and F\n");
-			return;
 		}
 		setVideoColor(bg, fg);
 	}
+	return 0;
 }
 
 int getchar_cmd(int argc, char *argv[]) {
 	printf("Please type in a character\n");
 	char c = getchar();
 	printf("You pressed: %c\n", c);
+	return 0;
 }
 
 int printf_cmd(int argc, char *argv[]) {
@@ -111,6 +118,7 @@ int printf_cmd(int argc, char *argv[]) {
 	printf("Printing in lowercase hexadecimal notation: %x\n", 0x55fa);
 	printf("Printing in uppercase hexadecimal notation: %X\n", 0x55fa);
 	printf("Printing a single char: %c\n", 'c');
+	return 0;
 }
 
 int scanf_cmd(int argc, char *argv[]) {
@@ -132,5 +140,6 @@ int scanf_cmd(int argc, char *argv[]) {
 	printf("One more...Please type in a double: ");
 	scanf("%f", &f);
 	printf("\nscanf said you typed in: %f\n\n", f);
+	return 0;
 }
 

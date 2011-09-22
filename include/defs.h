@@ -1,14 +1,10 @@
 #ifndef _defs_
 #define _defs_
 
-#define MAX_PROCESS_NAME 32
-
 #define byte unsigned char
 #define word short int
 #define dword int
 #define ushort unsigned short
-
-typedef unsigned long long int uint64_t;
 
 /* Flags para derechos de acceso de los segmentos */
 #define ACS_PRESENT     0x80            /* segmento presente en memoria */
@@ -37,32 +33,23 @@ typedef unsigned long long int uint64_t;
 #define ACS_STACK       (ACS_PRESENT | ACS_DSEG | ACS_WRITE)
 
 #define VIDEO_ADDRESS 	0xb8000
+typedef enum { false = 0, true} boolean;
 
 #define NULL	((void *)0)
-#define TRUE	1
-#define FALSE	0
 
 #define SYSTEM_READ		3
 #define SYSTEM_WRITE	4
-/*
-0	STD	NOHIDE	{ int nosys(void); } syscall nosys_args int
-1	STD	NOHIDE	{ void exit(int rval); } exit rexit_args void
-2	STD	POSIX	{ int fork(void); }
-3	STD	POSIX	{ ssize_t read(int fd, void *buf, size_t nbyte); }
-4	STD	POSIX	{ ssize_t write(int fd, const void *buf, size_t nbyte); }
-5	STD	POSIX	{ int open(char *path, int flags, int mode); }
-6	STD	POSIX	{ int close(int fd); }
-*/
+
 #define STD_IN		0
 #define STD_OUT		1
 #define STD_ERROR	2
 
 #define K_BUFFER_SIZE	10
 
-#pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */
-
 typedef unsigned int size_t;
 typedef short int ssize_t;
+
+#pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */
 
 /* Descriptor de segmento */
 typedef struct {
@@ -89,41 +76,6 @@ typedef struct {
   word  limit;
   dword base;
 } IDTR;
-
-typedef struct {
-	int buffer[10];
-	int head;
-	int tail;
-} BUFFERTYPE;
-
-typedef struct {
-	char* terminal;
-	int movimiento;
-	BUFFERTYPE buffer;
-} TTY;
-
-typedef struct {
-	int pid;
-	char name[MAX_PROCESS_NAME];
-	int priority;
-	int tty;
-	int foreground;
-	int lastCalled;
-	int sleep;
-	int blocked;
-	int parent;
-	int ESP;
-	int free;
-	int stackstart;
-	int stacksize;
-} PROCESS;
-
-typedef struct {
-	int EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX,  EIP, CS, EFLAGS;
-	void*retaddr;
-	int argc;
-	char** argv;
-} STACK_FRAME;
 
 #endif
 

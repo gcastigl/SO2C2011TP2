@@ -19,7 +19,7 @@ please type in help\n\n"
 
 #define MAX_ARG_DIM	5
 
-typedef struct cmd_table_entry {
+typedef struct {
 	char* name;
 	char* help;
 	int (*func)(int argc, char *argv[]);

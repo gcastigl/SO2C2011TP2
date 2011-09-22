@@ -1,5 +1,7 @@
 #include "../include/io.h"
 
+int isTTY(int fd);
+
 void sysRead(int fd, void * buffer, size_t count) {
 	int i;
 	char c;
@@ -16,8 +18,13 @@ void sysRead(int fd, void * buffer, size_t count) {
 
 void sysWrite(int fd, void * buffer, size_t count) {
 	if (fd == STD_OUT || fd == STD_ERROR) {
-		//COPIA DEL BUFFER ENTREGADO A LA PANTALLA
+		// COPIA DEL BUFFER ENTREGADO A LA PANTALLA
 		writeInVideo((char*) buffer, count);
+	} else if (isTTY(fd)) {
+
 	}
 }
 
+int isTTY(int fd) {
+	return true;
+}

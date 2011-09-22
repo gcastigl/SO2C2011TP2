@@ -52,7 +52,7 @@ void handleScanCode(unsigned char scanCode) {
 }
 
 int checkSpecialKey(unsigned char scanCode) {
-	int ret = TRUE;
+	int ret = true;
 	
 	if(IS_ESCAPE()) {
 		switch (scanCode) {
@@ -66,7 +66,7 @@ int checkSpecialKey(unsigned char scanCode) {
 				break;
 		}
 		kbFlags &= ~ESCAPE;
-		return TRUE;
+		return true;
 	}
 	
 	switch (scanCode) {
@@ -106,7 +106,7 @@ int checkSpecialKey(unsigned char scanCode) {
 			break;
 		
 		default:
-			ret = FALSE;
+			ret = false;
 			break;
 	}
 	
