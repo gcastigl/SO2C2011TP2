@@ -1,0 +1,89 @@
+\documentclass[a4paper,14.49998pt]{article}
+\usepackage[latin1]{inputenc}
+\usepackage{t1enc}
+\usepackage[pdftex]{graphicx}
+\usepackage[spanish]{babel}
+\usepackage{multicol}
+\usepackage{fancybox}
+\usepackage{fancyhdr}
+\usepackage[pdftex,usenames,dvipsnames]{color}
+\usepackage{listings}
+\usepackage{ucs}
+\usepackage{textcomp}
+\lstset{
+	tabsize=4,
+	rulecolor=,
+	language=matlab,
+        basicstyle=\scriptsize,
+        upquote=true,
+        aboveskip={1.5\baselineskip},
+        columns=fixed,
+        showstringspaces=false,
+        extendedchars=true,
+        breaklines=true,
+        prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+        frame=single,
+        showtabs=false,
+        showspaces=false,
+        showstringspaces=false,
+        identifierstyle=\ttfamily,
+        keywordstyle=\color[rgb]{0,0,1},
+        commentstyle=\color[rgb]{0.133,0.545,0.133},
+        stringstyle=\color[rgb]{0.627,0.126,0.941}
+}
+\pagenumbering{arabic}
+\pagestyle{fancy}
+\fancyhead[L]{Arqui}
+\fancyhead[C]{curso 2011 primer cuatrimestre}
+\fancyhead[R]{TP Especial}
+\title{\Huge{Manual del Usuario\\\vspace{15mm}Arnix\\\vspace{15mm}Modo protegido con GRUB}}
+\begin{document}
+\maketitle
+\vspace{70mm}
+\large{\underline{Autores:}} 
+\begin{center}
+\begin{tabular}{l r}
+\emph{\author{Axel Wassington}} & Legajo: \emph{50124}\\
+\emph{\author{Horacio Miguel Gomez}} & Legajo: \emph{50825}\\
+\emph{\author{Tomás Mehdi}} & Legajo: \emph{51014}
+\end{tabular}
+\end{center}
+\pagebreak
+\tableofcontents
+\pagebreak
+
+\section{Manual de uso}
+Esta seccion esta destinada a proporcionar información sobre las funcionalidades
+del sistema y explicar su modo de uso.
+\subsection{Booteo}
+El sistema es booteable, por lo que para su inicio solamente se requiere que el CD
+se encuentre insertado y la lectora posea la mayor prioridad de booteo. Luego se
+mostrará la pantalla de GRUB. Se puede presionar
+enter para proceder, o de lo contrario GRUB continuará la carga del sistema tras un
+número prestablecido de segundos, visible en el ultimo renglón de la pantalla. Una vez realizado 
+el booteo, se cargará el shell. A partir de
+aquí se puede comenzar a utilizar los comandos provistos por el shell.
+\subsection{Comandos de shell}
+La siguiente lista indica la forma de usar a los distintos comandos de el shell.
+Es importante destacar que todos las llamadas son case sensitive. En caso
+de ingresar un comando que no esta contemplado por el shell se imprime un
+mensaje de error y se devuelve el control al usuario.
+\subsubsection{rename}
+Cambia el nombre de usuario en la consola.
+\subsubsection{help}
+Muestra todo los comandos disponibles de la shell.
+\subsubsection{isodd}
+Informa si el número ingresado es par o impar.
+\subsubsection{test}
+Acepta los parametros printf y scanf, y imprime algunos tests de los diferentes tipos de data
+input type.
+\subsubsection{getCPUspeed}
+Imprime en pantalla la velocidad a la que trabaja el CPU.
+\subsubsection{clear}
+Limpia la pantalla.
+\subsubsection{echo}
+Recive una cadena de caracteres luego del nombre del comando e imprime dicha cadena.
+\subsubsection{exit}
+Cierra el shell y pide que ingreses un nuevo nombre de usuario para la shell.
+\pagebreak
+\end{document}

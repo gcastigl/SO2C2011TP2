@@ -1,0 +1,142 @@
+\documentclass[a4paper,14.49998pt]{article}
+\usepackage[latin1]{inputenc}
+\usepackage{t1enc}
+\usepackage[pdftex]{graphicx}
+\usepackage[spanish]{babel}
+\usepackage{multicol}
+\usepackage{fancybox}
+\usepackage{fancyhdr}
+\usepackage[pdftex,usenames,dvipsnames]{color}
+\usepackage{listings}
+\usepackage{ucs}
+\usepackage{textcomp}
+\lstset{
+	tabsize=4,
+	rulecolor=,
+	language=matlab,
+        basicstyle=\scriptsize,
+        upquote=true,
+        aboveskip={1.5\baselineskip},
+        columns=fixed,
+        showstringspaces=false,
+        extendedchars=true,
+        breaklines=true,
+        prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+        frame=single,
+        showtabs=false,
+        showspaces=false,
+        showstringspaces=false,
+        identifierstyle=\ttfamily,
+        keywordstyle=\color[rgb]{0,0,1},
+        commentstyle=\color[rgb]{0.133,0.545,0.133},
+        stringstyle=\color[rgb]{0.627,0.126,0.941},
+	numbers=left
+}
+\pagenumbering{arabic}
+\pagestyle{fancy}
+\fancyhead[L]{Arqui}
+\fancyhead[C]{curso 2011 primer cuatrimestre}
+\fancyhead[R]{TP Especial}
+\title{\Huge{Codigos fuente\\\vspace{15mm}Arnix\\\vspace{15mm}Modo protegido con GRUB}}
+\begin{document}
+\maketitle
+\vspace{70mm}
+\large{\underline{Autores:}} 
+\begin{center}
+\begin{tabular}{l r}
+\emph{\author{Axel Wassington}} & Legajo: \emph{50124}\\
+\emph{\author{Horacio Miguel Gomez}} & Legajo: \emph{50825}\\
+\emph{\author{Tomás Mehdi}} & Legajo: \emph{51014}
+\end{tabular}
+\end{center}
+\pagebreak
+\tableofcontents
+\pagebreak
+
+\section{Codigos fuente}
+\subitem{include}
+\subsection{defs.h}
+\lstinputlisting[language=C]{../include/defs.h}
+\subsection{kasm.h}
+\lstinputlisting[language=C]{../include/kasm.h}
+\subsection{stdarg.h}
+\lstinputlisting[language=C]{../include/stdarg.h}
+\subsection{varargs.h}
+\lstinputlisting[language=C]{../include/varargs.h}
+\subitem{src}
+\subsubitem{kernel}
+\subsection{kernel.c}
+\lstinputlisting[language=C]{../src/kernel.c}
+\subsection{lib.asm}
+\lstinputlisting[language=csh]{../src/libasm.asm}
+\subsection{loader.asm}
+\lstinputlisting[language=csh]{../src/loader.asm}
+\subsubitem{driver}
+\subsection{keyboard.c}
+\lstinputlisting[language=C]{../src/kernel/driver/keyboard.c}
+\subsection{keyboard.h}
+\lstinputlisting[language=C]{../src/kernel/driver/keyboard.h}
+\subsection{screen.c}
+\lstinputlisting[language=C]{../src/kernel/driver/screen.c}
+\subsection{screen.h}
+\lstinputlisting[language=C]{../src/kernel/driver/screen.h}
+\subsection{timer.c}
+\lstinputlisting[language=C]{../src/kernel/driver/timer.c}
+\subsection{timer.h}
+\lstinputlisting[language=C]{../src/kernel/driver/timer.h}
+\subsubitem{system}
+\subsection{common.h}
+\lstinputlisting[language=C]{../src/kernel/system/common.h}
+\subsection{idt.c}
+\lstinputlisting[language=C]{../src/kernel/system/idt.c}
+\subsection{idt.h}
+\lstinputlisting[language=C]{../src/kernel/system/idt.h}
+\subsection{in\_out.c}
+\lstinputlisting[language=C]{../src/kernel/system/in_out.c}
+\subsection{in\_out.h}
+\lstinputlisting[language=C]{../src/kernel/system/in_out.h}
+\subsection{int80.c}
+\lstinputlisting[language=C]{../src/kernel/system/int80.c}
+\subsection{int80.h}
+\lstinputlisting[language=C]{../src/kernel/system/int80.h}
+\subsection{isr.c}
+\lstinputlisting[language=C]{../src/kernel/system/isr.c}
+\subsection{isr.h}
+\lstinputlisting[language=C]{../src/kernel/system/isr.h}
+\subsection{keyboardlisteners.c}
+\lstinputlisting[language=C]{../src/kernel/system/keyboardlisteners.h}
+\subsection{keyboardlisteners.h}
+\lstinputlisting[language=C]{../src/kernel/system/keyboardlisteners.h}
+\subsubitem{asm}
+\subsection{idt.asm}
+\lstinputlisting[language=csh]{../src/kernel/system/asm/idt.asm}
+\subsection{common.asm}
+\lstinputlisting[language=csh]{../src/kernel/system/asm/common.asm}
+\subsubitem{std}
+\subsection{getchar.c}
+\lstinputlisting[language=C]{../src/std/getchar.c}
+\subsection{printf.c}
+\lstinputlisting[language=C]{../src/std/printf.c}
+\subsection{scanf.c}
+\lstinputlisting[language=C]{../src/std/scanf.c}
+\subsection{stdio.h}
+\lstinputlisting[language=C]{../src/std/stdio.h}
+\subsection{string.c}
+\lstinputlisting[language=C]{../src/std/string.c}
+\subsection{string.h}
+\lstinputlisting[language=C]{../src/std/string.h}
+\subsection{systemcall.asm}
+\lstinputlisting[language=C]{../src/std/systemcall.asm}
+\subsection{systemcall.h}
+\lstinputlisting[language=C]{../src/std/systemcall.h}
+\subsubitem{user}
+\subsection{commands.c}
+\lstinputlisting[language=C]{../src/user/commands.c}
+\subsection{commands.h}
+\lstinputlisting[language=C]{../src/user/commands.h}
+\subsection{shell.c}
+\lstinputlisting[language=C]{../src/user/shell.c}
+\subsection{shell.h}
+\lstinputlisting[language=C]{../src/user/shell.h}
+\pagebreak
+\end{document}
