@@ -1,4 +1,12 @@
-bin/*
-bochsrc.txt
-img/tpe.img
-.project
+.*
+nbproject/
+bin/
+bochsout.txt
+arma
+compila
+img/
+*~
+Debug/
+*.toc
+*.log
+*.aux

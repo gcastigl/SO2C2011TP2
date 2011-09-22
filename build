@@ -1,0 +1,24 @@
+#!/bin/bash
+
+kill $(pidof bochs-bin)
+#parse arguments
+for var in "$@"
+do
+    if [ $var = "clean" ]
+    then
+        make clean
+    fi
+done
+make
+STATUS=$?
+if [ $STATUS -ne 0 ]
+then
+    echo "Error status: $STATUS"
+else
+    if [ ! -e img/tpe.img ]
+    then
+        cp doc/tpe.img img/tpe.img
+    fi
+    mcopy bin/kernel.bin b:boot/ -o
+    bochs
+fi
