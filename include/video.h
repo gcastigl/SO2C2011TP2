@@ -43,7 +43,7 @@ videoInfo video;
 #define TOTAL_VIDEO_SIZE (ROWS * COLUMNS * 2)
 
 /* Inicializa el struct del video */
-void initVideo();
+void initTTY(TTY tty);
 
 /* writes in video a string */
 void writeInVideo(char *string, size_t count);

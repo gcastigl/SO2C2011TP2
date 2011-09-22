@@ -1,11 +1,12 @@
 #include "../include/kernel.h"
 
 #define MAX_PROCESS	64
+#define MAX_TTY		8
 
 DESCR_INT idt[0x81];			/* IDT de 81h entradas*/
 IDTR idtr;						/* IDTR */
 
-static TTY tty[8];
+static TTY tty[MAX_TTY];
 static int currentTTY;
 static PROCESS procesos[MAX_PROCESS];
 static PROCESS idle;
@@ -17,7 +18,7 @@ void setupIDT();
 void createProcessAt(char* name, int (*process)(int,char**),int tty, int argc,
 	char** argv, int stacklength, int priority, int isFront);
 
-int GetPID(void);
+int getPID(void);
 PROCESS* getProcessByPID(int pid);
 
 kmain() {
@@ -31,7 +32,8 @@ kmain() {
 	_mascaraPIC2(0xFF);
 	doubleFlagsFix(1.1);
 	initKeyBoard();
-	initVideo();
+
+	//initVideo();
 	createProcessAt("Shell 0", NULL, 0, 0, NULL, 1 << 10, 2, 1);
 	initShell();
 	_Sti();
@@ -70,7 +72,7 @@ void createProcessAt(char* name, int (*process)(int,char**),int tty, int argc,
 	procesos[i].blocked = 0;
 	procesos[i].tty = tty;
 	procesos[i].lastCalled = 0;
-	procesos[i].stacksize = stacklength;  //FIXME: WHY DOES THE SYSTEM RESTARTS HERE??!!!
+	procesos[i].stacksize = stacklength;
 	procesos[i].stackstart = (int) stack;
 	procesos[i].free = 0;
 	// procesos[i].ESP = loadStackFrame(process, argc, argv,(int)(stack+stacklength-1), Cleaner);
@@ -101,6 +103,7 @@ PROCESS* getProcessByPID(int pid) {
 	return 0;
 }
 
+
 /*
 fd = File descriptor referring to the open file.
 
@@ -112,6 +115,7 @@ size_t __read(int fd, void * buffer, size_t count) {
 	_SysCall(SYSTEM_READ,fd, buffer, count);
 	return count;
 }
+
 
 /*
 fd = File descriptor of file into which data is written.

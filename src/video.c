@@ -1,11 +1,14 @@
 #include "../include/video.h"
 
-void initVideo() {
-	video.address = (char*) VIDEO_ADDRESS;
-	setVideoColor(BLACK, GREEN);
-	cls();
-	setOffset(0);
-	setCursor(0, 0);
+void initTTY(TTY tty) {
+	int terminalSize = 2 * ROWS * COLUMNS;
+	tty.terminal = (char*) malloc(terminalSize);
+	tty.movimiento = 0;
+	int i;
+	for(i = 0; i < terminalSize; i+=2) {
+		tty.terminal[i] = BLACK;
+		tty.terminal[i+1] = GREEN;
+	}
 }
 
 /*
