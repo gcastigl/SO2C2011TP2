@@ -58,12 +58,12 @@ void updateShell() {
 		cleanBuffer();
 	} else if (c == '\b') {
 		if (currPos > 0) {
-			writeInVideo(&c, 1);
+			printf("%c", c);
 			currPos--;
 			shellBuffer[currPos] = '\0';
 		}
 	} else {
-		writeInVideo(&c, 1);
+		printf("%c", c);
 		shellBuffer[currPos] = c;
 		shellBuffer[currPos + 1] = '\0';
 		currPos++;
