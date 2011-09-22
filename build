@@ -20,5 +20,5 @@ else
         cp doc/tpe.img img/tpe.img
     fi
     mcopy bin/kernel.bin b:boot/ -o
-    bochs
+    bochs &
 fi
