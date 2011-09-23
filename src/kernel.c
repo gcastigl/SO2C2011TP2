@@ -18,6 +18,7 @@ kmain() {
 		doubleFlagsFix(1.1);
 		initKeyBoard();
 		initVideo();
+		setFD(STD_OUT);
 		initShell();
 	_Sti();
 	while (1) {

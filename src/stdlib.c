@@ -1,6 +1,11 @@
 #include "../include/stdlib.h"
 
-int nextfree = 0x300000;
+static int nextfree = 0x300000;
+static int currentFd;
+
+void setFD(int fileDescriptor) {
+	currentFd = fileDescriptor;
+}
 
 void* malloc(size_t size) {
 	void* temp = (void*) nextfree;
@@ -35,11 +40,11 @@ char getc(int fd) {
 }
 
 void putchar(char c) {
-	putc(c, STD_OUT);
+	putc(c, currentFd);
 }
 
 void putc(char c, int fd) {
-	__write(STD_OUT, &c, 1);
+	__write(fd, &c, 1);
 }
 
 void puti(int n) {

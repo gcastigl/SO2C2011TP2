@@ -6,6 +6,7 @@
 #include "interrupts.h"
 #include "kasm.h"
 #include "defs.h"
+#include "io.h"
 
 int getNextPID();
 

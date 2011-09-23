@@ -9,9 +9,6 @@
 #define va_end(v)     __builtin_va_end(v)
 #define va_copy(d,s)  __builtin_va_copy(d,s)
 
-#define STDOUT 1
-#define STDIN 2
-
 #define F_PRECISION 6
 
 typedef __builtin_va_list va_list;
