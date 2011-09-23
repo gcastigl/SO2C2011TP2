@@ -3,7 +3,7 @@
 void initVideo() {
 	video.address = (char*) VIDEO_ADDRESS;
 	setVideoColor(BLACK, GREEN);
-	cls();
+	video_clearScreen();
 	setOffset(0);
 	setCursor(0, 0);
 }
@@ -172,7 +172,7 @@ void setCursor(ushort row, ushort column) {
 /*
 	Borra la pantalla en modo texto color.
 */
-void cls() {
+void video_clearScreen() {
 	unsigned int i = 0;
 	while (i < TOTAL_VIDEO_SIZE) {
 		video.address[i] = ' ';
@@ -213,3 +213,11 @@ int specialAscii(char ascii) {
 	return ret;
 }
 
+// ===========================================
+// Functions to operate with ttys
+// ===========================================
+
+void video_writeFormattedBuffer(char* buffer, size_t size) {
+	video_clearScreen();
+	memcpy(buffer, (void*) VIDEO_ADDRESS, size);
+}

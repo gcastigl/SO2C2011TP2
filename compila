@@ -15,4 +15,6 @@ gcc -m32 -g -c ../src/stdlib.c -o stdlib.o 			-fno-builtin -fno-stack-protector
 gcc -m32 -g -c ../src/shell.c -o shell.o 			-fno-builtin -fno-stack-protector
 gcc -m32 -g -c ../src/command.c -o command.o 		-fno-builtin -fno-stack-protector
 gcc -m32 -g -c ../src/math.c -o math.o 				-fno-builtin -fno-stack-protector
-ld -melf_i386 -T ../src/link.ld -o kernel.bin kernel.o kstart.o libc.o libasm.o video.o interrupts.o keyboard.o io.o stdlib.o string.o shell.o command.o math.o
+gcc -m32 -g -c ../src/tty.c -o tty.o 				-fno-builtin -fno-stack-protector
+ld -melf_i386 -T ../src/link.ld -o kernel.bin kernel.o kstart.o libc.o libasm.o video.o interrupts.o \
+	keyboard.o io.o stdlib.o string.o shell.o command.o math.o tty.o

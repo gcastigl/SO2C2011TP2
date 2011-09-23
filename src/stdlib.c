@@ -149,8 +149,8 @@ void printf(const char *fmt, ...) {
 
 void memcpy(void* from, void* to, size_t count) {
 	size_t i;
-	char* cfrom = (char *)from;
-	char* cto = (char *)to;
+	char* cfrom = (char *) from;
+	char* cto = (char *) to;
 	for (i = 0; i < count; i++) {
 		cto[i] = cfrom[i];
 	}

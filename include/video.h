@@ -1,12 +1,13 @@
 #ifndef VIDEO_H
 #define VIDEO_H
 
-#include "defs.h"
 #include "io.h"
-#include "string.h"
-#include "interrupts.h"
 
 #define VIDEO_ADDRESS 	0xb8000
+
+#define ROWS 				25
+#define COLUMNS 			80
+#define TOTAL_VIDEO_SIZE 	(ROWS * COLUMNS * 2)
 
 #define TAB_SIZE		4
 /*
@@ -31,18 +32,15 @@
 #define YELLOW			0xE
 #define WHITE			0xF
 
-typedef struct video_info {
+
+typedef struct {
 	char* address;
 	byte bgColor;
 	byte fgColor;
 	int offset;
-} videoInfo;
+} VideoInfo;
 
-videoInfo video;
-
-#define ROWS 				25
-#define COLUMNS 			80
-#define TOTAL_VIDEO_SIZE 	(ROWS * COLUMNS * 2)
+VideoInfo video;
 
 /* Inicializa el struct del video */
 void initVideo();
@@ -53,7 +51,7 @@ void writeInVideo(char *string, size_t count);
 /* Setea el cursor en la posición deseada */
 void setCursor(ushort row, ushort col);
 
-void cls();
+void video_clearScreen();
 
 /* Chequea si el parámetro es un ascii especial */
 int specialAscii(char ascii);
@@ -104,5 +102,15 @@ void clearToEnd(int from);
 
 /* limpia una linea */
 void clearRow(int row);
+
+// ===========================================
+// Functions to operate with ttys
+// ===========================================
+
+/*
+ * Dado un buffer con formato, se compia tal cual es entregado a pantalla.
+ * Analogo a llamar memcpy a la direccion de video;
+ */
+void video_writeFormattedBuffer(char* buffer, size_t size);
 
 #endif

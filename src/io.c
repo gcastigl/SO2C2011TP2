@@ -21,7 +21,8 @@ void sysWrite(int fd, void * buffer, size_t count) {
 		// COPIA DEL BUFFER ENTREGADO A LA PANTALLA
 		writeInVideo((char*) buffer, count);
 	} else if (isTTY(fd)) {
-
+		TTY* tty = tty_getCurrent();
+		video_writeFormattedBuffer(tty->terminal, TOTAL_VIDEO_SIZE);
 	}
 }
 

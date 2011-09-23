@@ -16,7 +16,7 @@ int restart_cmd(int argc, char *argv[]) {
 }
 
 int clear_cmd(int argc, char *argv[]) {
-	cls();
+	video_clearScreen();
 	return 0;
 }
 
