@@ -2,7 +2,7 @@
 
 void video_writeInVideoWithFormat(char *string, size_t count, char format);
 
-void initVideo() {
+void video_init() {
 	video.address = (char*) VIDEO_ADDRESS;
 	setOffset(0);
 	setCursor(0, 0);

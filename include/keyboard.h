@@ -36,7 +36,7 @@ char translateSc(unsigned char scanCode);
 
 void putKeyInBuffer(char c);
 char getKeyFromBuffer();
-void initKeyBoard();
+void keyboard_init();
 int bufferIsEmpty();
 
 #endif

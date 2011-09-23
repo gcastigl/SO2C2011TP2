@@ -6,7 +6,7 @@ void write(TTY* tty, char* buffer, size_t size);
 static TTY tty[MAX_TTYs];
 static int currentTTY;
 
-void initTTYs() {
+void tty_init() {
 	int i;
 	currentTTY = 0;
 	for (i = 0; i < MAX_TTYs; i++) {

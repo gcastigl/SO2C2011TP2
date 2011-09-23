@@ -34,7 +34,7 @@ unsigned char ucase[60] =
   ' ' /* Space bar */
 };
 
-void initKeyBoard() {
+void keyboard_init() {
 	keyboard_buffer.from = 0;
 	keyboard_buffer.to = 0;
 	keyboard_buffer.buffer[0] = '\0';

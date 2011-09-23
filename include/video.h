@@ -41,7 +41,7 @@ typedef struct {
 VideoInfo video;
 
 /* Inicializa el struct del video */
-void initVideo();
+void video_init();
 
 /* writes in video a string */
 void writeInVideo(char *string, size_t count);

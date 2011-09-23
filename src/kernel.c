@@ -16,9 +16,9 @@ kmain() {
 		_mascaraPIC1(0xFC);
 		_mascaraPIC2(0xFF);
 		doubleFlagsFix(1.1);
-		initKeyBoard();
-		initVideo();
-		initTTYs();
+		keyboard_init();
+		video_init();
+		tty_init();
 		setFD(3);
 		initShell();
 	_Sti();
