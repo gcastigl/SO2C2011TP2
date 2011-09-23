@@ -1,7 +1,7 @@
 #include "../include/kernel.h"
 
 static DESCR_INT idt[0x81];			/* IDT de 81h entradas*/
-static IDTR idtr;						/* IDTR */
+static IDTR idtr;					/* IDTR */
 static int currentPID = 0;
 static int nextPID = 1;
 
@@ -18,6 +18,7 @@ kmain() {
 		doubleFlagsFix(1.1);
 		initKeyBoard();
 		initVideo();
+		initTTYs();
 		setFD(3);
 		initShell();
 	_Sti();

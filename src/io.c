@@ -16,18 +16,19 @@ void sysRead(int fd, void * buffer, size_t count) {
 	}
 }
 
+// FIXME: how to recognize each FD according to its value
+// We are now assuming that all fd are TTYs
 void sysWrite(int fd, void * buffer, size_t count) {
+	TTY* tty;
 	if (fd == STD_OUT || fd == STD_ERROR) {
-		// COPIA DEL BUFFER ENTREGADO A LA PANTALLA
-		// FIXME: THIS should write to the current TTY....
-		writeInVideo((char*) buffer, count);
+		tty = tty_getCurrent();
 	} else if (isTTY(fd)) {
-		tty_write(fd - 3, (char*) buffer, count);
-		TTY* tty = tty_getTTY(fd - 3);
-		count *= 2; // For each caracter, there is one more for the format
-		int offset = tty->offset - count;
-		video_writeFormattedBuffer(tty->terminal + offset, count, offset);
+		tty = tty_getTTY(fd - 3);
 	}
+	tty_write(tty, (char*) buffer, count);
+	count *= 2; // For each caracter, there is one more for the format
+	int offset = tty->offset - count;
+	video_writeFormattedBuffer(tty->terminal + offset, count, offset);
 }
 
 int isTTY(int fd) {

@@ -12,6 +12,8 @@ void initTTYs() {
 	for (i = 0; i < MAX_TTYs; i++) {
 		initTTY(i);
 	}
+	char format = video_getFormattedColor(tty[currentTTY].fgColor, tty[currentTTY].bgColor);
+	video_clearScreen(format);
 }
 
 void initTTY(int index) {
@@ -35,17 +37,15 @@ TTY* tty_getCurrent() {
 	return &tty[currentTTY];
 }
 
-void tty_write(int ttyIndex, char* buffer, size_t size) {
-	write(&tty[ttyIndex], buffer, size);
-}
-
 // Function to copy from a buffer to video format
-void write(TTY* tty, char* buffer, size_t size) {
+void tty_write(TTY* tty, char* buffer, size_t size) {
 	int i;
 	char* temp = tty->terminal + tty->offset;
+	char format = video_getFormattedColor(tty->fgColor, tty->bgColor);
 	for (i = 0; i < size; i++) {
-		temp[2 * i] = buffer[i];
-		temp[2 * i + 1] = ' ';
+		int pos = 2 * i;
+		temp[pos] = buffer[i];
+		temp[pos + 1] = format;
 	}
 	tty->offset += size * 2;
 	/*char* temp = tty->terminal + tty->offset;

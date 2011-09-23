@@ -23,8 +23,8 @@ typedef struct {
 	int offset;
 	BUFFERTYPE buffer;
 	// FIXME: This values could be wrappeed up in a VideoAttributtes structure
-	byte bgColor;
-	byte fgColor;
+	char bgColor;
+	char fgColor;
 } TTY;
 
 void tty_setCurrent(int tty);
@@ -33,6 +33,6 @@ TTY* tty_getCurrent();
 
 TTY* tty_getTTY(int index);
 
-void tty_write(int tty, char* buffer, size_t size);
+void tty_write(TTY* tty, char* buffer, size_t size);
 
 #endif

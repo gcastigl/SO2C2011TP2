@@ -35,8 +35,6 @@
 
 typedef struct {
 	char* address;
-	byte bgColor;
-	byte fgColor;
 	int offset;
 } VideoInfo;
 
@@ -51,7 +49,7 @@ void writeInVideo(char *string, size_t count);
 /* Setea el cursor en la posición deseada */
 void setCursor(ushort row, ushort col);
 
-void video_clearScreen();
+void video_clearScreen(char format);
 
 /* Chequea si el parámetro es un ascii especial */
 int specialAscii(char ascii);
@@ -67,20 +65,6 @@ int getCurrColumn();
 
 /* Escribe un char directamente en la memoria */
 void dummyWrite(char ascii);
-
-/* Setea el color del texto que se escribirá después */
-void setVideoForeground(byte color);
-
-/* Setea el color del fondo del caracter siguiente */
-void setVideoBackground(byte color);
-
-/* Setea el color de fondo y del texto del próximo caracter */
-void setVideoColor(byte bg, byte fg);
-
-/* Devuelve el color de fondo y el texto listo para ser impreso en la memória
- * de la pantalla
- */
-char getVideoColor();
 
 /* Sube la pantalla n líneas */
 void scroll(char lines);
@@ -112,5 +96,11 @@ void clearRow(int row);
  * Analogo a llamar memcpy a la direccion de video;
  */
 void video_writeFormattedBuffer(char* buffer, size_t size, int videOffset);
+
+char video_getFormattedColor(char fg, char bg);
+
+char video_getBGcolor(char format);
+
+char video_getFGcolor(char format);
 
 #endif

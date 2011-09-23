@@ -1,9 +1,9 @@
 #include "../include/video.h"
 
+void video_writeInVideoWithFormat(char *string, size_t count, char format);
+
 void initVideo() {
 	video.address = (char*) VIDEO_ADDRESS;
-	setVideoColor(BLACK, GREEN);
-	video_clearScreen();
 	setOffset(0);
 	setCursor(0, 0);
 }
@@ -13,13 +13,13 @@ void initVideo() {
 	fgc y color de fondo bgs.
 	Estos caracteres se agregan al final del ultimo caracter mandado. 
 */
-void writeInVideoColors(char *string, size_t count, int fgc, int bgc) {
+void video_writeInVideoWithFormat(char *string, size_t count, char format) {
 	int i = 0;
 	while (i < count) {
 		char ascii = string[i];
 		if (!specialAscii(ascii)) {
 			video.address[getOffset()] = ascii;
-			video.address[getOffset() + 1] = bgc << 4 | (fgc & 0x0F);
+			video.address[getOffset() + 1] = format;
 			if (getOffset() == TOTAL_VIDEO_SIZE - 2) {
 				scroll(1);
 				setPosition(getCurrRow(), 0);
@@ -30,10 +30,6 @@ void writeInVideoColors(char *string, size_t count, int fgc, int bgc) {
 		i++;
 	}
 	return;
-}
-
-void writeInVideo(char *string, size_t count) {
-	writeInVideoColors(string, count, video.fgColor, video.bgColor);
 }
 
 /*
@@ -103,43 +99,21 @@ void setPosition(int row, int column) {
 		offset = row * COLUMNS;
 		scroll(1);
 	}
-	
 	setOffset(offset * 2);
 }
 
 /*
-	Columns actual de fin de la ultimo caracter
-*/
+ *	Columns actual de fin de la ultimo caracter
+ */
 int getCurrRow() {
 	return (getOffset() / 2) / COLUMNS; 
 }
 
 /*
-	Fila actual de fin de la ultimo caracter
-*/
+ *	Fila actual de fin de la ultimo caracter
+ */
 int getCurrColumn() {
 	return (getOffset() / 2) % COLUMNS; 
-}
-
-void setVideoBackground(byte color) {
-	video.bgColor = color;
-}
-
-void setVideoForeground(byte color) {
-	video.fgColor = color;
-}
-
-void setVideoColor(byte bg, byte fg) {
-	setVideoForeground(fg);
-	setVideoBackground(bg);
-	int i;
-	for (i = 1; i < TOTAL_VIDEO_SIZE; i+=2) {
-		video.address[i] = getVideoColor();
-	}
-}
-
-char getVideoColor() {
-	return (video.bgColor << 4) | (video.fgColor & 0x0F);
 }
 
 int getOffset() {
@@ -154,8 +128,8 @@ void setOffset(int offset) {
 }
 
 /*
-	Setea el cursor en la posicion row, column.
-*/
+ *	Setea el cursor en la posicion row, column.
+ */
 void setCursor(ushort row, ushort column) {
 	if (row >= ROWS || row < 0 || column >= COLUMNS || column < 0) {
 		return;
@@ -172,21 +146,21 @@ void setCursor(ushort row, ushort column) {
 /*
 	Borra la pantalla en modo texto color.
 */
-void video_clearScreen() {
+void video_clearScreen(char format) {
 	unsigned int i = 0;
 	while (i < TOTAL_VIDEO_SIZE) {
 		video.address[i] = ' ';
 		i++;
-		video.address[i] = getVideoColor();
+		video.address[i] = format;
 		i++;
 	};
 	setOffset(0);
 }
 
 /*
-	Imprime caracter especiales a ontinuacion del ultimo caracter agregado a 
-	pantalla.
-*/
+ *	Imprime caracter especiales a ontinuacion del ultimo caracter agregado a
+ *	pantalla.
+ */
 int specialAscii(char ascii) {
 	int ret = true;
 	int tab;
@@ -220,15 +194,20 @@ int specialAscii(char ascii) {
 void video_writeFormattedBuffer(char* buffer, size_t size, int videOffset) {
 	int i;
 	char format;
-	for (i = 0; i < size; i+=2) {
-		format = buffer[i] + 1;
-		writeInVideoColors(buffer + i, 1, 0xF, 0);
+	for (i = 0; i < size; i += 2) {
+		format = buffer[i + 1];
+		video_writeInVideoWithFormat(buffer + i, 1, format);
 	}
-	/*memcpy((void*) VIDEO_ADDRESS, buffer, size);
-	int i;
-	for (i = size; i < TOTAL_VIDEO_SIZE; i+=2) {
-		// Clean the remaning part of the creen
-		video.address[i] = ' ';
-	}*/
 }
 
+char video_getFormattedColor(char fg, char bg) {
+	return (bg << 4) | (fg & 0x0F);
+}
+
+char video_getBGcolor(char format) {
+	return format >> 4;
+}
+
+char video_getFGcolor(char format) {
+	return format & 0x0F;
+}
