@@ -31,6 +31,8 @@ void tty_setCurrent(int tty);
 
 TTY* tty_getCurrent();
 
+TTY* tty_getTTY(int index);
+
 void tty_write(int tty, char* buffer, size_t size);
 
 #endif

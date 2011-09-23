@@ -32,6 +32,10 @@ void tty_setCurrent(int tty) {
 	currentTTY = tty;
 }
 
+TTY* tty_getTTY(int index) {
+	return &tty[index];
+}
+
 TTY* tty_getCurrent() {
 	return &tty[currentTTY];
 }

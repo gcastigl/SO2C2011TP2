@@ -19,9 +19,10 @@ void sysRead(int fd, void * buffer, size_t count) {
 void sysWrite(int fd, void * buffer, size_t count) {
 	if (fd == STD_OUT || fd == STD_ERROR) {
 		// COPIA DEL BUFFER ENTREGADO A LA PANTALLA
+		// FIXME: THIS should write to the current TTY....
 		writeInVideo((char*) buffer, count);
 	} else if (isTTY(fd)) {
-		TTY* tty = tty_getCurrent();
+		TTY* tty = tty_getTTY(fd - 3);
 		video_writeFormattedBuffer(tty->terminal, TOTAL_VIDEO_SIZE);
 	}
 }
