@@ -27,11 +27,10 @@ cmd_table_entry cmd_table[] = {
 };
 
 
-void initShell() {
+void shell_init() {
 	cleanBuffer();
 	prntWelcomeMsg();
 	printf(SHELL_TEXT);
-	_initTTCounter();
 }
 
 

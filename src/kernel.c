@@ -20,7 +20,8 @@ kmain() {
 		video_init();
 		tty_init();
 		setFD(3);
-		initShell();
+		shell_init();
+		_initTTCounter();
 	_Sti();
 	while (1) {
 		updateShell();
