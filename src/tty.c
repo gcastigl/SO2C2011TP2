@@ -1,7 +1,7 @@
 #include "../include/tty.h"
 
 void initTTY(int index);
-void write(int tty, char* buffer, size_t size);
+void write(TTY* tty, char* buffer, size_t size);
 
 static TTY tty[MAX_TTYs];
 static int currentTTY;
@@ -15,12 +15,7 @@ void initTTYs() {
 }
 
 void initTTY(int index) {
-	tty[index].terminal = (char*) malloc(TOTAL_TTY_SIZE);
-	int i;
-	for ( i = 0; i < TOTAL_TTY_SIZE; i+=2) {
-		tty[index].terminal[i] = 0;
-		tty[index].terminal[i + 1] = 0x07;
-	}
+	tty[index].terminal = (char*) calloc(TOTAL_TTY_SIZE);
 	tty[index].offset = 0;
 	tty[index].buffer.head = 0;
 	tty[index].buffer.tail = 0;
@@ -40,16 +35,31 @@ TTY* tty_getCurrent() {
 	return &tty[currentTTY];
 }
 
-void tty_write(int index, char* buffer, size_t size) {
-	write(index, buffer, size);
+void tty_write(int ttyIndex, char* buffer, size_t size) {
+	write(&tty[ttyIndex], buffer, size);
 }
 
 // Function to copy from a buffer to video format
-void write(int index, char* buffer, size_t size) {
+void write(TTY* tty, char* buffer, size_t size) {
 	int i;
-	char* temp = tty[index].terminal + tty[index].offset;
+	char* temp = tty->terminal + tty->offset;
 	for (i = 0; i < size; i++) {
 		temp[2 * i] = buffer[i];
-		temp[2 * i + 1] = tty[index].bgColor << 4 | (tty[index].bgColor & 0x0F);
+		temp[2 * i + 1] = ' ';
 	}
+	tty->offset += size * 2;
+	/*char* temp = tty->terminal + tty->offset;
+	int i, erasedChars = 0;
+	for (i = 0; i < size; i++) {
+		int pos = 2 * (i - erasedChars) + 1;
+		if (buffer[i] != '\b') {
+			temp[pos] = buffer[i];
+			temp[pos + 1] = tty->bgColor << 4 | (tty->bgColor & 0x0F);
+		} else {
+			temp[pos] = ' ';
+			erasedChars++;
+		}
+	}
+	tty->offset += 2 * (size - erasedChars);
+	tty->offset %= TOTAL_TTY_SIZE;*/
 }

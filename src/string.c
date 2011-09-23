@@ -5,7 +5,6 @@ size_t strlen(char* string) {
 	while (string[count] != 0) {
 		count++;
 	}
-	
 	return count;
 }
 

@@ -217,7 +217,18 @@ int specialAscii(char ascii) {
 // Functions to operate with ttys
 // ===========================================
 
-void video_writeFormattedBuffer(char* buffer, size_t size) {
-	video_clearScreen();
-	memcpy(buffer, (void*) VIDEO_ADDRESS, size);
+void video_writeFormattedBuffer(char* buffer, size_t size, int videOffset) {
+	int i;
+	char format;
+	for (i = 0; i < size; i+=2) {
+		format = buffer[i] + 1;
+		writeInVideoColors(buffer + i, 1, 0xF, 0);
+	}
+	/*memcpy((void*) VIDEO_ADDRESS, buffer, size);
+	int i;
+	for (i = size; i < TOTAL_VIDEO_SIZE; i+=2) {
+		// Clean the remaning part of the creen
+		video.address[i] = ' ';
+	}*/
 }
+

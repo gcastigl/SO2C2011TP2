@@ -111,6 +111,6 @@ void clearRow(int row);
  * Dado un buffer con formato, se compia tal cual es entregado a pantalla.
  * Analogo a llamar memcpy a la direccion de video;
  */
-void video_writeFormattedBuffer(char* buffer, size_t size);
+void video_writeFormattedBuffer(char* buffer, size_t size, int videOffset);
 
 #endif

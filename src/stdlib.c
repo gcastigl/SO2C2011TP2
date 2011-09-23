@@ -9,7 +9,7 @@ void setFD(int fileDescriptor) {
 
 void* malloc(size_t size) {
 	void* temp = (void*) nextfree;
-	nextfree = nextfree + size;
+	nextfree += size;
 	return temp;
 }
 
@@ -18,7 +18,7 @@ void* calloc(size_t size) {
 	char* temp;
 	int i;
 	temp = (char*) malloc(size);
-	for(i=0;i<size;i++)
+	for(i = 0;i < size; i++)
 		temp[i] = 0;
 	return (void*) temp;
 }
@@ -152,7 +152,7 @@ void printf(const char *fmt, ...) {
 	va_end(args);
 }
 
-void memcpy(void* from, void* to, size_t count) {
+void memcpy(void* to, void* from, size_t count) {
 	size_t i;
 	char* cfrom = (char *) from;
 	char* cto = (char *) to;

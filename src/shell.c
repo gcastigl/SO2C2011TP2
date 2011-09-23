@@ -10,8 +10,8 @@ int currPos;
 char shellBuffer[BUFFER_SIZE];
 
 /*
-	Tabla de comandos disponibles al usuario en esta shell
-*/
+ *	Tabla de comandos disponibles al usuario en esta shell
+ */
 cmd_table_entry cmd_table[] = {
 	{"help", 			HELP_HELP, help_cmd},
 	{"restart", 		HELP_RESTART, restart_cmd},
@@ -36,10 +36,10 @@ void initShell() {
 
 
 /*
-	Al ser invoacada se fija si se presiono una tecla (buffer del teclado 
-	no vacio) y en cuyo caso, se guaradra en el buffer de la shell y si es 
-	necesario, manda la ejecucion de un programa. 
-*/
+ *	Al ser invoacada se fija si se presiono una tecla (buffer del teclado
+ *	no vacio) y en cuyo caso, se guaradra en el buffer de la shell y si es
+ *	necesario, manda la ejecucion de un programa.
+ */
 void updateShell() {
 	if (IS_CTRL() && IS_ALT() && IS_DEL()) {
 		_reset();
