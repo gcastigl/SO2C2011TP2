@@ -7,6 +7,7 @@
 #include "kasm.h"
 #include "defs.h"
 #include "io.h"
+#include "stdio.h"
 
 int getNextPID();
 
