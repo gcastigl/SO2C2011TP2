@@ -1,7 +1,6 @@
 #include "../include/tty.h"
 
 void initTTY(int index);
-void write(TTY* tty, char* buffer, size_t size);
 
 static TTY tty[MAX_TTYs];
 static int currentTTY;
@@ -37,7 +36,6 @@ TTY* tty_getCurrent() {
 	return &tty[currentTTY];
 }
 
-// Function to copy from a buffer to video format
 void tty_write(TTY* tty, char* buffer, size_t size) {
 	int i;
 	char* temp = tty->terminal + tty->offset;
@@ -48,6 +46,7 @@ void tty_write(TTY* tty, char* buffer, size_t size) {
 		temp[pos + 1] = format;
 	}
 	tty->offset += size * 2;
+	tty->offset %= TOTAL_TTY_SIZE;
 	/*char* temp = tty->terminal + tty->offset;
 	int i, erasedChars = 0;
 	for (i = 0; i < size; i++) {

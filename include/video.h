@@ -51,9 +51,6 @@ void setCursor(ushort row, ushort col);
 
 void video_clearScreen(char format);
 
-/* Chequea si el parámetro es un ascii especial */
-int specialAscii(char ascii);
-
 /* Setea la posición en la cual va escribirse en la pantalla */
 void setPosition(int row, int column);
 

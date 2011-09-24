@@ -1,6 +1,9 @@
 #include "../include/video.h"
 
+
 void video_writeInVideoWithFormat(char *string, size_t count, char format);
+int specialAscii(char ascii, char format);
+void paintSpaces(int from, int to, char format);
 
 void video_init() {
 	video.address = (char*) VIDEO_ADDRESS;
@@ -17,7 +20,7 @@ void video_writeInVideoWithFormat(char *string, size_t count, char format) {
 	int i = 0;
 	while (i < count) {
 		char ascii = string[i];
-		if (!specialAscii(ascii)) {
+		if (!specialAscii(ascii, format)) {
 			video.address[getOffset()] = ascii;
 			video.address[getOffset() + 1] = format;
 			if (getOffset() == TOTAL_VIDEO_SIZE - 2) {
@@ -161,17 +164,22 @@ void video_clearScreen(char format) {
  *	Imprime caracter especiales a ontinuacion del ultimo caracter agregado a
  *	pantalla.
  */
-int specialAscii(char ascii) {
+int specialAscii(char ascii, char format) {
 	int ret = true;
-	int tab;
+	int tab, endOfRow;
 	switch (ascii) {
 		case '\n':
+			if (getOffset() % COLUMNS != 0) {
+				endOfRow = getOffset() - (getOffset() % (2 * COLUMNS)) + 2*COLUMNS;
+			    paintSpaces(getOffset(), endOfRow, format);
+			}
 			setPosition(getCurrRow() + 1, 0);
 			break;
 		case '\t': //Tab
 				tab = (getCurrColumn() % TAB_SIZE != 0) ? 
 					TAB_SIZE - (getCurrColumn() % TAB_SIZE) : TAB_SIZE;
 				if (getCurrColumn() + tab < COLUMNS) {
+					paintSpaces(getOffset(), getOffset() + 2 * tab, format);
 					setPosition(getCurrRow(), getCurrColumn() + tab);
 				}
 			break;
@@ -185,6 +193,14 @@ int specialAscii(char ascii) {
 	}
 	setCursor(getCurrRow(), getCurrColumn());
 	return ret;
+}
+
+void paintSpaces(int from, int to, char format) {
+	int i;
+	from = from % 2 == 0 ? from : from + 1; // Even spaces are for characters
+	for (i = from; i < to; i+=2) {
+		video.address[i + 1] = format;
+	}
 }
 
 // ===========================================

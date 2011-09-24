@@ -27,6 +27,8 @@ typedef struct {
 	char fgColor;
 } TTY;
 
+void tty_init();
+
 void tty_setCurrent(int tty);
 
 TTY* tty_getCurrent();

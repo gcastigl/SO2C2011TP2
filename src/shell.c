@@ -162,6 +162,13 @@ int getCmdIndex(char * cmdName) {
 
 void prntWelcomeMsg() {
 	//TODO: Podria mostrarse un msj con colores y logo ascii eventualmente.
+	TTY* currTty = tty_getCurrent();
+	char format = video_getFormattedColor(currTty->fgColor, currTty->bgColor); // current format backup
+	currTty->bgColor = GREEN;
+	currTty->fgColor = BLUE;
 	printf(WELCOME_MSG);
+	currTty->bgColor = video_getBGcolor(format);	// restore format
+	currTty->fgColor = video_getFGcolor(format);
+	printf("\n\n");
 }
 

@@ -39,6 +39,7 @@ int help_cmd(int argc, char *argv[]) {
 		printf("\nType in help \"cmdName\" to see the help menu for that \
 command.\n");
 	}
+	return 0;
 }
 
 int calculateCpuSpeed(int (*method)()) {
