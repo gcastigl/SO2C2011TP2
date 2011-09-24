@@ -26,9 +26,9 @@ void sysWrite(int fd, void * buffer, size_t count) {
 		tty = tty_getCurrentTTY(fd - 3);
 	}
 	tty_write(tty, (char*) buffer, count);
-	count *= 2; // For each caracter, there is one more for the format
-	int offset = tty->offset - count;
-	video_writeFormattedBuffer(tty->terminal + offset, count, offset);
+	video_setOffset(0);
+	video_write(tty->terminal, tty->offset + 1,
+		video_getFormattedColor(tty->fgColor, tty->bgColor));
 }
 
 int isTTY(int fd) {

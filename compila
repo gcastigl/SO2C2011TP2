@@ -18,5 +18,6 @@ gcc -m32 -g -c ../src/io.c -o io.o 						-fno-builtin -fno-stack-protector -Wall
 gcc -m32 -g -c ../src/shell.c -o shell.o 				-fno-builtin -fno-stack-protector -Wall
 gcc -m32 -g -c ../src/command.c -o command.o 			-fno-builtin -fno-stack-protector -Wall
 gcc -m32 -g -c ../src/tty.c -o tty.o 					-fno-builtin -fno-stack-protector -Wall
+gcc -m32 -g -c ../src/driver/videoUtils.c -o videoUtils.o 		-fno-builtin -fno-stack-protector -Wall
 ld -melf_i386 -T ../src/link.ld -o kernel.bin kernel.o kstart.o libc.o libasm.o video.o interrupts.o \
-	keyboard.o io.o stdlib.o string.o shell.o command.o math.o tty.o printf.o scanf.o
+	keyboard.o io.o stdlib.o string.o shell.o command.o math.o tty.o printf.o scanf.o videoUtils.o

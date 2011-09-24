@@ -2,13 +2,10 @@
 #define TTY_H_
 
 #include "defs.h"
+#include "stdlib.h"
 #include "video.h"
 
 #define MAX_TTYs		8
-
-#define ROWS 			25
-#define COLUMNS 		80
-#define TOTAL_TTY_SIZE 	(ROWS * COLUMNS * 2)
 
 #define TTY_BUFFER_SIZE	10
 
@@ -38,5 +35,7 @@ TTY* tty_getCurrentTTY();
 TTY* tty_getTTY(int index);
 
 void tty_write(TTY* tty, char* buffer, size_t size);
+
+void tty_clean(TTY* tty);
 
 #endif

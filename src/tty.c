@@ -16,7 +16,7 @@ void tty_init() {
 }
 
 void initTTY(int index) {
-	tty[index].terminal = (char*) calloc(TOTAL_TTY_SIZE);
+	tty[index].terminal = (char*) calloc(TOTAL_VIDEO_SIZE);
 	tty[index].offset = 0;
 	tty[index].buffer.head = 0;
 	tty[index].buffer.tail = 0;
@@ -28,8 +28,7 @@ void tty_setCurrent(int tty) {
 	currentTTY = tty;
 	TTY* currTTY = tty_getCurrentTTY();
 	video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
-	video_writeFormattedBuffer(currTTY->terminal, 50, 0);
-	//memcpy((void*) VIDEO_ADDRESS, currTTY->terminal, TOTAL_VIDEO_SIZE);
+	video_write(currTTY->terminal, TOTAL_VIDEO_SIZE - 10, 0);
 }
 
 int tty_getCurrent() {
@@ -45,28 +44,29 @@ TTY* tty_getCurrentTTY() {
 }
 
 void tty_write(TTY* tty, char* buffer, size_t size) {
-	int i;
-	char* temp = tty->terminal + tty->offset;
+	int j;
 	char format = video_getFormattedColor(tty->fgColor, tty->bgColor);
-	for (i = 0; i < size; i++) {
-		int pos = 2 * i;
-		temp[pos] = buffer[i];
-		temp[pos + 1] = format;
-	}
-	tty->offset += size * 2;
-	tty->offset %= TOTAL_TTY_SIZE;
-	/*char* temp = tty->terminal + tty->offset;
-	int i, erasedChars = 0;
-	for (i = 0; i < size; i++) {
-		int pos = 2 * (i - erasedChars) + 1;
-		if (buffer[i] != '\b') {
-			temp[pos] = buffer[i];
-			temp[pos + 1] = tty->bgColor << 4 | (tty->bgColor & 0x0F);
-		} else {
-			temp[pos] = ' ';
-			erasedChars++;
+	for (j = 0; j < size; ++j) {
+		if (tty->offset >= TOTAL_VIDEO_SIZE) {
+			terminal_scroll(tty->terminal);
+			tty->offset = terminal_getOffset(ROWS - 1, 0);
 		}
+		int newOffset = terminal_prtSpecialCharater(tty->terminal, tty->offset, buffer[j], format);
+		tty->offset += newOffset;
+		if (newOffset != 0) { // It was an special character, nothing to print
+			continue;
+		}
+		tty->terminal[tty->offset++] = buffer[j];
+		tty->terminal[tty->offset++] = format;
 	}
-	tty->offset += 2 * (size - erasedChars);
-	tty->offset %= TOTAL_TTY_SIZE;*/
+}
+
+void tty_clean(TTY* tty) {
+	char format = video_getFormattedColor(tty->fgColor, tty->bgColor);
+	int i;
+	for(i = 0; i < TOTAL_VIDEO_SIZE; i+=2) {
+		tty->terminal[i] = ' ';
+		tty->terminal[i + 1] = format;
+	};
+	tty->offset = 0;
 }

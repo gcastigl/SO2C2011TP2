@@ -43,29 +43,41 @@ VideoInfo video;
 /* Inicializa los valores iniciales para el manejo de la pantalla*/
 void video_init();
 
+void video_write(char *string, size_t count, char format);
+
+void video_setCursor(int offset);
+
 /* Limpia toda la pantalla de acuerdo al formato dado por parametro*/
 void video_clearScreen(char format);
 
-/* Escribe un char directamente en la memoria  - DEFUG ONLY!*/
-void dummyWrite(char ascii);
-
-/* Sube la pantalla n líneas */
-void video_scroll(char lines);
-
-// ===========================================
-// Functions to operate with ttys
-// ===========================================
-
-/*
- * Dado un buffer con formato, se compia tal cual es entregado a pantalla.
- * Analogo a llamar memcpy a la direccion de video;
- */
-void video_writeFormattedBuffer(char* buffer, size_t size, int videOffset);
+void video_setOffset(int offset);
 
 char video_getFormattedColor(char fg, char bg);
 
 char video_getBGcolor(char format);
 
 char video_getFGcolor(char format);
+
+int terminal_prtSpecialCharater(char* terminal, int offset, char ascii, char format) ;
+
+// ====================================
+
+void terminal_scroll(char* terminal);
+
+void terminal_copyRow(char* terminal, int from, int to);
+
+void terminal_clearRow(char* terminal, int row, char format);
+
+void terminal_clearRowRange(char* terminal, int from, int to);
+
+void terminal_clearAll(char* terminal, char format);
+
+int terminal_getRow(int offset);
+
+int terminal_getColumn(int offset);
+
+int terminal_getOffset(int row, int column);
+
+void terminal_formatRange(char* terminal, int offsetFrom, int offsetTo, char format);
 
 #endif

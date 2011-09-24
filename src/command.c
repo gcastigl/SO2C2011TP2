@@ -17,7 +17,10 @@ int restart_cmd(int argc, char *argv[]) {
 
 int clear_cmd(int argc, char *argv[]) {
 	TTY* tty = tty_getCurrentTTY();
-	video_clearScreen(video_getFormattedColor(tty->fgColor, tty->bgColor));
+	tty_clean(tty);
+	video_setOffset(0);
+	video_write(tty->terminal, TOTAL_VIDEO_SIZE,
+		video_getFormattedColor(tty->fgColor, tty->bgColor));
 	return 0;
 }
 
