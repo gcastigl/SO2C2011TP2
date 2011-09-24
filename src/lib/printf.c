@@ -20,11 +20,8 @@ void printf(char * formatString, ...) {
     char * string;
     char out[40];
     char c;
-
     va_list args;
-
     va_start(args, formatString);
-
     while (*formatString != '\0') {
         if (*formatString == '%') {
             formatString++;
@@ -103,4 +100,67 @@ static char* numberBaseNtoString(unsigned int number, int base, char * out) {
         out[1] = '\0';
     }
     return out;
+}
+
+int sprintf(char* s, const char *template, ...) {
+	int len, read = 0;
+	char * string;
+	char c;
+	va_list args;
+	va_start(args, template);
+	while (*template != '\0') {
+		if (*template == '%') {
+			template++;
+			switch (*template) {
+				case 'c':
+					c = va_arg(args, int);
+					*s = c;
+					s++;
+					read++;
+					break;
+				case 's':
+					string = va_arg(args, char *);
+					len = strlen(string);
+					memcpy(s, string, len);
+					s += len;
+					read++;
+					break;
+				case 'd':
+					string = itoa(va_arg(args, int));
+					int len = strlen(string);
+					memcpy(s, string, len);
+					s += len;
+					read++;
+					break;
+			}
+		} else {
+			*s = *template;
+			s++;
+		}
+		template++;
+	}
+	va_end(args);
+	return read;
+}
+
+#define INT_DIGITS 19		/* enough for 64 bit integer */
+
+char* itoa(int i) {
+  static char buf[INT_DIGITS + 2];	/*INT_DIGITS digits, - and '\0' */
+  char *p = buf + INT_DIGITS + 1;	/* points to terminating '\0' */
+  if (i >= 0) {
+    do {
+      *--p = '0' + (i % 10);
+      i /= 10;
+    } while (i != 0);
+    return p;
+  }
+  else {			/* i < 0 */
+    do {
+      *--p = '0' - (i % 10);
+      i /= 10;
+    } while (i != 0);
+    *--p = '-';
+  }
+  return p;
 }

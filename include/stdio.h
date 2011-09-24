@@ -5,7 +5,9 @@
 #ifndef STDIO_H
 #define STDIO_H
 
-#define F_PRECISION 6
+#define F_PRECISION	6
+#define PAD_RIGHT 	1
+#define PAD_ZERO 	2
 
 char getchar();
 
@@ -27,6 +29,7 @@ void putf(double n);
 void pute(double n, int upperE);
 char getchar();
 void putchar(char c);
+int sprintf(char *out, const char *format, ...);
 
 int scanf(const char *format, ...);
 int gets(char* ans);
@@ -38,5 +41,7 @@ int isDigit(char c);
 int isNumber(char c);
 char toLower(char c);
 int digits(int n);
+
+char* itoa(int i);
 
 #endif //STDIO_H

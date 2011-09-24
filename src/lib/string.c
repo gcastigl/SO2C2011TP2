@@ -41,3 +41,8 @@ int substr(const char * s1, const char *s2) {
 	}
 	return isSubstr;
 }
+
+void strcpy(char* to, char* from) {
+	int len = strlen(from) + 1;
+	memcpy(to, from, len);
+}
