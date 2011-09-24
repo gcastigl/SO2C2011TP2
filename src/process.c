@@ -6,7 +6,7 @@ static PROCESS idle;
 void createProcessAt(char* name, int (*process)(int,char**),int tty, int argc,
 	char** argv, int stacklength, int priority, int isFront) {
 	PROCESS* newprocess;
-	void* stack = malloc(stacklength);
+	void* stack = (void*) malloc(stacklength);
 	int i;
 	for(i = 0; i < MAX_PROCESS;i++) {
 		if(procesos[i].free == 1)
@@ -44,5 +44,9 @@ PROCESS* getProcessByPID(int pid) {
 			return &procesos[i];
 		}
 	}
+	return 0;
+}
+
+int getPID() {
 	return 0;
 }

@@ -39,7 +39,7 @@ mboot:
 
 ; Comienzo de Offsets 8-24 del header, son validos por estar seteado el flag 16.
 
-	dd mboot	; Dirección de comienzo del header.
+	dd mboot	; Direcciï¿½n de comienzo del header.
 	dd code		; Direccion de comienzo del segmento text.
 	dd bss		; Direccion del final del segmento de datos. Implica que el 
 			; Codigo y el dato deben estar consecutivos. ( lo cumple el formato

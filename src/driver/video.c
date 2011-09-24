@@ -1,4 +1,4 @@
-#include "../include/video.h"
+#include "../../include/video.h"
 
 
 void video_writeInVideoWithFormat(char *string, size_t count, char format);

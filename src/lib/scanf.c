@@ -1,5 +1,5 @@
-#include "../include/stdio.h"
-#include "../include/string.h"
+#include "../../include/stdio.h"
+#include "../../include/string.h"
 
 char getchar() {
 	return getc(STD_IN);

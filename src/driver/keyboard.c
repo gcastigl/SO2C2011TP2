@@ -1,4 +1,4 @@
-#include "../include/keyboard.h"
+#include "../../include/keyboard.h"
 
 unsigned char lcase[60] =
 {
