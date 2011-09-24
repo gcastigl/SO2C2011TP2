@@ -74,7 +74,7 @@ int getCPUspeed_cmd(int argc, char *argv[]) {
 			return false;
 	}
 	
-	printf("Detected CPU speed: %iMHz\n", speed);
+	printf("Detected CPU speed: %dMHz\n", speed);
 	return 0;
 }
 

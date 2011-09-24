@@ -1,5 +1,25 @@
 #include "../../include/video.h"
 
+/* Setea la posición en la cual va escribirse en la pantalla */
+void setPosition(int row, int column);
+/* Setea el cursor en la posición deseada */
+void setCursor(ushort row, ushort col);
+/* Devuelve la columna en la cual se va a escribir */
+int getCurrRow();
+/* Devuelve la fila en la cual se va a escribir */
+int getCurrColumn();
+/* Setea el offset con respecto al inicio de la memoria de video */
+void setOffset(int offset);
+/* Devuelve el offset con respecto al inicio de la memoria de video */
+int getOffset();
+/* Copia una linea de "source" a "dest" */
+void copyRow(int source, int dest);
+/* limpia n líneas en un rango */
+void clearLinesRange(int from, int to);
+/* limpia desde la línea n hasta el final de la pantalla */
+void clearToEnd(int from);
+/* limpia una linea */
+void clearRow(int row);
 
 void video_writeInVideoWithFormat(char *string, size_t count, char format);
 int specialAscii(char ascii, char format);
@@ -24,7 +44,7 @@ void video_writeInVideoWithFormat(char *string, size_t count, char format) {
 			video.address[getOffset()] = ascii;
 			video.address[getOffset() + 1] = format;
 			if (getOffset() == TOTAL_VIDEO_SIZE - 2) {
-				scroll(1);
+				video_scroll(1);
 				setPosition(getCurrRow(), 0);
 			}
 			setOffset(getOffset() + 2);
@@ -38,7 +58,7 @@ void video_writeInVideoWithFormat(char *string, size_t count, char format) {
 /*
 	Corre lo mostrado en pantalla lines lineas hacia arriba.
 */
-void scroll(char lines) {
+void video_scroll(char lines) {
 	int i;
 	int start = getCurrRow();
 	for (i = lines; i <= start; i++) {
@@ -100,7 +120,7 @@ void setPosition(int row, int column) {
 	} else if (row >= ROWS) {
 		row = ROWS - 1;
 		offset = row * COLUMNS;
-		scroll(1);
+		video_scroll(1);
 	}
 	setOffset(offset * 2);
 }

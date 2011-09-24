@@ -40,49 +40,17 @@ typedef struct {
 
 VideoInfo video;
 
-/* Inicializa el struct del video */
+/* Inicializa los valores iniciales para el manejo de la pantalla*/
 void video_init();
 
-/* writes in video a string */
-void writeInVideo(char *string, size_t count);
-
-/* Setea el cursor en la posición deseada */
-void setCursor(ushort row, ushort col);
-
+/* Limpia toda la pantalla de acuerdo al formato dado por parametro*/
 void video_clearScreen(char format);
 
-/* Setea la posición en la cual va escribirse en la pantalla */
-void setPosition(int row, int column);
-
-/* Devuelve la columna en la cual se va a escribir */
-int getCurrRow();
-
-/* Devuelve la fila en la cual se va a escribir */
-int getCurrColumn();
-
-/* Escribe un char directamente en la memoria */
+/* Escribe un char directamente en la memoria  - DEFUG ONLY!*/
 void dummyWrite(char ascii);
 
 /* Sube la pantalla n líneas */
-void scroll(char lines);
-
-/* Setea el offset con respecto al inicio de la memoria de video */
-void setOffset(int offset);
-
-/* Devuelve el offset con respecto al inicio de la memoria de video */
-int getOffset();
-
-/* Copia una linea de "source" a "dest" */
-void copyRow(int source, int dest);
-
-/* limpia n líneas en un rango */
-void clearLinesRange(int from, int to);
-
-/* limpia desde la línea n hasta el final de la pantalla */
-void clearToEnd(int from);
-
-/* limpia una linea */
-void clearRow(int row);
+void video_scroll(char lines);
 
 // ===========================================
 // Functions to operate with ttys
