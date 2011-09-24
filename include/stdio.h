@@ -1,3 +1,4 @@
+#include "kernel.h"
 #include "varargs.h"
 #include "stdarg.h"
 
@@ -13,8 +14,6 @@ void putchar(char c);
 void printf(char * formatString, ...);
 
 int sscanf(char* formatString, char *format, ...);
-
-static int currentFd;
 
 void setFD(int fileDescriptor);
 

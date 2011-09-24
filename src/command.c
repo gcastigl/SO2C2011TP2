@@ -81,7 +81,7 @@ int getCPUspeed_cmd(int argc, char *argv[]) {
 
 int random_cmd(int argc, char *argv[]) {
 	int rand = random();
-	printf("%d", rand);
+	printf("%d\n", rand);
 	return rand;
 }
 

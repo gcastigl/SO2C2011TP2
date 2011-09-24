@@ -4,6 +4,8 @@ static void prints(char * string);
 
 static char * numberBaseNtoString(unsigned int number, int base, char * out);
 
+static int currentFd;
+
 void setFD(int fileDescriptor) {
 	currentFd = fileDescriptor;
 }

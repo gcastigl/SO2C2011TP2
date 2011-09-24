@@ -8,8 +8,7 @@ static int nextPID = 1;
 void doubleFlagsFix(double n);
 void setupIDT();
 
-kmain() {
-	int i,num;
+int kmain() {
 	_Cli();
 		setupIDT();
 		nextPID = 0;
@@ -26,7 +25,7 @@ kmain() {
 	while (1) {
 		updateShell();
 	}
-	
+	return 0;
 }
 
 void setupIDT() {

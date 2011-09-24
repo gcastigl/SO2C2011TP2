@@ -2,6 +2,7 @@
 #define IO_H
 
 #include "defs.h"
+#include "keyboard.h"
 #include "video.h"
 #include "tty.h"
 

@@ -1,12 +1,7 @@
 #ifndef _shell_
 #define _shell_
 
-#include "kernel.h"
-#include "defs.h"
-#include "interrupts.h"
-#include "io.h"
-#include "stdlib.h"
-#include "stdio.h"
+#include "string.h"
 #include "command.h"
 
 #define WELCOME_MSG	"\t\t\t\t\tWelcome to GAT O.S.\n\tFor a list of availables commands \
@@ -26,9 +21,14 @@ typedef struct {
 	int (*func)(int argc, char *argv[]);
 } cmd_table_entry;
 
+void shell_init();
+
 void updateShell();
+
 void cleanBuffer();
+
 cmd_table_entry* getCmdsTable();
+
 int getCmdIndex(char * cmdName);
 
 #endif

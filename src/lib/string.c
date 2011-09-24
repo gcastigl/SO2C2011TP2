@@ -29,3 +29,15 @@ int strncmp(char * s1, char * s2, unsigned int n) {
 	return ret;
 }
 
+
+/*Retorna true si s1 es subString de s2*/
+int substr(const char * s1, const char *s2) {
+	int i = 0, isSubstr = true;
+	while(isSubstr && s1[i] != '\0') {
+		if(s1[i] != s2[i]) {
+			isSubstr = false;
+		}
+		i++;
+	}
+	return isSubstr;
+}

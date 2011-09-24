@@ -19,7 +19,7 @@ int sscanf(char *stream, char *format, ...) {
     va_start(ap, format);
     int i = 0;
     int j = 0;
-    int converted;
+    int converted = false;
 
     int *integer, iTmp, iTmp2;
     char* string;
@@ -78,7 +78,7 @@ int sscanf(char *stream, char *format, ...) {
             }
         }
     }
-    return 0;
+    return true;
 }
 
 int scanf(const char *format, ...) {
@@ -178,7 +178,7 @@ int getd(int* n) {
 int getf(double* ans) {
 	int n1 = 0, n2, isDig, n1IsValid = false;
 	char c;
-	double total = 0, aux = 0;
+	double aux = 0;
 	do {
 		//Se lee primero la parte entera
 		c = getchar();

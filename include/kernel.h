@@ -8,6 +8,7 @@
 #include "defs.h"
 #include "io.h"
 #include "stdio.h"
+#include "kc.h"
 
 int getNextPID();
 
