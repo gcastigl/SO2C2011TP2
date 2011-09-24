@@ -3,11 +3,15 @@
 void excecuteCmd(char* buffer);
 int parse_cmd(char* buffer);
 char** getArguments(char* buffer, int* argc);
+void checkReset();
+void checkTTY();
 void prntWelcomeMsg();
 
-char* argv[MAX_ARG_DIM];
-int currPos;
-char shellBuffer[BUFFER_SIZE];
+static char shell_text[15];
+static char* argv[MAX_ARG_DIM];
+static int currPos;
+static char shellBuffer[BUFFER_SIZE];
+static int newTTY;
 
 /*
  *	Tabla de comandos disponibles al usuario en esta shell
@@ -30,9 +34,10 @@ cmd_table_entry cmd_table[] = {
 void shell_init() {
 	cleanBuffer();
 	prntWelcomeMsg();
-	printf(SHELL_TEXT);
+	newTTY = -1;
+	sprintf(shell_text, "@tty%d >", tty_getCurrent() + 1);
+	printf(shell_text);
 }
-
 
 /*
  *	Al ser invoacada se fija si se presiono una tecla (buffer del teclado
@@ -40,9 +45,8 @@ void shell_init() {
  *	necesario, manda la ejecucion de un programa.
  */
 void updateShell() {
-	if (IS_CTRL() && IS_ALT() && IS_DEL()) {
-		_reset();
-	}
+	checkReset();
+	checkTTY();
 	if (bufferIsEmpty()) {
 		return;
 	}
@@ -53,7 +57,7 @@ void updateShell() {
 	if (c == '\n') {
 		printf("\n");
 		excecuteCmd(shellBuffer);
-		printf(SHELL_TEXT);
+		printf(shell_text);
 		cleanBuffer();
 	} else if (c == '\b') {
 		if (currPos > 0) {
@@ -148,9 +152,33 @@ int getCmdIndex(char * cmdName) {
 	return -1;
 }
 
+void checkReset() {
+	if (IS_CTRL() && IS_ALT() && IS_DEL()) {
+		_reset();
+	}
+}
+
+void checkTTY() {
+	if (IS_CTRL() && newTTY == -1) {
+		int i;
+		for (i = 0; i < MAX_TTYs; ++i) {
+			if (F_PRESSED(i)) {
+				// printf("Se presiono: ctrl + %d\n", fKeys);
+				newTTY = i;
+				break;
+			}
+		}
+	}
+	if (!IS_CTRL() && newTTY != -1) {
+		tty_setCurrent(newTTY);
+		sprintf(shell_text, "@tty%d >", newTTY + 1);
+		newTTY = -1;
+		// printf("CAMBIO DE TTY\n");
+	}
+}
+
 void prntWelcomeMsg() {
-	//TODO: Podria mostrarse un msj con colores y logo ascii eventualmente.
-	TTY* currTty = tty_getCurrent();
+	TTY* currTty = tty_getCurrentTTY();
 	char format = video_getFormattedColor(currTty->fgColor, currTty->bgColor); // current format backup
 	currTty->bgColor = GREEN;
 	currTty->fgColor = BLUE;

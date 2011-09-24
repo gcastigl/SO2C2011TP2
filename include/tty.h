@@ -4,7 +4,7 @@
 #include "defs.h"
 #include "video.h"
 
-#define MAX_TTYs		4
+#define MAX_TTYs		8
 
 #define ROWS 			25
 #define COLUMNS 		80
@@ -31,7 +31,9 @@ void tty_init();
 
 void tty_setCurrent(int tty);
 
-TTY* tty_getCurrent();
+int tty_getCurrent();
+
+TTY* tty_getCurrentTTY();
 
 TTY* tty_getTTY(int index);
 

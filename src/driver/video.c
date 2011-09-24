@@ -167,15 +167,14 @@ void setCursor(ushort row, ushort column) {
 }
 
 /*
-	Borra la pantalla en modo texto color.
-*/
+ *	Completa la pantalla con espacios con el formato de color entregados.
+ *	Despues de esta llamada, el offset en la pantalla es seteado a 0.
+ */
 void video_clearScreen(char format) {
 	unsigned int i = 0;
 	while (i < TOTAL_VIDEO_SIZE) {
-		video.address[i] = ' ';
-		i++;
-		video.address[i] = format;
-		i++;
+		video.address[i++] = ' ';
+		video.address[i++] = format;
 	};
 	setOffset(0);
 }

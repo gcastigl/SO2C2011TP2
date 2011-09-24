@@ -6,7 +6,6 @@
 
 #define WELCOME_MSG	"\t\t\t\t\tWelcome to GAT O.S.\n\tFor a list of availables commands \
 please type in help\n"
-#define SHELL_TEXT	"GatOS> "
 
 #define BUFFER_SIZE	1024
 

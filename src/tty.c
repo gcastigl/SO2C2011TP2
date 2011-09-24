@@ -26,13 +26,21 @@ void initTTY(int index) {
 
 void tty_setCurrent(int tty) {
 	currentTTY = tty;
+	TTY* currTTY = tty_getCurrentTTY();
+	video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
+	video_writeFormattedBuffer(currTTY->terminal, 50, 0);
+	//memcpy((void*) VIDEO_ADDRESS, currTTY->terminal, TOTAL_VIDEO_SIZE);
+}
+
+int tty_getCurrent() {
+	return currentTTY;
 }
 
 TTY* tty_getTTY(int index) {
 	return &tty[index];
 }
 
-TTY* tty_getCurrent() {
+TTY* tty_getCurrentTTY() {
 	return &tty[currentTTY];
 }
 

@@ -18,7 +18,7 @@ int kmain() {
 		keyboard_init();
 		video_init();
 		tty_init();
-		setFD(3);
+		setFD(STD_OUT);
 		shell_init();
 		_initTTCounter();
 	_Sti();

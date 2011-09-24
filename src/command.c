@@ -16,7 +16,7 @@ int restart_cmd(int argc, char *argv[]) {
 }
 
 int clear_cmd(int argc, char *argv[]) {
-	TTY* tty = tty_getCurrent();
+	TTY* tty = tty_getCurrentTTY();
 	video_clearScreen(video_getFormattedColor(tty->fgColor, tty->bgColor));
 	return 0;
 }
@@ -99,7 +99,7 @@ int setAppearance_cmd(int argc, char *argv[]) {
 			printf("Both arguments must be a hexadecimal number between 0 \
 				and F\n");
 		}
-		TTY* tty = tty_getCurrent();
+		TTY* tty = tty_getCurrentTTY();
 		tty->bgColor = bg;
 		tty->fgColor = fg;
 	}

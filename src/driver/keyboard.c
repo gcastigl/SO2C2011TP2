@@ -33,14 +33,13 @@ unsigned char ucase[60] =
     0, /* Alt */
   ' ' /* Space bar */
 };
-
 void keyboard_init() {
+	fKeys = 0;
 	keyboard_buffer.from = 0;
 	keyboard_buffer.to = 0;
 	keyboard_buffer.buffer[0] = '\0';
 }
 
-int tickpos = -2;
 void handleScanCode(unsigned char scanCode) {
 	char c;
 	if (!checkSpecialKey(scanCode)) {
@@ -52,8 +51,7 @@ void handleScanCode(unsigned char scanCode) {
 }
 
 int checkSpecialKey(unsigned char scanCode) {
-	int ret = true;
-	
+	int ret = true, fbit;
 	if(IS_ESCAPE()) {
 		switch (scanCode) {
 			case 0x53:
@@ -68,7 +66,6 @@ int checkSpecialKey(unsigned char scanCode) {
 		kbFlags &= ~ESCAPE;
 		return true;
 	}
-	
 	switch (scanCode) {
 		/* Shifts */
 		case 0x2A:
@@ -104,12 +101,40 @@ int checkSpecialKey(unsigned char scanCode) {
 		case 0xE0:
 			kbFlags |= ESCAPE;
 			break;
-		
+		/* F1 through F10 */
+		case 0x3B:
+		case 0x3C:
+		case 0x3D:
+		case 0x3E:
+		case 0x3F:
+		case 0x40:
+		case 0x41:
+		case 0x42:
+		case 0x43:
+		case 0x44:
+			kbFlags |= FN;
+			fbit = 1 << (scanCode - 0x3B);
+			fKeys |= fbit;
+			break;
+		case 0xBB:
+		case 0xBC:
+		case 0xBD:
+		case 0xBE:
+		case 0xBF:
+		case 0xC0:
+		case 0xC1:
+		case 0xC2:
+		case 0xC3:
+		case 0xC4:
+			// fbit = (1 << (scanCode - 0xBB)); // FIXME: why won't this work??
+			kbFlags &= ~FN;
+			fbit = -1; // turns off all F key flags
+			fKeys &= ~fbit;
+			break;
 		default:
 			ret = false;
 			break;
 	}
-	
 	return ret;
 	
 }
@@ -146,6 +171,4 @@ void putKeyInBuffer(char c) {
 	keyboard_buffer.to++;
 	keyboard_buffer.to %= K_BUFFER_SIZE;
 }
-
-
 

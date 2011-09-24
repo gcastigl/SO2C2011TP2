@@ -21,9 +21,9 @@ void sysRead(int fd, void * buffer, size_t count) {
 void sysWrite(int fd, void * buffer, size_t count) {
 	TTY* tty;
 	if (fd == STD_OUT || fd == STD_ERROR) {
-		tty = tty_getCurrent();
+		tty = tty_getCurrentTTY();
 	} else if (isTTY(fd)) {
-		tty = tty_getTTY(fd - 3);
+		tty = tty_getCurrentTTY(fd - 3);
 	}
 	tty_write(tty, (char*) buffer, count);
 	count *= 2; // For each caracter, there is one more for the format
