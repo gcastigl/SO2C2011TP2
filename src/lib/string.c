@@ -8,14 +8,12 @@ size_t strlen(char* string) {
 	return count;
 }
 
-int strcmp(char * s1, char * s2) {
+int strcmp(const char * s1, const char * s2) {
 	int ret = 0;
-	
 	while(ret == 0 && (*s1 != '\0' || *s2 != '\0')) {
 		ret = *s1 - *s2;
 		s1++;s2++;
 	}
-	
 	return ret;
 }
 
