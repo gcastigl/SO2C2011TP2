@@ -6,8 +6,10 @@
 #define STDIO_H
 
 #define F_PRECISION	6
-#define PAD_RIGHT 	1
-#define PAD_ZERO 	2
+
+typedef struct file_s {
+	int num;
+} FILE;
 
 char getchar();
 
