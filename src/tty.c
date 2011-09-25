@@ -82,7 +82,7 @@ char tty_getCurrTTYFormat() {
 
 void tty_setFormatToCurrTTY(char format) {
 	TTY* currTTY = tty_getCurrentTTY();
-	tty->fgColor = video_getFGcolor(currTTY->fgColor);
-	tty->bgColor = video_getBGcolor(currTTY->bgColor);
+	currTTY->fgColor = video_getFGcolor(format);
+	currTTY->bgColor = video_getBGcolor(format);
 }
 
