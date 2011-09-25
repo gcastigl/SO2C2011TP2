@@ -6,6 +6,7 @@ char** getArguments(char* buffer, int* argc);
 void checkReset();
 void checkTTY();
 void prntWelcomeMsg();
+void printShellLabel();
 
 static char shell_text[15];
 static char* argv[MAX_ARG_DIM];
@@ -36,7 +37,7 @@ void shell_init() {
 	prntWelcomeMsg();
 	newTTY = -1;
 	sprintf(shell_text, "@tty%d >", tty_getCurrent() + 1);
-	printf(shell_text);
+	printShellLabel();
 }
 
 /*
@@ -57,7 +58,7 @@ void updateShell() {
 	if (c == '\n') {
 		printf("\n");
 		excecuteCmd(shellBuffer);
-		printf(shell_text);
+		printShellLabel();
 		cleanBuffer();
 	} else if (c == '\b') {
 		if (currPos > 0) {
@@ -83,6 +84,10 @@ void excecuteCmd(char* buffer) {
 	int cmdLen, argc;
 	char ** arguments;
 	
+	TTY* currTty = tty_getCurrentTTY();
+	char format = video_getFormattedColor(currTty->fgColor, currTty->bgColor); // current format backup
+	currTty->fgColor = DARK_GRAY;
+
 	int cmdIndex = parse_cmd(buffer);
 	if (cmdIndex != -1) {
 		cmdLen = strlen(cmd_table[cmdIndex].name);
@@ -92,6 +97,7 @@ void excecuteCmd(char* buffer) {
 	} else if(buffer[0]!='\0') {
 		printf("\n\tUnknown command\n");
 	}
+	currTty->fgColor = video_getFGcolor(format);	// restore format
 }
 
 
@@ -170,11 +176,23 @@ void checkTTY() {
 		}
 	}
 	if (!IS_CTRL() && newTTY != -1) {
-		tty_setCurrent(newTTY);
-		sprintf(shell_text, "@tty%d >", newTTY + 1);
-		newTTY = -1;
-		// printf("CAMBIO DE TTY\n");
+		if (newTTY != tty_getCurrent()) { // Do not switch to the same tty!
+			tty_setCurrent(newTTY);
+			sprintf(shell_text, "@tty%d >", newTTY + 1);
+			newTTY = -1;
+			printShellLabel();
+		}
 	}
+}
+
+void printShellLabel() {
+	TTY* currTty = tty_getCurrentTTY();
+	char format = video_getFormattedColor(currTty->fgColor, currTty->bgColor); // current format backup
+	currTty->bgColor = BLACK;
+	currTty->fgColor = CYAN;
+	printf(shell_text);
+	currTty->bgColor = video_getBGcolor(format);	// restore format
+	currTty->fgColor = video_getFGcolor(format);
 }
 
 void prntWelcomeMsg() {

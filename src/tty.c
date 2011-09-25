@@ -21,7 +21,7 @@ void initTTY(int index) {
 	tty[index].buffer.head = 0;
 	tty[index].buffer.tail = 0;
 	tty[index].bgColor = BLACK;
-	tty[index].fgColor = GREEN;
+	tty[index].fgColor = WHITE;
 }
 
 void tty_setCurrent(int tty) {

@@ -81,7 +81,9 @@ int terminal_prtSpecialCharater(char* terminal, int offset, char ascii, char for
 		case '\b': // Backspace
 			offset -= 2;
 			terminal[offset] = ' ';
-			terminal[offset + 1] = format;
+			if (format != -1) {
+				terminal[offset + 1] = format;
+			}
 			break;
 	}
 	return offset - initOffset;
