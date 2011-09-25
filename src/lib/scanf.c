@@ -144,7 +144,7 @@ int gets(char* ans) {
 	int index = 0;
 	do {
 		c = getchar();
-		if ( c!= '\b' || (c == '\b' && index >= 0) ) {
+		if (c != '\b' || (c == '\b' && index > 0)) {
 			if (c == '\b') {
 				ans[index--] = '\0';
 			} else {
@@ -152,9 +152,9 @@ int gets(char* ans) {
 			}
 			putchar(c);
 		}
-	} while( c != '\n');
-	ans[index++] = '\0';
-	return index == 0 ? 0 : 1;
+	} while(c != '\n');
+	ans[index - 1] = '\0';
+	return (index - 1) == 0 ? 0 : 1;
 }
 
 int getd(int* n) {
