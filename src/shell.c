@@ -89,10 +89,9 @@ void shell_cleanScreen() {
 void excecuteCmd(char* buffer) {
 	int cmdLen, argc;
 	char ** arguments;
-	
-	TTY* currTty = tty_getCurrentTTY();
-	char format = video_getFormattedColor(currTty->fgColor, currTty->bgColor); // current format backup
-	currTty->fgColor = DARK_GRAY;
+
+	char oldFormat = tty_getCurrTTYFormat();
+	tty_setFormatToCurrTTY(video_getFormattedColor(DARK_GRAY, BLACK));
 
 	int cmdIndex = parse_cmd(buffer);
 	if (cmdIndex != -1) {
@@ -103,7 +102,7 @@ void excecuteCmd(char* buffer) {
 	} else if(buffer[0]!='\0') {
 		printf("\n\tUnknown command\n");
 	}
-	currTty->fgColor = video_getFGcolor(format);	// restore format
+	tty_setFormatToCurrTTY(oldFormat); // restore old format
 }
 
 
@@ -192,13 +191,10 @@ void checkTTY() {
 }
 
 void printShellLabel() {
-	TTY* currTty = tty_getCurrentTTY();
-	char format = video_getFormattedColor(currTty->fgColor, currTty->bgColor); // current format backup
-	currTty->bgColor = BLACK;
-	currTty->fgColor = CYAN;
+	char oldFormat = tty_getCurrTTYFormat();
+	tty_setFormatToCurrTTY(video_getFormattedColor(CYAN, BLACK));
 	printf(shell_text);
-	currTty->bgColor = video_getBGcolor(format);	// restore format
-	currTty->fgColor = video_getFGcolor(format);
+	tty_setFormatToCurrTTY(oldFormat);
 }
 
 

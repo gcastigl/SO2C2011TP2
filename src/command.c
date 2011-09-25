@@ -98,9 +98,7 @@ int setAppearance_cmd(int argc, char *argv[]) {
 			printf("Both arguments must be a hexadecimal number between 0 \
 				and F\n");
 		}
-		TTY* tty = tty_getCurrentTTY();
-		tty->bgColor = bg;
-		tty->fgColor = fg;
+		tty_setFormatToCurrTTY(video_getFormattedColor(fg, bg));
 	}
 	return 0;
 }
@@ -146,6 +144,7 @@ int scanf_cmd(int argc, char *argv[]) {
 	return 0;
 }
 
-void logout(int argc, char *argv[]) {
+int logout(int argc, char *argv[]) {
 	user_logout();
+	return 0;
 }
