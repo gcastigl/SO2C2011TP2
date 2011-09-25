@@ -23,7 +23,7 @@ int kmain() {
 		_initTTCounter();
 	_Sti();
 	while (1) {
-		updateShell();
+		shell_update();
 	}
 	return 0;
 }

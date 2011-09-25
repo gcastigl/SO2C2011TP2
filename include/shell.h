@@ -3,6 +3,7 @@
 
 #include "string.h"
 #include "command.h"
+#include "user.h"
 
 #define WELCOME_MSG	"\t\t\t\t\tWelcome to GAT O.S.\n\tFor a list of availables commands \
 please type in help\n"
@@ -22,13 +23,18 @@ typedef struct {
 
 void shell_init();
 
-void updateShell();
+/*
+ *	Al ser invoacada se fija si se presiono una tecla (buffer del teclado
+ *	no vacio) y en cuyo caso, se guaradra en el buffer de la shell y si es
+ *	necesario, manda la ejecucion de un programa.
+ */
+void shell_update();
 
-void cleanBuffer();
+void shell_cleanScreen();
 
-cmd_table_entry* getCmdsTable();
+cmd_table_entry* shell_getCmdsTable();
 
-int getCmdIndex(char * cmdName);
+int shell_getCmdIndex(char * cmdName);
 
 #endif
 

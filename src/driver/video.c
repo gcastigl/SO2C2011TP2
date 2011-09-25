@@ -30,6 +30,10 @@ void video_clearScreen(char format) {
 	video_setCursor(0);
 }
 
+void video_clearRow(int row, char format) {
+	terminal_clearRow(video.address, row, format);
+}
+
 void video_setOffset(int offset) {
 	video.offset = offset;
 }

@@ -60,6 +60,8 @@ char video_getFGcolor(char format);
 
 int terminal_prtSpecialCharater(char* terminal, int offset, char ascii, char format) ;
 
+void video_clearRow(int row, char format);
+
 // ====================================
 
 void terminal_scroll(char* terminal);

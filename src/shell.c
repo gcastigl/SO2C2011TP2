@@ -5,8 +5,8 @@ int parse_cmd(char* buffer);
 char** getArguments(char* buffer, int* argc);
 void checkReset();
 void checkTTY();
-void prntWelcomeMsg();
 void printShellLabel();
+void cleanBuffer();
 
 static char shell_text[15];
 static char* argv[MAX_ARG_DIM];
@@ -34,20 +34,17 @@ cmd_table_entry cmd_table[] = {
 
 void shell_init() {
 	cleanBuffer();
-	prntWelcomeMsg();
 	newTTY = -1;
-	sprintf(shell_text, "@tty%d >", tty_getCurrent() + 1);
-	printShellLabel();
 }
 
-/*
- *	Al ser invoacada se fija si se presiono una tecla (buffer del teclado
- *	no vacio) y en cuyo caso, se guaradra en el buffer de la shell y si es
- *	necesario, manda la ejecucion de un programa.
- */
-void updateShell() {
+void shell_update() {
 	checkReset();
 	checkTTY();
+	if (!user_isLoggedIn()) {
+		user_doLogin();
+		sprintf(shell_text, "%s@tty%d >", user_getName(), tty_getCurrent() + 1);
+		printShellLabel();
+	}
 	if (bufferIsEmpty()) {
 		return;
 	}
@@ -74,12 +71,20 @@ void updateShell() {
 	}
 }
 
+void shell_cleanScreen() {
+	TTY* tty = tty_getCurrentTTY();
+	tty_clean(tty);
+	video_setOffset(0);
+	video_write(tty->terminal, TOTAL_VIDEO_SIZE,
+		video_getFormattedColor(tty->fgColor, tty->bgColor));
+}
+
 /*
-	Verifica si en el buffer recibido existe un comando valido, y de ser asi,
-	lo invoca. 
-	Imprime en pantalla un cartel de error si no se pudo enontrar un comando
-	 valido que concuerde con lo leido.
-*/
+ *	Verifica si en el buffer recibido existe un comando valido, y de ser asi,
+ *	lo invoca.
+ *	Imprime en pantalla un cartel de error si no se pudo enontrar un comando
+ *	 valido que concuerde con lo leido.
+ */
 void excecuteCmd(char* buffer) {
 	int cmdLen, argc;
 	char ** arguments;
@@ -144,11 +149,11 @@ void cleanBuffer() {
 	shellBuffer[0] = '\0';
 }
 
-cmd_table_entry* getCmdsTable() {
+cmd_table_entry* shell_getCmdsTable() {
 	return cmd_table;
 }
 
-int getCmdIndex(char * cmdName) {
+int shell_getCmdIndex(char * cmdName) {
 	int i;
 	for( i=0; cmd_table[i].func != NULL; i++) {
 		if (strcmp(cmdName, cmd_table[i].name) == 0) {
@@ -178,7 +183,7 @@ void checkTTY() {
 	if (!IS_CTRL() && newTTY != -1) {
 		if (newTTY != tty_getCurrent()) { // Do not switch to the same tty!
 			tty_setCurrent(newTTY);
-			sprintf(shell_text, "@tty%d >", newTTY + 1);
+			sprintf(shell_text, "%s@tty%d >", user_getName(), tty_getCurrent() + 1);
 			if (tty_getCurrentTTY()->offset == 0) printShellLabel();
 		}
 		newTTY = -1;
@@ -195,14 +200,4 @@ void printShellLabel() {
 	currTty->fgColor = video_getFGcolor(format);
 }
 
-void prntWelcomeMsg() {
-	TTY* currTty = tty_getCurrentTTY();
-	char format = video_getFormattedColor(currTty->fgColor, currTty->bgColor); // current format backup
-	currTty->bgColor = GREEN;
-	currTty->fgColor = BLUE;
-	printf(WELCOME_MSG);
-	currTty->bgColor = video_getBGcolor(format);	// restore format
-	currTty->fgColor = video_getFGcolor(format);
-	printf("\n\n");
-}
 

@@ -16,28 +16,24 @@ int restart_cmd(int argc, char *argv[]) {
 }
 
 int clear_cmd(int argc, char *argv[]) {
-	TTY* tty = tty_getCurrentTTY();
-	tty_clean(tty);
-	video_setOffset(0);
-	video_write(tty->terminal, TOTAL_VIDEO_SIZE,
-		video_getFormattedColor(tty->fgColor, tty->bgColor));
+	shell_cleanScreen();
 	return 0;
 }
 
 int help_cmd(int argc, char *argv[]) {
 	int cmdIndex;
 	if (argc == 1) {
-		cmdIndex = getCmdIndex(argv[0]);
+		cmdIndex = shell_getCmdIndex(argv[0]);
 		if (cmdIndex != -1) {
-			printf("\n%s\n", getCmdsTable()[cmdIndex].help);
+			printf("\n%s\n", shell_getCmdsTable()[cmdIndex].help);
 		} else {
 			printf("\nCommand not found\n");
 		}
 	} else if (argc == 0) {
 		int i;
 		printf("\nAvailable commands:\n\n");
-		for( i=0; getCmdsTable()[i].func != NULL; i++) {
-			printf("\t%s\n", getCmdsTable()[i].name);
+		for( i=0; shell_getCmdsTable()[i].func != NULL; i++) {
+			printf("\t%s\n", shell_getCmdsTable()[i].name);
 		}
 		printf("\nType in help \"cmdName\" to see the help menu for that \
 command.\n");

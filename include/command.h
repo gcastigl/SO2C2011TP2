@@ -7,7 +7,6 @@
 #include "video.h"
 #include "math.h"
 #include "interrupts.h"
-#include "tty.h"
 
 #define HELP_HELP			"Shows this help function"
 

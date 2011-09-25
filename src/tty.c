@@ -51,6 +51,7 @@ void tty_write(TTY* tty, char* buffer, size_t size) {
 		if (tty->offset >= TOTAL_VIDEO_SIZE) {
 			terminal_scroll(tty->terminal);
 			tty->offset = terminal_getOffset(ROWS - 1, 0);
+			video_clearRow(ROWS - 1, -1);
 		}
 		int newOffset = terminal_prtSpecialCharater(tty->terminal, tty->offset, buffer[j], format);
 		tty->offset += newOffset;
