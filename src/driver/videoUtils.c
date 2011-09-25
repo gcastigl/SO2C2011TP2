@@ -69,11 +69,9 @@ int terminal_prtSpecialCharater(char* terminal, int offset, char ascii, char for
 	int endOfRow, tab;
 	switch (ascii) {
 		case '\n':
-			if (offset % (2 * COLUMNS) != 0) {
-				endOfRow = offset + 2 * COLUMNS - (offset % (2 * COLUMNS));
-				terminal_formatRange(terminal, offset, endOfRow, format);
-				offset = endOfRow;
-			}
+			endOfRow = offset + 2 * COLUMNS - (offset % (2 * COLUMNS));
+			terminal_formatRange(terminal, offset, endOfRow, format);
+							offset = endOfRow;
 			break;
 		case '\t': // Tab
 				tab = 2 * TAB_SIZE - (offset % (2 * TAB_SIZE));
