@@ -1,24 +1,25 @@
 #include "../include/user.h"
 
 void prntWelcomeMsg();
+int isValidUser(char* userName);
 
 static char user[NAME_MAX_LENGTH] = {"\0"};
 static int isLoggedIn = false;
 
 void user_doLogin() {
+	TTY* tty = tty_getCurrentTTY();
+	tty_clean(tty);
 	prntWelcomeMsg();
-	char c;
-	int i = 0;
+	int validUser;
 	do {
 		printf("\nUsername: ");
-        while ((c = getchar()) != '\n' && i < NAME_MAX_LENGTH) {
-        	user[i++] = c;
-        	printf("%c", c);
+		gets(user);
+		validUser = isValidUser(user);
+        if (!validUser) {
+        	printf("\tInvalid username!\n");
         }
-        if (user[0] == '\n') {
-        	printf("\tInvalid user!");
-        }
-	} while(user[0] == '\n' || user[0] == '\0');
+	} while(!validUser);
+	printf("Password: ********\n");
 	printf("\nLogged in as: %s\n", user);
 	isLoggedIn = true;
 }
@@ -36,6 +37,10 @@ const char* user_getName() {
 
 void user_logout() {
 	isLoggedIn = false;
+}
+
+int isValidUser(char* userName) {
+	return strcmp(userName, "admin") == 0 || strcmp(userName, "guest") == 0;
 }
 
 void prntWelcomeMsg() {
