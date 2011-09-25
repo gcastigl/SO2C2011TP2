@@ -100,6 +100,7 @@ void excecuteCmd(char* buffer) {
 		cmd_table[cmdIndex].func(argc, arguments);
 		printf("\n");
 	} else if(buffer[0]!='\0') {
+		tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
 		printf("\n\tUnknown command\n");
 	}
 	tty_setFormatToCurrTTY(oldFormat); // restore old format

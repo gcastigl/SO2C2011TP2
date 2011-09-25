@@ -25,6 +25,7 @@ int help_cmd(int argc, char *argv[]) {
 	if (argc == 1) {
 		cmdIndex = shell_getCmdIndex(argv[0]);
 		if (cmdIndex != -1) {
+			tty_setFormatToCurrTTY(video_getFormattedColor(MAGENTA, BLACK));
 			printf("\n%s\n", shell_getCmdsTable()[cmdIndex].help);
 		} else {
 			printf("\nCommand not found\n");
