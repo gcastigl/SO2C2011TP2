@@ -28,7 +28,7 @@ void tty_setCurrent(int tty) {
 	currentTTY = tty;
 	TTY* currTTY = tty_getCurrentTTY();
 	video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
-	video_setCursor(0);
+	video_setOffset(0);
 	video_write(currTTY->terminal, currTTY->offset, -1);
 }
 

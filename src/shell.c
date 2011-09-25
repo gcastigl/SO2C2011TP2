@@ -179,9 +179,9 @@ void checkTTY() {
 		if (newTTY != tty_getCurrent()) { // Do not switch to the same tty!
 			tty_setCurrent(newTTY);
 			sprintf(shell_text, "@tty%d >", newTTY + 1);
-			newTTY = -1;
-			printShellLabel();
+			if (tty_getCurrentTTY()->offset == 0) printShellLabel();
 		}
+		newTTY = -1;
 	}
 }
 
