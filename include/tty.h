@@ -38,4 +38,8 @@ void tty_write(TTY* tty, char* buffer, size_t size);
 
 void tty_clean(TTY* tty);
 
+void tty_setFormatToCurrTTY(char format);
+
+char tty_getCurrTTYFormat();
+
 #endif
