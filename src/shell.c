@@ -28,6 +28,7 @@ cmd_table_entry cmd_table[] = {
 	{"getchar", "Funcion para la catedra para testeo de getchar\n", getchar_cmd},
 	{"printf", "Funcion para la catedra para testeo de printf\n", printf_cmd},
 	{"scanf", "Funcion para la catedra para testeo de scanf\n", scanf_cmd},
+	{"logout", "Logout current user\n", logout},
 	{"", "", NULL}
 };
 
