@@ -17,9 +17,6 @@ GLOBAL _getTTCounter
 GLOBAL _initTTCounter
 
 EXTERN  getNextProcess
-EXTERN  getTempEsp
-EXTERN	saveEsp
-EXTERN	loadEsp
 EXTERN	int_09
 EXTERN	int_80
 
@@ -127,13 +124,7 @@ _int_08_hand:				; Handler de INT 8 ( Timer tick)
 ; Switch process
 	mov		eax, esp
 	push	eax
-	call	saveEsp
-	pop		eax
-	call 	getTempEsp
-	mov		esp, eax
 	call	getNextProcess
-	push	eax
-	call	loadEsp
 	mov		esp, eax
 	pop		eax
 ; Finished switching process

@@ -4,8 +4,8 @@ PROCESS process[MAX_PROCESSES];
 PROCESS idle;
 
 void createProcessAt(char* name, int (*f_process)(int,char**),int tty, int argc,
-	char** argv, int stacklength, int priority, int isFront) {
-	void* stack = (void*)malloc(stacklength);
+	char** argv, int stackLength, int priority, int isFront) {
+	void* stack = (void*)malloc(stackLength);
 	int i;
 	for(i = 0; i < MAX_PROCESSES; i++) {
 		if(process[i].free == 1)
@@ -19,10 +19,10 @@ void createProcessAt(char* name, int (*f_process)(int,char**),int tty, int argc,
 	process[i].blocked = 0;
 	process[i].tty = tty;
 	process[i].lastCalled = 0;
-	process[i].stackSize = stacklength;
+	process[i].stackSize = stackLength;
 	process[i].stackStart = (int) stack;
 	process[i].free = 0;
-	process[i].esp = loadStackFrame(f_process, argc, argv,(int)(stack + stacklength - 1), destroyProcess);
+	process[i].esp = loadStackFrame(f_process, argc, argv,(int)(stack + stackLength - 1), destroyProcess);
 	process[i].parent = 0;
 	int currPid = getCurrPid();
 	if(isFront && currPid >= 1) {

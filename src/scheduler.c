@@ -17,22 +17,19 @@ void saveEsp(int esp) {
     return;
 }
 
-void* getTempEsp(void) {
-    return (void*)(idle.esp);
-}
-
-int loadEsp(PROCESS* process) {
-    return process->esp;
-}
-
-PROCESS* getNextProcess(void) {
+int getNextProcess(int esp) {
     PROCESS* temp;
-    
+    if (!firstTime) {
+        temp = getProcessByPid(getCurrPid());
+        temp->esp = esp;
+    } else {
+        firstTime = 0;
+    }
     temp = getNextTask();
     temp->lastCalled = 0;
     setCurrPid(temp->pid);
     
-    return temp;
+    return temp->esp;
 }
 
 PROCESS* getNextTask(void) {
@@ -67,8 +64,7 @@ PROCESS* getNextTask(void) {
 
 void setupScheduler(void) {
     int i;
-    int stackSize = 0x200;
-    void* stack = malloc(stackSize);
+    void* stack = malloc(DEFAULT_STACK_SIZE);
     
     for (i = 0; i < MAX_PROCESSES; i++) {
         process[i].free = 1;
@@ -82,9 +78,9 @@ void setupScheduler(void) {
     idle.blocked = 0;
     idle.tty = 0;
     idle.stackStart = (int)stack;
-    idle.stackSize = stackSize;
+    idle.stackSize = DEFAULT_STACK_SIZE;
     idle.parent = 0;
     idle.lastCalled = 0;
     idle.free = 0;
-    idle.esp = loadStackFrame(idle_process, 0, NULL, (int)(stack + 0x1FF), destroyProcess);
+    idle.esp = loadStackFrame(idle_process, 0, NULL, (int)(stack + DEFAULT_STACK_SIZE - 1), destroyProcess);
 }
