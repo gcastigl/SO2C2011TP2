@@ -1,8 +1,10 @@
 #ifndef PROCESS_H_
 #define PROCESS_H_
 
+#include "defs.h"
+
 #define MAX_PROCESS_NAME 	32
-#define MAX_PROCESS			64
+#define MAX_PROCESSES		64
 
 typedef struct {
 	int pid;
@@ -14,15 +16,15 @@ typedef struct {
 	int sleep;
 	int blocked;
 	int parent;
-	int ESP;
+	int esp;
 	int free;
-	int stackstart;
-	int stacksize;
+	int stackStart;
+	int stackSize;
 } PROCESS;
 
 typedef struct {
-	int EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX,  EIP, CS, EFLAGS;
-	void*retaddr;
+	int edi, esi, ebp, esp, ebx, edx, ecx, eax, eip, cs, eFlags;
+	void* retAddr;
 	int argc;
 	char** argv;
 } STACK_FRAME;
@@ -30,8 +32,8 @@ typedef struct {
 void createProcessAt(char* name, int (*process)(int,char**),int tty, int argc,
 	char** argv, int stacklength, int priority, int isFront);
 
-int getPID(void);
-
-PROCESS* getProcessByPID(int pid);
-
+void destroyProcess(int pid);
+PROCESS* getProcessByPid(int pid);
+PROCESS* getTempProcess();
+int loadStackFrame(int(*process)(int, char**), int argc, char** argv, int bottom, void(*destroyProcess)(int));
 #endif

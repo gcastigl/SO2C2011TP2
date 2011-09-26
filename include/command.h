@@ -41,4 +41,7 @@ int getchar_cmd(int argc, char *argv[]);
 int scanf_cmd(int argc, char *argv[]);
 int printf_cmd(int argc, char *argv[]);
 
+//Processes
+int idle_process(int argc, char** argv);
+int shell_process(int argc, char** argv);
 #endif

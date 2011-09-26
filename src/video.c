@@ -188,7 +188,7 @@ void video_clearScreen() {
 	pantalla.
 */
 int specialAscii(char ascii) {
-	int ret = true;
+	int ret = TRUE;
 	int tab;
 	switch (ascii) {
 		case '\n':
@@ -206,7 +206,7 @@ int specialAscii(char ascii) {
 			video.address[getOffset()] = ' ';
 			break;
 		default:
-			ret = false;
+			ret = FALSE;
 			break;
 	}
 	setCursor(getCurrRow(), getCurrColumn());

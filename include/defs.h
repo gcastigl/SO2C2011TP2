@@ -1,5 +1,5 @@
-#ifndef _defs_
-#define _defs_
+#ifndef DEFS_H
+#define DEFS_H
 
 #define byte unsigned char
 #define word short int
@@ -32,7 +32,10 @@
 #define ACS_DATA        (ACS_PRESENT | ACS_DSEG | ACS_WRITE)
 #define ACS_STACK       (ACS_PRESENT | ACS_DSEG | ACS_WRITE)
 
-typedef enum { false = 0, true} boolean;
+typedef enum { FALSE = 0, TRUE } boolean;
+
+#define MAX_PRIORITY 4
+#define PRIORITY_RATIO 2
 
 #define NULL	((void *)0)
 
@@ -47,6 +50,11 @@ typedef enum { false = 0, true} boolean;
 
 typedef unsigned int size_t;
 typedef short int ssize_t;
+typedef unsigned char uchar_t;  // -->Length: 8 bit
+typedef unsigned short ushort_t; // -->Length: 16 bit
+typedef unsigned int uint_t;   // -->Length: 32 bit
+typedef unsigned long ulong_t;  // -->Length: 64 bit
+typedef int (*entry_t)(int argc, char* argv[]);
 
 #pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */
 

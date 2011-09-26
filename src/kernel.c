@@ -2,28 +2,25 @@
 
 static DESCR_INT idt[0x81];			/* IDT de 81h entradas*/
 static IDTR idtr;						/* IDTR */
-static int currentPID = 0;
-static int nextPID = 1;
-
+int currentPid = 0;
+int nextPid = 0;
+extern PROCESS process[];
 void doubleFlagsFix(double n);
 void setupIDT();
 
 kmain() {
-	int i,num;
 	_Cli();
 		setupIDT();
-		nextPID = 0;
 		_mascaraPIC1(0xFC);
 		_mascaraPIC2(0xFF);
 		doubleFlagsFix(1.1);
 		initKeyBoard();
 		initVideo();
+        setupScheduler();
 		setFD(3);
-		initShell();
+		createProcessAt("Shell 1", shell_process, 0, 0, NULL, 0x400, 2, 1);
 	_Sti();
-	while (1) {
-		updateShell();
-	}
+    while (1);
 	
 }
 
@@ -39,12 +36,16 @@ void setupIDT() {
 	_lidt (&idtr);
 }
 
-int getCurrPID() {
-	return currentPID;
+int getCurrPid() {
+	return currentPid;
 }
 
-int getNextPID() {
-	return nextPID++;
+int setCurrPid(int pid) {
+    currentPid = pid;
+}
+
+int getNextPid() {
+	return nextPid++;
 }
 
 /*
@@ -68,5 +69,16 @@ size_t __write(int fd, const void * buffer, size_t count) {
 }
 
 void doubleFlagsFix(double n) {
+    //Does nothing
 }
 
+boolean noProcesses() {
+    int i;
+    for (i = 0; i < MAX_PROCESSES; i++) {
+        if (process[i].free != 1) {
+            return FALSE;
+        }
+    }
+    
+    return TRUE;
+}

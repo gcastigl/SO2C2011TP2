@@ -15,7 +15,11 @@ GLOBAL _tscGetCpuSpeed
 GLOBAL _msrGetCpuSpeed
 GLOBAL _getTTCounter
 GLOBAL _initTTCounter
-EXTERN  int_08
+
+EXTERN  getNextProcess
+EXTERN  getTempEsp
+EXTERN	saveEsp
+EXTERN	loadEsp
 EXTERN	int_09
 EXTERN	int_80
 
@@ -111,37 +115,48 @@ _lidt:				; Carga el IDTR
 
 
 _int_08_hand:				; Handler de INT 8 ( Timer tick)
-	push	ds
-	push	es              ; Se salvan los registros
-	pusha                   ; Carga de DS y ES con el valor del selector
-	
-	push eax
-	mov eax, [ttcounter]
-	inc eax
-	mov [ttcounter], eax
-	pop eax
-	
-	mov		ax, 10h			; a utilizar.
-	mov		ds, ax
-	mov		es, ax
-	call	int_08
+	cli
+	pushad
+
+; Increase timerTick counter	
+	push	eax
+	mov		eax, [ttcounter]
+	inc		eax
+	mov		[ttcounter], eax
+	pop		eax
+; Switch process
+	mov		eax, esp
+	push	eax
+	call	saveEsp
+	pop		eax
+	call 	getTempEsp
+	mov		esp, eax
+	call	getNextProcess
+	push	eax
+	call	loadEsp
+	mov		esp, eax
+	pop		eax
+; Finished switching process
 	mov		al,20h			; Envio de EOI generico al PIC
 	out		20h,al
-	popa
-	pop		es
-	pop		ds
+
+	popad
+	sti
+	
 	iret
 
 _int_09_hand:				; Handler de INT 9 ( Teclado )
+	cli
 	push	ds
 	push	es
-	pusha
+	pushad
 	call	int_09
 	mov		al,20h			; Envio de EOI generico al PIC
 	out		20h,al
-	popa
+	popad
 	pop		es
 	pop		ds
+	sti
 	iret
 
 _int_80_hand:				; Handler de INT 80h

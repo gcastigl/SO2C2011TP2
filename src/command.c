@@ -1,5 +1,7 @@
 #include "../include/command.h"
 
+
+//Console commands
 int echo_cmd(int argc, char *argv[]) {
 	int i;
 	if (argc > 0) {
@@ -57,7 +59,7 @@ int getCPUspeed_cmd(int argc, char *argv[]) {
 	int speed;
 	if (_cpuIdTest() != 1) {
 		printf("error: cpuid instruction is not supported.\n");
-		return false;
+		return FALSE;
 	}
 	printf("Detected cpuid instruction...\n");
 	if (_rdtscTest() > 0) {
@@ -69,7 +71,7 @@ int getCPUspeed_cmd(int argc, char *argv[]) {
 	} else {
 		printf("error: rdtsc or rdmsr should be available to \
 			perform this command\n");
-			return false;
+			return FALSE;
 	}
 	
 	printf("Detected CPU speed: %iMHz\n", speed);
@@ -143,3 +145,16 @@ int scanf_cmd(int argc, char *argv[]) {
 	return 0;
 }
 
+//Processes
+int idle_process(int argc, char** argv) {
+    while(1) {
+        printf("Idle!");
+    }
+}
+
+int shell_process(int argc, char** argv) {
+    initShell();
+    while(1) {
+        updateShell();
+    }
+}

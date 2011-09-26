@@ -123,10 +123,10 @@ void printf(const char *fmt, ...) {
 				case 'u':
 					putui(va_arg(args, int));
 				case 'x':
-					puth(va_arg(args, int), false);
+					puth(va_arg(args, int), FALSE);
 					break;
 				case 'X':
-					puth(va_arg(args, int), true);
+					puth(va_arg(args, int), TRUE);
 					break;
 				case 's':
 					puts(va_arg(args, char*));
@@ -135,10 +135,10 @@ void printf(const char *fmt, ...) {
 					putf(va_arg(args, double));
 					break;
 				case 'e':
-					pute(va_arg(args, double), false);
+					pute(va_arg(args, double), FALSE);
 					break;
 				case 'E':
-					pute(va_arg(args, double), true);
+					pute(va_arg(args, double), TRUE);
 					break;
 				case 'c':
 					c = (char)va_arg(args, int);
@@ -183,7 +183,7 @@ int scanf(const char *format, ...) {
 	va_list args;
 	va_start(args, format);
 	int i = 0, parsed = 0;
-	int insidePercentage = false;
+	int insidePercentage = FALSE;
 	char* c;
 	while(format[i] != '\0') {
 		//IGNORING ALL BUT %
@@ -204,11 +204,11 @@ int scanf(const char *format, ...) {
 					parsed += getf(va_arg(args, double *));
 					break;
 			}
-			insidePercentage = false;
+			insidePercentage = FALSE;
 		}
 		
 		if (format[i] == '%') {
-			insidePercentage = true;
+			insidePercentage = TRUE;
 		}
 		i++;
 	}
@@ -252,7 +252,7 @@ int getd(int* n) {
 }
 
 int getf(double* ans) {
-	int n1 = 0, n2, isDig, n1IsValid = false;
+	int n1 = 0, n2, isDig, n1IsValid = FALSE;
 	char c;
 	double total = 0, aux = 0;
 	do {
@@ -262,7 +262,7 @@ int getf(double* ans) {
 		if (isDig) {
 			n1 *= 10;
 			n1 += c - '0';
-			n1IsValid = true;
+			n1IsValid = TRUE;
 		}
 		putchar(c);
 	} while(isDig);

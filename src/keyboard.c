@@ -52,7 +52,7 @@ void handleScanCode(unsigned char scanCode) {
 }
 
 int checkSpecialKey(unsigned char scanCode) {
-	int ret = true;
+	int ret = TRUE;
 	
 	if(IS_ESCAPE()) {
 		switch (scanCode) {
@@ -66,7 +66,7 @@ int checkSpecialKey(unsigned char scanCode) {
 				break;
 		}
 		kbFlags &= ~ESCAPE;
-		return true;
+		return TRUE;
 	}
 	
 	switch (scanCode) {
@@ -106,7 +106,7 @@ int checkSpecialKey(unsigned char scanCode) {
 			break;
 		
 		default:
-			ret = false;
+			ret = FALSE;
 			break;
 	}
 	
@@ -129,12 +129,14 @@ int bufferIsFull() {
 }
 
 char getKeyFromBuffer() {
+    _Cli();
 	if (bufferIsEmpty()) {
 		return '\0';
 	}
 	char c = keyboard_buffer.buffer[keyboard_buffer.from];
 	keyboard_buffer.from++;
 	keyboard_buffer.from %= K_BUFFER_SIZE;
+    _Sti();
 	return c;
 }
 

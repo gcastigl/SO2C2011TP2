@@ -1,5 +1,9 @@
 #include "../include/string.h"
 
+void strcpy(char* to, char* from) {
+    memcpy(to, from, strlen(from));
+}
+
 size_t strlen(char* string) {
 	size_t count = 0;
 	while (string[count] != 0) {

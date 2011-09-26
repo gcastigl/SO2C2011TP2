@@ -7,11 +7,13 @@
 #include "kasm.h"
 #include "defs.h"
 #include "io.h"
+#include "scheduler.h"
+#include "command.h"
 
-int getNextPID();
-
-int getCurrPID();
-
+int getNextPid();
+int getCurrPid();
+int setCurrPid(int pid);
+boolean noProcesses();
 /* __write
 *
 * Recibe como parametros:

@@ -39,5 +39,6 @@ int isDigit(char c);
 char toLower(char c);
 int digits(int n);
 
-#endif
+void memcpy(void* to, void* from, size_t count);
 
+#endif
