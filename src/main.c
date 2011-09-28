@@ -8,7 +8,8 @@ static int nextPID = 1;
 void doubleFlagsFix(double n);
 void setupIDT();
 
-int kmain() {
+
+int main(struct multiboot *mboot_ptr) {
 	_Cli();
 		setupIDT();
 		nextPID = 0;

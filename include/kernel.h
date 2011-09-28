@@ -2,8 +2,9 @@
 #define _kernel_
 
 #include "defs.h"
-#include "video.h"
+#include "multiboot.h"
 #include "interrupts.h"
+#include "video.h"
 #include "kasm.h"
 #include "defs.h"
 #include "io.h"

@@ -4,7 +4,7 @@ rm -rf *
 nasm -f aout ../src/libasm.asm -o libasm.o
 nasm -f aout ../src/kstart.asm -o kstart.o
 nasm -f aout ../src/loader.asm -o kstart.o
-gcc -m32 -g -c ../src/kernel.c -o kernel.o 					-fno-builtin -fno-stack-protector -Wall
+gcc -m32 -g -c ../src/main.c -o main.o 						-fno-builtin -fno-stack-protector -Wall
 gcc -m32 -g -c ../src/libc.c  -o libc.o 					-fno-builtin -fno-stack-protector -Wall
 gcc -m32 -g -c ../src/driver/video.c -o video.o 			-fno-builtin -fno-stack-protector -Wall
 gcc -m32 -g -c ../src/driver/keyboard.c -o keyboard.o 		-fno-builtin -fno-stack-protector -Wall
@@ -20,5 +20,5 @@ gcc -m32 -g -c ../src/command.c -o command.o 				-fno-builtin -fno-stack-protect
 gcc -m32 -g -c ../src/tty.c -o tty.o 						-fno-builtin -fno-stack-protector -Wall
 gcc -m32 -g -c ../src/driver/videoUtils.c -o videoUtils.o 	-fno-builtin -fno-stack-protector -Wall
 gcc -m32 -g -c ../src/user.c -o user.o		 				-fno-builtin -fno-stack-protector -Wall
-ld -melf_i386 -T ../src/link.ld -o kernel.bin kernel.o kstart.o libc.o libasm.o video.o interrupts.o \
+ld -melf_i386 -T ../src/link.ld -o kernel.bin main.o kstart.o libc.o libasm.o video.o interrupts.o \
 	keyboard.o io.o stdlib.o string.o shell.o command.o math.o tty.o printf.o scanf.o videoUtils.o user.o
