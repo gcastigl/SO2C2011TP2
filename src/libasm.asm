@@ -15,6 +15,7 @@ GLOBAL _tscGetCpuSpeed
 GLOBAL _msrGetCpuSpeed
 GLOBAL _getTTCounter
 GLOBAL _initTTCounter
+GLOBAL _newStack
 
 EXTERN  getNextProcess
 EXTERN	int_09
@@ -111,6 +112,34 @@ _lidt:				; Carga el IDTR
 	retn
 
 
+_newStack:
+    push ebp
+    mov ebp, esp
+
+            mov eax, [ebp + 12] ; Pointer to the bottom of the new stack.
+            mov esp, eax        ; We switch to the new stack
+
+            mov eax, [ebp + 16] ; This is the char* line argument
+            push eax            ; Pushed so it can be read.
+
+            mov eax, [ebp + 20] ; Function to clean-up after task is done.
+            push eax            ; To the new stack it goes!
+
+            mov eax, 512        ; New flags register, to be iret'd
+            push eax            ; There we go.                       
+
+            push cs             ; Code segment.
+
+            mov eax, [ebp + 8]  ; Function for the new task to run.
+            push eax            ; To the new stack it goes as well!
+
+            pushad              ; Trash. Won't matter.
+            mov eax, esp        ; Return the moved stack pointer.
+
+    mov esp, ebp
+    pop ebp
+    ret
+
 _int_08_hand:				; Handler de INT 8 ( Timer tick)
 	cli
 	pushad
@@ -122,11 +151,11 @@ _int_08_hand:				; Handler de INT 8 ( Timer tick)
 	mov		[ttcounter], eax
 	pop		eax
 ; Switch process
-	mov		eax, esp
-	push	eax
+	mov		ebx, esp
+	push	ebx
 	call	getNextProcess
-	mov		esp, eax
-	pop		eax
+	pop		ebx
+	mov		esp, ebx
 ; Finished switching process
 	mov		al,20h			; Envio de EOI generico al PIC
 	out		20h,al
