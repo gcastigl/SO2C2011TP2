@@ -1,6 +1,6 @@
-#ifndef KASM_H
-#define KASM_H
-#include "defs.h"
+#ifndef LIBASM_H
+#define LIBASM_H
+#include "../defs.h"
 
 unsigned int _read_msw();
 

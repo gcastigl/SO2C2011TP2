@@ -1,7 +1,7 @@
 #ifndef VIDEO_H
 #define VIDEO_H
 
-#include "io.h"
+#include "../io.h"
 
 #define VIDEO_ADDRESS 	0xb8000
 

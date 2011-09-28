@@ -4,11 +4,11 @@
 #include "defs.h"
 #include "multiboot.h"
 #include "interrupts.h"
-#include "video.h"
-#include "kasm.h"
+#include "driver/video.h"
+#include "asm/libasm.h"
 #include "defs.h"
 #include "io.h"
-#include "stdio.h"
+#include "lib/stdio.h"
 #include "kc.h"
 
 int getNextPID();

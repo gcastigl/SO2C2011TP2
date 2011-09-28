@@ -1,7 +1,7 @@
 #ifndef _shell_
 #define _shell_
 
-#include "string.h"
+#include "lib/string.h"
 #include "command.h"
 #include "user.h"
 

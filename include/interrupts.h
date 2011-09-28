@@ -3,8 +3,8 @@
 
 #include "defs.h"
 #include "io.h"
-#include "keyboard.h"
-#include "kernel.h"
+#include "driver/keyboard.h"
+#include "main.h"
 #include "command.h"
 
 #define TT_MEDITIONS	100

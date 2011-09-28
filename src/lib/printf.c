@@ -1,4 +1,4 @@
-#include "../../include/stdio.h"
+#include "../../include/lib/stdio.h"
 
 static void prints(char * string);
 

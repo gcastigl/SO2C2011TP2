@@ -1,7 +1,7 @@
 #ifndef FILE_H_
 #define FILE_H_
 
-#include "stdio.h"
+#include "lib/stdio.h"
 
 #define NUM_FILES 128
 

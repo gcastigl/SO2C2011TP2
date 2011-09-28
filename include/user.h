@@ -1,7 +1,7 @@
 #ifndef USER_H_
 #define USER_H_
 
-#include "video.h"
+#include "driver/video.h"
 
 #define NAME_MAX_LENGTH	20
 

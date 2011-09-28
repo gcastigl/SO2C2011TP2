@@ -2,10 +2,10 @@
 #define _command_
 
 #include "defs.h"
-#include "kasm.h"
+#include "asm/libasm.h"
 #include "shell.h"
-#include "video.h"
-#include "math.h"
+#include "driver/video.h"
+#include "lib/math.h"
 #include "interrupts.h"
 
 #define HELP_HELP			"Shows this help function"

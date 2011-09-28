@@ -1,4 +1,4 @@
-#include "../../include/video.h"
+#include "../../include/driver/video.h"
 
 void terminal_scroll(char* terminal) {
 	int row;

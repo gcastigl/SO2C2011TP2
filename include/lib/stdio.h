@@ -1,6 +1,6 @@
-#include "kernel.h"
-#include "varargs.h"
-#include "stdarg.h"
+#include "../main.h"
+#include "../varargs.h"
+#include "../stdarg.h"
 
 #ifndef STDIO_H
 #define STDIO_H

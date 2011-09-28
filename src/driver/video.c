@@ -1,4 +1,4 @@
-#include "../../include/video.h"
+#include "../../include/driver/video.h"
 
 void video_init() {
 	video.address = (char*) VIDEO_ADDRESS;

@@ -1,4 +1,4 @@
-#include "../../include/keyboard.h"
+#include "../../include/driver/keyboard.h"
 
 unsigned char lcase[60] =
 {
