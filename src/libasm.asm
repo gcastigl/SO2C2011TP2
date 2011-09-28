@@ -6,6 +6,10 @@ GLOBAL  _mascaraPIC1,_mascaraPIC2,_Cli,_Sti
 GLOBAL  _debug
 GLOBAL	_outb
 GLOBAL	_inb
+GLOBAL _port_in
+GLOBAL _port_out
+GLOBAL _portw_in
+GLOBAL _portw_out
 GLOBAL _reset
 GLOBAL _cpuIdTest
 GLOBAL _rdtscTest
@@ -59,6 +63,7 @@ _Sti:
 	sti	; habilita interrupciones por flag
 	ret
 
+; FIXME _outb and _inb should be removed and use port_in and port_out instaed
 _outb:
 	push	ebp
 	mov		ebp, esp
@@ -109,6 +114,78 @@ _lidt:				; Carga el IDTR
 	pop		ebp
 	retn
 
+;=================================================================
+;					PORT_IN
+;=================================================================
+_port_in:
+	push ebp
+	mov ebp, esp
+	push dx
+
+	mov eax, 0
+	mov dx, [ebp+8]
+	in al, dx
+
+	pop dx
+	leave
+	ret
+
+
+;=================================================================
+;					PORT_OUT
+;=================================================================
+
+_port_out:
+	push ebp
+	mov ebp, esp
+	pusha
+
+	mov dx, [ebp+8]
+	mov ax, [ebp+12]
+	out dx, al
+
+	popa
+	leave
+	ret
+
+
+;=================================================================
+;					PORTW_IN
+;=================================================================
+_portw_in:
+	push ebp
+	mov ebp, esp
+	push dx
+
+	mov eax, 0
+	mov dx, [ebp+8]
+	in ax, dx
+
+	pop dx
+	leave
+	ret
+
+
+;=================================================================
+;					PORTW_OUT
+;=================================================================
+
+_portw_out:
+	push ebp
+	mov ebp, esp
+	pusha
+
+	mov dx, [ebp+8]
+	mov ax, [ebp+12]
+	out dx, ax
+
+	popa
+	leave
+	ret
+
+;=================================================================
+;					INTERRUPT HANDLERS
+;=================================================================
 
 _int_08_hand:				; Handler de INT 8 ( Timer tick)
 	push	ds
@@ -184,6 +261,10 @@ _SysCall:
 	mov esp, ebp
 	pop ebp
 	ret
+
+;=================================================================
+;					OTHERS
+;=================================================================
 
 _reset:
 .wait1:
