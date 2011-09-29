@@ -2,14 +2,14 @@
 
 static int nextfree = 0x300000;
 
-void* malloc(size_t size) {
+void* malloc(u32int size) {
 	void* temp = (void*) nextfree;
 	nextfree += size;
 	return temp;
 }
 
 // Malloc inicializado en 0
-void* calloc(size_t size) {
+void* calloc(u32int size) {
 	char* temp;
 	int i;
 	temp = (char*) malloc(size);
@@ -23,8 +23,8 @@ void free(void * pointer) {
 }
 
 
-void memcpy(void* to, void* from, size_t count) {
-	size_t i;
+void memcpy(void* to, void* from, u32int count) {
+	u32int i;
 	char* cfrom = (char *) from;
 	char* cto = (char *) to;
 	for (i = 0; i < count; i++) {

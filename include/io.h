@@ -6,9 +6,9 @@
 #include <driver/video.h>
 #include <tty.h>
 
-void sysRead(int fd, void * buffer, size_t count);
+void sysRead(int fd, void * buffer, u32int count);
 
-void sysWrite(int fd, void * buffer, size_t count);
+void sysWrite(int fd, void * buffer, u32int count);
 
 static inline
 unsigned char inb( unsigned short port ) {

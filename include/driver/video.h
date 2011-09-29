@@ -43,7 +43,7 @@ VideoInfo video;
 /* Inicializa los valores iniciales para el manejo de la pantalla*/
 void video_init();
 
-void video_write(char *string, size_t count, char format);
+void video_write(char *string, u32int count, char format);
 
 void video_setCursor(int offset);
 

@@ -44,7 +44,7 @@ TTY* tty_getCurrentTTY() {
 	return &tty[currentTTY];
 }
 
-void tty_write(TTY* tty, char* buffer, size_t size) {
+void tty_write(TTY* tty, char* buffer, u32int size) {
 	int j;
 	char format = video_getFormattedColor(tty->fgColor, tty->bgColor);
 	for (j = 0; j < size; ++j) {

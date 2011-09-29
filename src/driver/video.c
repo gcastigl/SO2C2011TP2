@@ -7,7 +7,7 @@ void video_init() {
 	video_setCursor(0);
 }
 
-void video_write(char *string, size_t count, char format) {
+void video_write(char *string, u32int count, char format) {
 	memcpy(video.address + video.offset, string, count);
 	video.offset += count * 2;
 	video_setCursor(video.offset / 4);

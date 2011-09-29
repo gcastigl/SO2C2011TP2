@@ -3,13 +3,13 @@
 
 #include <defs.h>
 
-void* malloc(size_t neededMem);
+void* malloc(u32int neededMem);
 
-void* calloc(size_t size);
+void* calloc(u32int size);
 
 void free(void * pointer);
 
-void memcpy(void* to, void* from, size_t count);
+void memcpy(void* to, void* from, u32int count);
 
 #endif
 

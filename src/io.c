@@ -2,7 +2,7 @@
 
 int isTTY(int fd);
 
-void sysRead(int fd, void * buffer, size_t count) {
+void sysRead(int fd, void * buffer, u32int count) {
 	int i;
 	char c;
 	char * aux;
@@ -18,7 +18,7 @@ void sysRead(int fd, void * buffer, size_t count) {
 
 // FIXME: how to recognize each FD according to its value
 // We are now assuming that all fd are TTYs
-void sysWrite(int fd, void * buffer, size_t count) {
+void sysWrite(int fd, void * buffer, u32int count) {
 	TTY* tty;
 	if (fd == STD_OUT || fd == STD_ERROR) {
 		tty = tty_getCurrentTTY();

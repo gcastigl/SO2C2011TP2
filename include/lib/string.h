@@ -5,7 +5,7 @@
 #include <lib/stdio.h>
 #include <lib/stdlib.h>
 
-size_t strlen(char *string);
+u32int strlen(char *string);
 
 int strcmp(const char * s1, const char * s2);
 
@@ -15,6 +15,6 @@ int substr(const char * s1, const char *s2);
 
 void strcpy(char* to, char* from);
 
-void *memset(void *s, int c, size_t n);
+void *memset(void *s, int c, u32int n);
 
 #endif

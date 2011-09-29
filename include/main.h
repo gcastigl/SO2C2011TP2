@@ -22,7 +22,7 @@ int getCurrPID();
 * - Cantidad
 *
 **/
-size_t __write(int fd, const void* buffer, size_t count);
+u32int __write(int fd, const void* buffer, u32int count);
 
 /* __read
 *
@@ -32,7 +32,7 @@ size_t __write(int fd, const void* buffer, size_t count);
 * - Cantidad
 *
 **/
-size_t __read(int fd, void* buffer, size_t count);
+u32int __read(int fd, void* buffer, u32int count);
 
 #endif
 

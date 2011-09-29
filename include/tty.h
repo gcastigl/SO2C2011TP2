@@ -34,7 +34,7 @@ TTY* tty_getCurrentTTY();
 
 TTY* tty_getTTY(int index);
 
-void tty_write(TTY* tty, char* buffer, size_t size);
+void tty_write(TTY* tty, char* buffer, u32int size);
 
 void tty_clean(TTY* tty);
 

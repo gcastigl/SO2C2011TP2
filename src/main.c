@@ -38,7 +38,7 @@ int getNextPID() {
  *	buffer = Storage location for data.
  *	count = Maximum number of bytes.
  */
-size_t __read(int fd, void * buffer, size_t count) {
+u32int __read(int fd, void * buffer, u32int count) {
 	_SysCall(SYSTEM_READ,fd, buffer, count);
 	return count;
 }
@@ -48,7 +48,7 @@ size_t __read(int fd, void * buffer, size_t count) {
  *	buffer = Data to be written..
  *	count = Maximum number of bytes.
  */
-size_t __write(int fd, const void * buffer, size_t count) {
+u32int __write(int fd, const void * buffer, u32int count) {
 	_SysCall(SYSTEM_WRITE, fd, buffer, count);
 	return count;
 }

@@ -1,7 +1,7 @@
 #include <lib/string.h>
 
-size_t strlen(char* string) {
-	size_t count = 0;
+u32int strlen(char* string) {
+	u32int count = 0;
 	while (string[count] != 0) {
 		count++;
 	}
@@ -45,7 +45,7 @@ void strcpy(char* to, char* from) {
 	memcpy(to, from, len);
 }
 
-void *memset(void *s, int c, size_t n) {
+void *memset(void *s, int c, u32int n) {
     unsigned char* p=s;
     while(n--)
         *p++ = (unsigned char)c;

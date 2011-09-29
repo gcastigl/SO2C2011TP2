@@ -54,9 +54,6 @@ typedef          char  s8int;
 
 #define K_BUFFER_SIZE	10
 
-typedef unsigned int size_t;
-typedef short int ssize_t;
-
 #pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */
 
 #endif
