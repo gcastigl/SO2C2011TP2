@@ -27,8 +27,7 @@ void sysWrite(int fd, void * buffer, u32int count) {
 	}
 	tty_write(tty, (char*) buffer, count);
 	video_setOffset(0);
-	video_write(tty->terminal, tty->offset + 1,
-		video_getFormattedColor(tty->fgColor, tty->bgColor));
+	video_write(tty->terminal, tty->offset + 1);
 }
 
 int isTTY(int fd) {

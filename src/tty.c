@@ -29,7 +29,7 @@ void tty_setCurrent(int tty) {
 	TTY* currTTY = tty_getCurrentTTY();
 	video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
 	video_setOffset(0);
-	video_write(currTTY->terminal, currTTY->offset, -1);
+	video_write(currTTY->terminal, currTTY->offset);
 }
 
 int tty_getCurrent() {
@@ -73,7 +73,7 @@ void tty_clean(TTY* tty) {
 	tty->offset = 0;
 	video_clearScreen(video_getFormattedColor(tty->fgColor, tty->bgColor));
 	video_setOffset(0);
-	video_write(tty->terminal, tty->offset, -1);
+	video_write(tty->terminal, tty->offset);
 }
 char tty_getCurrTTYFormat() {
 	TTY* currTTY = tty_getCurrentTTY();
