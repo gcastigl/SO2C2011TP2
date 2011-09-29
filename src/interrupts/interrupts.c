@@ -1,6 +1,5 @@
 #include <interrupts/interrupts.h>
 
-
 //Timer Tick
 void int_08() {
 }
@@ -21,3 +20,32 @@ void int_80(int sysCallNumber, void ** args) {
 	}
 }
 
+void bounds() {
+	panic("Bounds Exceeded!");
+}
+
+void invop() {
+	panic("Invalid OPCODE");
+}
+
+void div0() {
+	panic("Division by 0");
+}
+
+
+void gpf() {
+	panic("General Protection Fault");
+}
+
+void ssf() {
+	panic("Stack Segment Fault");
+}
+
+
+void snp() {
+	panic("Segment Not Present");
+}
+
+void pageFault() {
+    panic("Page fault!");
+}

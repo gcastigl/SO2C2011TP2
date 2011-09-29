@@ -9,6 +9,7 @@
 #include <defs.h>
 #include <io.h>
 #include <lib/stdio.h>
+#include <paging/paging.h>
 #include <interrupts/interruptDefs.h>
 
 int getNextPID();

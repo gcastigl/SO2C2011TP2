@@ -32,3 +32,10 @@ void memcpy(void* to, void* from, u32int count) {
 	}
 }
 
+void panic(char* str) {
+    TTY* tty = tty_getCurrent();
+    tty_clean(tty);
+    tty_write(tty, str, strlen(str));
+    while(1);
+}
+

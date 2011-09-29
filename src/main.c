@@ -12,6 +12,7 @@ int main(struct multiboot *mboot_ptr) {
 		_mascaraPIC1(0xFC);
 		_mascaraPIC2(0xFF);
 		doubleFlagsFix(1.1);
+		//initialise_paging();
 		keyboard_init();
 		video_init();
 		tty_init();
