@@ -1,4 +1,4 @@
-#include "../include/interrupts.h"
+#include <interrupts.h>
 
 
 //Timer Tick

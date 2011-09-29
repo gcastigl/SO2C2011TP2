@@ -1,9 +1,9 @@
 #ifndef TTY_H_
 #define TTY_H_
 
-#include "defs.h"
-#include "lib/stdlib.h"
-#include "driver/video.h"
+#include <defs.h>
+#include <lib/stdlib.h>
+#include <driver/video.h>
 
 #define MAX_TTYs		8
 

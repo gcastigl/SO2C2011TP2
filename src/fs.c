@@ -1,6 +1,6 @@
 // fs.c -- Defines the interface for and structures relating to the virtual file system.
 //         Written for JamesM's kernel development tutorials.
-#include "../include/fs.h"
+#include <fs.h>
 
 fs_node_t *fs_root = 0; // The root of the filesystem.
 

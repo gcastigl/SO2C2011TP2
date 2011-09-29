@@ -1,8 +1,8 @@
 #ifndef INITRD_H
 #define INITRD_H
 
-#include "defs.h"
-#include "fs.h"
+#include <defs.h>
+#include <fs.h>
 
 typedef struct
 {

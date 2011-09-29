@@ -1,4 +1,4 @@
-#include "../../include/lib/math.h"
+#include <lib/math.h>
 
 long seed = 213131;
 

@@ -1,4 +1,4 @@
-#include "../include/at_wini.h"
+#include <at_wini.h>
 
 #define BIT(i)	(1 << (i))
 /*

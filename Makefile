@@ -4,8 +4,8 @@ NAME=kernel.bin
 
 SOURCES= src/asm/libasm.asm src/asm/boot.asm src/libc.c \
 src/driver/keyboard.c \
-src/lib/stdlib.c src/io.c src/lib/math.c src/lib/string.c src/lib/printf.c src/lib/scanf.c \
-src/interrupts.c src/shell.c src/command.c src/tty.c src/driver/videoUtils.c src/driver/video.c src/user.c src/main.c
+src/lib/stdlib.c src/lib/math.c \
+src/shell.c src/command.c src/interrupts.c src/lib/string.c src/lib/printf.c src/lib/scanf.c src/io.c src/driver/videoUtils.c src/driver/video.c src/user.c src/main.c
 
 OBJS=$(patsubst src%.asm, bin%.o,  \
 $(patsubst src%.c, bin%.o, $(SOURCES)))
@@ -16,15 +16,13 @@ ASFLAGS=-faout
 CC=gcc
 
 C_INCLUDE_PATH=include
-VPATH=src/
 NAME=kernel.bin
 
 define cc-command
-$(CC) $(CFLAGS) $< -o $@
+$(CC) $(CFLAGS) -I$(C_INCLUDE_PATH) $< -o $@
 endef
 
-all: $(OBJS)
-	$(link)
+all: $(OBJS) link
 
 clean:
 	rm bin/*.o bin/$(NAME)
@@ -32,7 +30,7 @@ clean:
 link:
 	ld $(LDFLAGS) -o $(BIN_DIR)/$(NAME) $(OBJS)
 
-bin/%.o: src/%.c include/%.h
+bin/%.o: src/%.c
 	mkdir -p $(dir $@)
 	$(cc-command)
 

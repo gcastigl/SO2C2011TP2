@@ -1,9 +1,10 @@
-#include "../main.h"
-#include "../varargs.h"
-#include "../stdarg.h"
-
 #ifndef STDIO_H
 #define STDIO_H
+
+#include <main.h>
+#include <varargs.h>
+#include <stdarg.h>
+
 
 #define F_PRECISION	6
 

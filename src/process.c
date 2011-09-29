@@ -1,4 +1,4 @@
-#include "../include/process.h"
+#include <process.h>
 
 static PROCESS procesos[MAX_PROCESS];
 static PROCESS idle;

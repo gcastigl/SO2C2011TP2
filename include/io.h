@@ -1,10 +1,10 @@
 #ifndef IO_H
 #define IO_H
 
-#include "defs.h"
-#include "driver/keyboard.h"
-#include "driver/video.h"
-#include "tty.h"
+#include <defs.h>
+#include <driver/keyboard.h>
+#include <driver/video.h>
+#include <tty.h>
 
 void sysRead(int fd, void * buffer, size_t count);
 

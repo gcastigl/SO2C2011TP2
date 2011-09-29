@@ -1,4 +1,4 @@
-#include "../include/shell.h"
+#include <shell.h>
 
 void excecuteCmd(char* buffer);
 int parse_cmd(char* buffer);

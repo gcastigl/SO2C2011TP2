@@ -1,8 +1,7 @@
 #ifndef FS_H
 #define FS_H
 
-#include "defs.h"
-//#include "common.h"
+#include <defs.h>
 
 #define FS_FILE        0x01
 #define FS_DIRECTORY   0x02

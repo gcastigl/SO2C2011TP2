@@ -1,4 +1,4 @@
-#include "../include/command.h"
+#include <command.h>
 
 int echo_cmd(int argc, char *argv[]) {
 	int i;

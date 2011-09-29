@@ -1,4 +1,4 @@
-#include "../include/user.h"
+#include <user.h>
 
 void prntWelcomeMsg();
 int isValidUser(char* userName);

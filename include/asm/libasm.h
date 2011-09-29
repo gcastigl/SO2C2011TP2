@@ -1,6 +1,6 @@
 #ifndef LIBASM_H
 #define LIBASM_H
-#include "../defs.h"
+#include <defs.h>
 
 unsigned int _read_msw();
 

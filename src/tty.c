@@ -1,4 +1,4 @@
-#include "../include/tty.h"
+#include <tty.h>
 
 void initTTY(int index);
 

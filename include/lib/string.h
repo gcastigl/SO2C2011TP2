@@ -1,8 +1,8 @@
 #ifndef STRING_H
 #define STRING_H
 
-#include "../defs.h"
-#include "stdio.h"
+#include <defs.h>
+#include <lib/stdio.h>
 
 size_t strlen(char *string);
 

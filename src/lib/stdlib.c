@@ -1,4 +1,4 @@
-#include "../../include/lib/stdlib.h"
+#include <lib/stdlib.h>
 
 static int nextfree = 0x300000;
 

@@ -1,7 +1,7 @@
-#include "defs.h"
-
 #ifndef _kc_
 #define _kc_
+
+#include <defs.h>
 
 /* Muestra la imagen de inicio */
 void showSplashScreen();
@@ -13,6 +13,6 @@ void wait(int time);
 void setup_IDT_entry (DESCR_INT *item, byte selector, dword offset, byte access,
 	byte cero);
 
-void setup_GDT_entry (DESCR_SEG* item, dword base, dword limit, byte access, byte attribs);
+void setup_GDT_entry (gdt_ptr_t* item, dword base, dword limit, byte access, byte attribs);
 
 #endif

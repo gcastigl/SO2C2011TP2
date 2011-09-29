@@ -1,9 +1,9 @@
 #ifndef _shell_
 #define _shell_
 
-#include "lib/string.h"
-#include "command.h"
-#include "user.h"
+#include <lib/string.h>
+#include <command.h>
+#include <user.h>
 
 #define WELCOME_MSG	"\t\t\t\t\tWelcome to GAT O.S.\n\tFor a list of availables commands \
 please type in help\n"

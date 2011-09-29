@@ -1,11 +1,11 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-#include "../asm/libasm.h"
-#include "../defs.h"
-#include "../shell.h"
-#include "../driver/video.h"
-#include "../lib/stdlib.h"
+#include <asm/libasm.h>
+#include <defs.h>
+#include <shell.h>
+#include <driver/video.h>
+#include <lib/stdlib.h>
 
 #define ESCAPE	0x01
 #define UCASE	0x02

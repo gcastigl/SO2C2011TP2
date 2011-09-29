@@ -1,4 +1,4 @@
-#include "../include/io.h"
+#include <io.h>
 
 int isTTY(int fd);
 

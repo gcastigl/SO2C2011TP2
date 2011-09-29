@@ -1,7 +1,7 @@
 #ifndef STDLIB_H
 #define STDLIB_H
 
-#include "../defs.h"
+#include <defs.h>
 
 void* malloc(size_t neededMem);
 

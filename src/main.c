@@ -1,4 +1,4 @@
-#include "../include/main.h"
+#include <main.h>
 
 static DESCR_INT idt[0x81];			/* IDT de 81h entradas*/
 static IDTR idtr;					/* IDTR */
