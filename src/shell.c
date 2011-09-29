@@ -76,8 +76,7 @@ void shell_cleanScreen() {
 	TTY* tty = tty_getCurrentTTY();
 	tty_clean(tty);
 	video_setOffset(0);
-	video_write(tty->terminal, TOTAL_VIDEO_SIZE,
-		video_getFormattedColor(tty->fgColor, tty->bgColor));
+	video_write(tty->terminal, TOTAL_VIDEO_SIZE);
 }
 
 /*
