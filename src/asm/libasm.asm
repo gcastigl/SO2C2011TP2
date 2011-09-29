@@ -1,39 +1,49 @@
-GLOBAL  _read_msw,_lidt
-GLOBAL  _int_08_hand
-GLOBAL	_int_09_hand
-GLOBAL _int_80_hand
-GLOBAL  _mascaraPIC1,_mascaraPIC2,_Cli,_Sti
+GLOBAL  _read_msw,
+GLOBAL  _mascaraPIC1,_mascaraPIC2,_cli,_sti
 GLOBAL  _debug
+
 GLOBAL	_outb
 GLOBAL	_inb
 GLOBAL _port_in
 GLOBAL _port_out
 GLOBAL _portw_in
 GLOBAL _portw_out
+
 GLOBAL _reset
-GLOBAL _cpuIdTest
-GLOBAL _rdtscTest
-GLOBAL _rdmsrTest
-GLOBAL _SysCall
-GLOBAL _tscGetCpuSpeed
-GLOBAL _msrGetCpuSpeed
+
 GLOBAL _getTTCounter
 GLOBAL _initTTCounter
-EXTERN  int_08
-EXTERN	int_09
-EXTERN	int_80
+GLOBAL ttcounter
+
+GLOBAL _SysCall
+GLOBAL _gdt_flush
+GLOBAL _idt_flush
 
 SECTION .data
 SEG_BIOS_DATA_AREA	equ	40h
-OFFSET_TICK_COUNT	equ 6Ch
-INTERVAL_IN_TICKS	equ 10
 
-SECTION .bss
-ttcounter 	resd 1
-low			resd 1
-high		resd 1
+common ttcounter 4
 
 SECTION .text
+
+_idt_flush:
+	mov eax, [esp + 4]
+	lidt [eax]
+	ret
+
+_gdt_flush:
+	mov eax, [esp + 4]
+	lgdt [eax]
+	
+	mov ax, 0x10
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
+	jmp 0x08:.flush
+.flush:
+	ret
 
 _initTTCounter:
 	push ebp
@@ -54,11 +64,11 @@ _getTTCounter:
 	pop ebp
 	ret
 
-_Cli:
+_cli:
 	cli	; limpia flag de interrupciones
 	ret
 
-_Sti:
+_sti:
 
 	sti	; habilita interrupciones por flag
 	ret
@@ -100,18 +110,6 @@ _mascaraPIC2:			; Escribe mascara del PIC 2
 
 _read_msw:
 	smsw	ax		; Obtiene la Machine Status Word
-	retn
-
-
-_lidt:				; Carga el IDTR
-	push	ebp
-	mov		ebp, esp
-	push	ebx
-	mov		ebx, [ss: ebp + 6] ; ds:bx = puntero a IDTR
-	rol		ebx,16
-	lidt	[ds: ebx]          ; carga IDTR
-	pop		ebx
-	pop		ebp
 	retn
 
 ;=================================================================
@@ -187,64 +185,6 @@ _portw_out:
 ;					INTERRUPT HANDLERS
 ;=================================================================
 
-_int_08_hand:				; Handler de INT 8 ( Timer tick)
-	push	ds
-	push	es              ; Se salvan los registros
-	pusha                   ; Carga de DS y ES con el valor del selector
-	
-	push eax
-	mov eax, [ttcounter]
-	inc eax
-	mov [ttcounter], eax
-	pop eax
-	
-	mov		ax, 10h			; a utilizar.
-	mov		ds, ax
-	mov		es, ax
-	call	int_08
-	mov		al,20h			; Envio de EOI generico al PIC
-	out		20h,al
-	popa
-	pop		es
-	pop		ds
-	iret
-
-_int_09_hand:				; Handler de INT 9 ( Teclado )
-	push	ds
-	push	es
-	pusha
-	call	int_09
-	mov		al,20h			; Envio de EOI generico al PIC
-	out		20h,al
-	popa
-	pop		es
-	pop		ds
-	iret
-
-_int_80_hand:				; Handler de INT 80h
-	push ebp
-	mov ebp, esp			;StackFrame
-	
-	push edx
-	push ecx
-	push ebx
-	
-	push esp				; Puntero al array de argumentos
-	push eax				; Numero de Systemcall
-	call int_80
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	pop eax
-	pop esp
-
-	pop ebx
-	pop ecx
-	pop edx
-	
-	mov esp, ebp
-	pop ebp
-	iret
-
 _SysCall:
 	push ebp
 	mov ebp, esp
@@ -273,125 +213,6 @@ _reset:
 	jne		.wait1
 	mov		al, 0FEh
 	out		64h, al
-	ret
-
-; Returns 1 if cpuid function is present.
-_cpuIdTest:
-	pushfd ; get
-	pop eax
-	mov ecx, eax ; save
-	xor eax, 0x200000 ; flip
-	push eax ; set
-	popfd
-	pushfd ; and test
-	pop eax
-	xor eax, ecx ; mask changed bits
-	shr eax, 21 ; move bit 21 to bit 0
-	and eax, 1 ; and mask others
-	push ecx
-	popfd ; restore original flags
-	ret
-
-_rdtscTest:
-	push ebp
-	mov ebp, esp
-	mov eax, 1
-	cpuid
-	mov eax, 0
-	sub dx, 10h 
-	mov ax, dx ; if eax != 0, rdtsc is supported
-	mov esp, ebp
-	pop ebp
-	ret
-	
-_rdmsrTest:
-	push ebp
-	mov ebp, esp
-	mov eax, 1
-	cpuid
-	mov eax, 0
-	sub dx, 20h 
-	mov ax, dx ; if eax != 0, rdmsr is supported
-	mov esp, ebp
-	pop ebp
-	ret
-
-_tscGetCpuSpeed:
-	push ebp
-	mov ebp, esp
-	
-	mov ebx, [ttcounter]
-.wait_irq0:
-	cmp  ebx, [ttcounter]
-	jz	.wait_irq0
-	push ebx
-	cpuid
-	rdtsc                   ; read time stamp counter
-	mov [low], eax
-	mov	[high], edx
-	pop ebx
-	add	ebx, INTERVAL_IN_TICKS + 1             ; Set time delay value ticks.
-
-.wait_for_elapsed_ticks:
-	cmp	ebx, [ttcounter] ; Have we hit the delay?
-	jnz	.wait_for_elapsed_ticks
-	mov eax, 0
-	push ebx
-	cpuid
-	rdtsc
-	sub eax, [low]  ; Calculate TSC
-	sbb edx, [high]
-	pop ebx
-	; f(total_ticks_per_Second) =  (1 / total_ticks_per_Second) * 1,000,000
-	; This adjusts for MHz.
-	; so for this: f(100) = (1/100) * 1,000,000 = 10000
-	; we use 18.2, so 1/18.2 * 1000000 = 54945
-	mov ebx, 54945 * INTERVAL_IN_TICKS
-    div ebx
-	; ax contains measured speed in MHz
-.end:
-	mov esp, ebp
-	pop ebp
-	ret
-
-_msrGetCpuSpeed:
-	push ebp
-	mov ebp, esp
-	
-	mov ebx, [ttcounter]
-.wait_irq0:
-	cmp  ebx, [ttcounter]
-	jz	.wait_irq0
-	push ebx
-	cpuid
-	mov ecx, 10h
-	rdmsr
-	mov [low], eax
-	mov	[high], edx
-	pop ebx
-	add	ebx, INTERVAL_IN_TICKS + 1             ; Set time delay value ticks.
-
-.wait_for_elapsed_ticks:
-	cmp	ebx, [ttcounter] ; Have we hit the delay?
-	jnz	.wait_for_elapsed_ticks
-	mov eax, 0
-	push ebx
-	cpuid
-	mov ecx, 10h
-	rdmsr
-	sub eax, [low]  ; Calculate TSC
-	sbb edx, [high]
-	pop ebx
-	; f(total_ticks_per_Second) =  (1 / total_ticks_per_Second) * 1,000,000
-	; This adjusts for MHz.
-	; so for this: f(100) = (1/100) * 1,000,000 = 10000
-	; we use 18.2, so 1/18.2 * 1000000 = 54945
-	mov ebx, 54945 * INTERVAL_IN_TICKS
-    div ebx
-	; ax contains measured speed in MHz
-.end:
-	mov esp, ebp
-	pop ebp
 	ret
 
 ; Debug para el BOCHS, detiene la ejecución

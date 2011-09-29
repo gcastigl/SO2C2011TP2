@@ -12,13 +12,11 @@ unsigned char _port_in(ushort port);
 void _portw_out(ushort port, ushort data);
 unsigned int _portw_in(ushort port);
 
-void _lidt (IDTR *idtr);
-
 void _mascaraPIC1 (byte mascara);  /* Escribe mascara de PIC1 */
 void _mascaraPIC2 (byte mascara);  /* Escribe mascara de PIC2 */
 
-void _Cli(void);        /* Deshabilita interrupciones  */
-void _Sti(void);	 /* Habilita interrupciones  */
+void _cli(void);        /* Deshabilita interrupciones  */
+void _sti(void);	 /* Habilita interrupciones  */
 
 void _reset();
 int _cpuIdTest();

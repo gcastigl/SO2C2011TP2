@@ -138,7 +138,7 @@ void _write(int ata, char * msg, int bytes, unsigned short sector, int offset){
 }
 
 void writeDataToRegister(int ata, char upper, char lower){
-	_Cli();
+	_cli();
 	unsigned short out;
 
 	// Wait for driver's ready signal.
@@ -148,11 +148,11 @@ void writeDataToRegister(int ata, char upper, char lower){
 	out = (upper << 8) | lower;
 	_portw_out(ata + WIN_REG0, out);
 
-	_Sti();
+	_sti();
 }
 
 unsigned short getDataRegister(int ata){
-	_Cli();
+	_cli();
 	unsigned short ans;
 
 	// Wait for driver's ready signal.
@@ -160,19 +160,19 @@ unsigned short getDataRegister(int ata){
 
 	ans = _portw_in(ata + WIN_REG0);
 
-	_Sti();
+	_sti();
 	return ans;
 }
 
 unsigned short getErrorRegister(int ata){
-	_Cli();
+	_cli();
 	unsigned short rta = _port_in(ata + WIN_REG1) & 0x00000FFFF;
-	_Sti();
+	_sti();
 	return rta;
 }
 
 void sendComm(int ata, int rdwr, unsigned short sector){
-	_Cli();
+	_cli();
 
 	_port_out(ata + WIN_REG1, 0);
 	_port_out(ata + WIN_REG2, 0);	// Set count register sector in 1
@@ -186,22 +186,22 @@ void sendComm(int ata, int rdwr, unsigned short sector){
 	_port_out(ata + WIN_REG7, rdwr);
 
 
-	_Sti();
+	_sti();
 }
 
 unsigned short getStatusRegister(int ata){
 	unsigned short rta;
-	_Cli();
+	_cli();
 	rta = _port_in(ata + WIN_REG7) & 0x00000FFFF;
-	_Sti();
+	_sti();
 	return rta;
 }
 
 void identifyDevice(int ata){
-	_Cli();
+	_cli();
 	_port_out(ata + WIN_REG6, 0);
 	_port_out(ata + WIN_REG7, WIN_IDENTIFY);
-	_Sti();
+	_sti();
 }
 
 // Check disk features

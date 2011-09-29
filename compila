@@ -2,6 +2,8 @@
 cd ./bin
 rm -rf *
 nasm -f aout ../src/asm/libasm.asm -o libasm.o
+nasm -f aout ../src/asm/cpuSpeed.asm -o cpuSpeed.o
+nasm -f aout ../src/asm/asmInterrupts.asm -o asmInterrupts.o
 nasm -f aout ../src/asm/boot.asm -o boot.o
 gcc -m32 -g -c ../src/main.c -o main.o 						-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/libc.c  -o libc.o 					-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
@@ -19,5 +21,5 @@ gcc -m32 -g -c ../src/command.c -o command.o 				-I../include -fno-builtin -fno-
 gcc -m32 -g -c ../src/tty.c -o tty.o 						-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/driver/videoUtils.c -o videoUtils.o 	-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/user.c -o user.o		 				-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-ld -melf_i386 -T ../src/link.ld -o kernel.bin main.o boot.o libc.o libasm.o video.o interrupts.o \
+ld -melf_i386 -T ../src/link.ld -o kernel.bin main.o boot.o libc.o cpuSpeed.o asmInterrupts.o libasm.o video.o interrupts.o \
 	keyboard.o io.o stdlib.o string.o shell.o command.o math.o tty.o printf.o scanf.o videoUtils.o user.o
