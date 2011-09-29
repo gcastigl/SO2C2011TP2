@@ -33,6 +33,9 @@ _int_09_hand:				; Handler de INT 9 ( Teclado )
 	push	ds
 	push	es
 	pusha
+	mov		ax, 10h			; a utilizar.
+	mov		ds, ax
+	mov		es, ax
 	call	int_09
 	mov		al,20h			; Envio de EOI generico al PIC
 	out		20h,al
@@ -51,6 +54,9 @@ _int_80_hand:				; Handler de INT 80h
 	
 	push esp				; Puntero al array de argumentos
 	push eax				; Numero de Systemcall
+	mov		ax, 10h			; a utilizar.
+	mov		ds, ax
+	mov		es, ax
 	call int_80
 	mov	al,20h			; Envio de EOI generico al PIC
 	out	20h,al
