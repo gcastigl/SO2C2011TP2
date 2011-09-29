@@ -1,5 +1,5 @@
-#ifndef _AT_WINI_H_
-#define _AT_WINI_H_
+#ifndef AT_WINI_H
+#define AT_WINI_H
 
 #include <asm/libasm.h>
 #include <lib/stdio.h>

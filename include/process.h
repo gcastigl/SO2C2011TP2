@@ -1,5 +1,5 @@
-#ifndef PROCESS_H_
-#define PROCESS_H_
+#ifndef PROCESS_H
+#define PROCESS_H
 
 #define MAX_PROCESS_NAME 	32
 #define MAX_PROCESS			64

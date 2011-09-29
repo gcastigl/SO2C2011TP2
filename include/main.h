@@ -1,5 +1,5 @@
-#ifndef _kernel_
-#define _kernel_
+#ifndef MAIN_H
+#define MAIN_H
 
 #include <defs.h>
 #include <multiboot.h>

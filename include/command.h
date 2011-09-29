@@ -1,5 +1,5 @@
-#ifndef _command_
-#define _command_
+#ifndef COMMAND_H
+#define COMMAND_H
 
 #include <defs.h>
 #include <asm/libasm.h>

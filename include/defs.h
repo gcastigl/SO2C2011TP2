@@ -1,5 +1,5 @@
-#ifndef _defs_
-#define _defs_
+#ifndef DEFS_H
+#define DEFS_H
 
 #define byte unsigned char
 #define word short int

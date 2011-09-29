@@ -1,5 +1,5 @@
-#ifndef _shell_
-#define _shell_
+#ifndef SHELL_H
+#define SHELL_H
 
 #include <lib/string.h>
 #include <command.h>

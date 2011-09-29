@@ -1,5 +1,5 @@
-#ifndef USER_H_
-#define USER_H_
+#ifndef USER_H
+#define USER_H
 
 #include <driver/video.h>
 
