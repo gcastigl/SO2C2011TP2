@@ -44,3 +44,10 @@ void strcpy(char* to, char* from) {
 	int len = strlen(from) + 1;
 	memcpy(to, from, len);
 }
+
+void *memset(void *s, int c, size_t n) {
+    unsigned char* p=s;
+    while(n--)
+        *p++ = (unsigned char)c;
+    return s;
+}
