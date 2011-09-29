@@ -43,6 +43,7 @@ static u32int first_frame() {
             }
         }
     }
+    return ERROR;
 }
 
 // Function to allocate a frame.

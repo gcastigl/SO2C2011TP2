@@ -16,7 +16,7 @@ void tty_init() {
 }
 
 void initTTY(int index) {
-	tty[index].terminal = (char*) calloc(TOTAL_VIDEO_SIZE);
+	tty[index].terminal = (char*) kmalloc(TOTAL_VIDEO_SIZE);
 	tty[index].offset = 0;
 	tty[index].buffer.head = 0;
 	tty[index].buffer.tail = 0;

@@ -2,7 +2,7 @@
 #define PAGING_H
 
 #include <defs.h>
-#include <paging/kheap.h>
+#include <lib/kheap.h>
 #include <lib/string.h>
 
 #define INDEX_FROM_BIT(a) (a / (8 * 4))
@@ -62,6 +62,8 @@ void switch_page_directory(page_directory_t *new);
 **/
 page_t *get_page(u32int address, int make, page_directory_t *dir);
 
+void alloc_frame(page_t *page, int is_kernel, int is_writeable);
+void free_frame(page_t *page);
 
 // A bitset of frames - used or free.
 u32int *frames;
