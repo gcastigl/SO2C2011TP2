@@ -6,7 +6,7 @@
 #include <shell.h>
 #include <driver/video.h>
 #include <lib/math.h>
-#include <interrupts.h>
+#include <interrupts/interrupts.h>
 
 #define HELP_HELP			"Shows this help function"
 

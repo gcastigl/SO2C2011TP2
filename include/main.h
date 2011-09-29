@@ -3,18 +3,17 @@
 
 #include <defs.h>
 #include <multiboot.h>
-#include <interrupts.h>
+#include <interrupts/interrupts.h>
 #include <driver/video.h>
 #include <asm/libasm.h>
 #include <defs.h>
 #include <io.h>
 #include <lib/stdio.h>
-#include <kc.h>
+#include <interrupts/interruptDefs.h>
 
 int getNextPID();
 
 int getCurrPID();
-
 /* __write
 *
 * Recibe como parametros:

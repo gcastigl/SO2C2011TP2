@@ -1,4 +1,4 @@
-#include <kc.h>
+#include <interrupts/interruptDefs.h>
 
 // Internal function prototypes.
 static void init_gdt();

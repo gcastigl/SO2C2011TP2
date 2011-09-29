@@ -1,5 +1,5 @@
-#ifndef _kc_
-#define _kc_
+#ifndef INTERRUPT_DEFS_H
+#define INTERRUPT_DEFS_H
 
 #include <defs.h>
 #include <asm/libasm.h>

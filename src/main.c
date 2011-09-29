@@ -4,8 +4,6 @@ static int currentPID = 0;
 static int nextPID = 1;
 
 void doubleFlagsFix(double n);
-void setupIDT();
-
 
 int main(struct multiboot *mboot_ptr) {
 	_cli();
