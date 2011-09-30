@@ -32,7 +32,7 @@ void memcpy(void* to, void* from, u32int count) {
 	}
 }
 
-void panic(char* str) {
+void panic(char* str, int lock) {
     _sti();
     char format = video_getFormattedColor(WHITE, BLACK);
     char *video = (char*)VIDEO_ADDRESS;
@@ -42,7 +42,7 @@ void panic(char* str) {
     for (i = 0; i < msgLength * 2; i+=2) {
         *(video + i) = str[i/2];
     }
-    while(1);
+    while(lock);
     _cli();
 }
 

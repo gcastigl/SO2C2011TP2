@@ -4,7 +4,6 @@
 //            Written for JamesM's kernel development tutorials.
 
 #include <lib/kheap.h>
-#include <paging/paging.h>
 
 // end is defined in the linker script.
 extern u32int end;
@@ -73,7 +72,7 @@ static void expand(u32int new_size, heap_t *heap)
     ASSERT(new_size > heap->end_address - heap->start_address);
 
     // Get the nearest following page boundary.
-    if (new_size&0xFFFFF000 != 0)
+    if ((new_size & 0xFFFFF000) != 0)
     {
         new_size &= 0xFFFFF000;
         new_size += 0x1000;
@@ -136,7 +135,7 @@ static s32int find_smallest_hole(u32int size, u8int page_align, heap_t *heap)
             // Page-align the starting point of this header.
             u32int location = (u32int)header;
             s32int offset = 0;
-            if ((location+sizeof(header_t)) & 0xFFFFF000 != 0)
+            if (((location + sizeof(header_t)) & 0xFFFFF000) != 0)
                 offset = 0x1000 /* page size */  - (location+sizeof(header_t))%0x1000;
             s32int hole_size = (s32int)header->size - offset;
             // Can we fit now?
@@ -174,7 +173,7 @@ heap_t *create_heap(u32int start, u32int end_addr, u32int max, u8int supervisor,
     start += sizeof(type_t)*HEAP_INDEX_SIZE;
 
     // Make sure the start address is page-aligned.
-    if (start & 0xFFFFF000 != 0)
+    if ((start & 0xFFFFF000) != 0)
     {
         start &= 0xFFFFF000;
         start += 0x1000;

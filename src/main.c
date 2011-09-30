@@ -16,12 +16,12 @@ int main(struct multiboot *mboot_ptr) {
 		keyboard_init();
 		video_init();
 		tty_init();
-		//setFD(STD_OUT);
-		//shell_init();
+		setFD(STD_OUT);
+		shell_init();
 		_initTTCounter();
 	_sti();
 	while (1) {
-		//shell_update();
+		shell_update();
 	}
 	return 0;
 }

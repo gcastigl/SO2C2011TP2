@@ -3,11 +3,10 @@
 void initTTY(int index);
 
 static TTY tty[MAX_TTYs];
-static int currentTTY;
+static int currentTTY = 0;
 
 void tty_init() {
 	int i;
-	currentTTY = 0;
 	for (i = 0; i < MAX_TTYs; i++) {
 		initTTY(i);
 	}

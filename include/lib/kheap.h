@@ -7,7 +7,7 @@
 #define KHEAP_H
 
 #include <defs.h>
-#include "ordered_map.h"
+#include <lib/ordered_map.h>
 
 #define KHEAP_START         0xC0000000
 #define KHEAP_INITIAL_SIZE  0x100000
