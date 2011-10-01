@@ -1,17 +1,24 @@
 ###############################################################
 # how much memory the emulated machine will have
 megs: 32
+
 # filename of ROM images
 romimage: file=./img/BIOS-bochs-latest
-vgaromimage: file=./img/vgabios.bin
-#vgaromimage: $BXSHARE/VGABIOS-elpin-2.40
+#vgaromimage: file=./img/vgabios.bin
+
 # what disk images will be used
-#floppya: 1_44=/home/srv/622C.IMG, status=inserted
 floppya: 1_44=./img/tpe.img, status=inserted
 #floppyb: 1_44=floppyb.img, status=inserted
+
 # hard disk
-#ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
-#ata0-master: type=disk, path="./dos_2.img", mode=flat, cylinders=81, heads=16, spt=63
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0-master: type=disk, mode=flat, translation=auto, path="img/disk.img", cylinders=20, heads=16, spt=63, biosdetect=auto, model="Generic 1234"
+
+ata1: enabled=1, ioaddr1=0x170, ioaddr2=0x370, irq=15
+ata1-master: type=disk, mode=flat, translation=auto, path="img/disk.img", cylinders=20, heads=16, spt=63, biosdetect=auto, model="Generic 1235"
+ata2: enabled=0
+ata3: enabled=0
+
 # choose the boot disk.
 cpu: ips=50000000
 boot: floppy
