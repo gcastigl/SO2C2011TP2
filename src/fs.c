@@ -63,6 +63,7 @@ int fs_createSubDirectory(Directory_t* dir, char* name) {
 	}
 	Directory_t* newFolder = (Directory_t*) kmalloc(sizeof(Directory_t));
 	initEmptyDirectory(newFolder, name);
+	newFolder->parent = dir;
 	dir->subDirs[dir->subDirsCount++] = newFolder;
 	return 0;
 }
