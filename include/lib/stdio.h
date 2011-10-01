@@ -1,7 +1,6 @@
 #ifndef STDIO_H
 #define STDIO_H
 
-#include <main.h>
 #include <varargs.h>
 #include <stdarg.h>
 

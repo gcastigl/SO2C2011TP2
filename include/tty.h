@@ -18,7 +18,7 @@ typedef struct {
 
 typedef struct {
 	char* terminal;
-	//Directory_t* currDirectory;
+	Directory_t* currDirectory;
 	char currPath[64];
 	int offset;
 	BUFFERTYPE buffer;

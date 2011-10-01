@@ -2,6 +2,8 @@
 #define FS_H
 
 #include <defs.h>
+#include <lib/stdio.h>
+#include <lib/string.h>
 #include <driver/ata_disk.h>
 
 #define MAX_FILENAME_LENGTH		64
