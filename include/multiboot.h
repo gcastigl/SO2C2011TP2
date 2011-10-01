@@ -22,8 +22,9 @@ struct multiboot
     u32int mem_upper;
     u32int boot_device;
     u32int cmdline;
-    u32int mods_count;
-    u32int mods_addr;
+    u32int mods_count;	// The number of modules loaded
+    u32int mods_addr;	// Array of addresses: Each 'entry' consists of the
+    //	starting address of the module and it's end, each being 4 bytes.
     u32int num;
     u32int size;
     u32int addr;

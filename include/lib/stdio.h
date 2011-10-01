@@ -8,10 +8,6 @@
 
 #define F_PRECISION	6
 
-typedef struct file_s {
-	int num;
-} FILE;
-
 char getchar();
 
 void putchar(char c);
