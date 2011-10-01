@@ -1,12 +1,68 @@
 #include "../include/file.h"
 
-void cd(const* path) {
-
+int cd(int argc, char *argv[]) {
+	if (argc != 1) {
+		printf("This cmd must be called with one argument!\n");
+		return 1;
+	}
+	if (strcmp("..", argv[0]) == 0) {
+		// Go up one direcotry;
+	} else {
+		Directory_t* next = fs_getDirectory(tty_getCurrentTTY()->currDirectory, argv[0]);
+		if (next != NULL) { // Switch directory (advance one folder)
+			tty_getCurrentTTY()->currDirectory = next;
+			int offset = tty_getCurrentTTY()->currPathOffset;
+			strcpy(tty_getCurrentTTY()->currPath + offset++, "/");
+			strcpy(tty_getCurrentTTY()->currPath + offset, next->name);
+		} else {
+			printf("cd: The directory %s does not exist\n", argv[0]);
+		}
+	}
+	return 0;
 }
 
-int ls(char * arg) {
+int ls(int argc, char *argv[]) {
+	if (argc == 0) {
+		Directory_t* current = tty_getCurrentTTY()->currDirectory;
+		int i;
+		for (i = 0; i < current->subDirsCount; i++) {
+			printf("\t%s\n", current->subDirs[i]->name);
+		}
+		return 0;
+	}
+	if (strcmp(argv[0], "/") == 0) {	// Absolute path
 
+	} else {
+
+	}
+	return 0;
 }
+
+int mkdir(int argc, char *argv[]) {
+	if(argc == 0 ) {
+		printf("mkdir: missing operand\n");
+	} else {
+		int created = fs_createSubDirectory(tty_getCurrentTTY()->currDirectory, argv[0]);
+		char* err = NULL;
+		switch(created) {
+			case 0:		// Directory was created OK
+				break;
+			case FS_DIR_EXISTS:
+				err = "File exists";
+				break;
+			case FS_DIR_FULL:
+				err = "Directory is full";
+				break;
+			default:
+				err = "Unknown error";
+		}
+		if (err != NULL) {
+			printf("mkdir: cannot create directory %s: %s\n", argv[0], err);
+		}
+	}
+	return 0;
+}
+
 /*
 int mkdir(char * arg){
 	if(strlen(arg) == 0 )

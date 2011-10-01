@@ -1,11 +1,20 @@
 #ifndef FILE_H
 #define FILE_H
 
+#include <defs.h>
 #include <lib/stdio.h>
+#include <fs.h>
+#include <tty.h>
 
 typedef struct {
 	u32int index;
 } FILE;
+
+int cd(int argc, char *argv[]);
+
+int ls(int argc, char *argv[]);
+
+int mkdir(int argc, char *argv[]);
 
 /*
 void createFilesystem();
