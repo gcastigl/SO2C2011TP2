@@ -6,9 +6,9 @@
 #include <lib/stdio.h>
 #include <lib/string.h>
 
-#define MAX_FILENAME_LENGTH		64
-#define MAX_FILES_PER_FOLDER	64
-#define MAX_FOLDERS_PER_FOLDER	64
+#define MAX_FILENAME_LENGTH		32
+#define MAX_FILES_PER_FOLDER	32
+#define MAX_FOLDERS_PER_FOLDER	32
 
 // ERROR CODES
 #define	DIR_EXISTS	1
@@ -22,14 +22,13 @@ typedef struct {
 	int length;
 } iNode;
 
-
 typedef struct Directory_t {
 	char name[MAX_FILENAME_LENGTH];
 	iNode* files[MAX_FILES_PER_FOLDER];
 	u32int filesCount;
 	struct Directory_t* parent;
-	struct Directory_t* subDirs[MAX_FOLDERS_PER_FOLDER];
 	u32int subDirsCount;
+	struct Directory_t* subDirs[MAX_FOLDERS_PER_FOLDER];
 } Directory_t;
 
 void directory_initialize();
