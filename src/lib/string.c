@@ -41,8 +41,10 @@ int substr(const char * s1, const char *s2) {
 }
 
 void strcpy(char* to, char* from) {
-	int len = strlen(from) + 1;
-	memcpy(to, from, len);
+	while(*from != '\0') {
+		*to++ = *from++;
+	}
+	*to = '\0';
 }
 
 void *memset(void *s, int c, u32int n) {
@@ -70,3 +72,4 @@ int indexOf(char* str, char c, int startIndex) {
 	}
 	return -1;
 }
+
