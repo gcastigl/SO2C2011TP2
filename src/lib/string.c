@@ -48,6 +48,25 @@ void strcpy(char* to, char* from) {
 void *memset(void *s, int c, u32int n) {
     unsigned char* p=s;
     while(n--)
-        *p++ = (unsigned char)c;
+        *p++ = (unsigned char) c;
     return s;
+}
+
+void strncpy(char *to, const char *from, int size) {
+	while(size < 0) {
+		*to++ = *from++;
+		size--;
+	}
+	*to = '\0';
+}
+
+int indexOf(char* str, char c, int startIndex) {
+	int i = 0;
+	while(str[i] != '\0') {
+		if (str[i] == c) {
+			return i;
+		}
+		i++;
+	}
+	return -1;
 }
