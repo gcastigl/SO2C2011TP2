@@ -1,4 +1,5 @@
 #include <lib/stdio.h>
+#include <main.h>
 
 static void prints(char * string);
 
