@@ -1,8 +1,5 @@
-// ordered_array.c -- Implementation for creating, inserting and deleting
-// from ordered arrays.
-// Written for JamesM's kernel development tutorials.
-
 #include <lib/ordered_map.h>
+#include <lib/kheap.h>
 
 s8int standard_lessthan_predicate(type_t a, type_t b)
 {

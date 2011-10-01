@@ -2,6 +2,8 @@
 #define TTY_H
 
 #include <defs.h>
+#include <fs.h>
+#include <lib/kheap.h>
 #include <lib/stdlib.h>
 #include <driver/video.h>
 
@@ -17,6 +19,8 @@ typedef struct {
 
 typedef struct {
 	char* terminal;
+	Directory_t* currDirectory;
+	char currPath[64];
 	int offset;
 	BUFFERTYPE buffer;
 	// FIXME: This values could be wrappeed up in a VideoAttributtes structure

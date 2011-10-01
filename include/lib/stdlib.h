@@ -2,7 +2,7 @@
 #define STDLIB_H
 
 #include <defs.h>
-#include <tty.h>
+
 /*
 void* malloc(u32int neededMem);
 

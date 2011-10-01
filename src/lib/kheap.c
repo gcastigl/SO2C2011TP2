@@ -61,6 +61,7 @@ u32int kmalloc_ap(u32int sz, u32int *phys)
     return kmalloc_int(sz, 1, phys);
 }
 
+// FIXME: It would be better for this to return a void* instaed of an int
 u32int kmalloc(u32int sz)
 {
     return kmalloc_int(sz, 0, 0);

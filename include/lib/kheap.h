@@ -7,6 +7,7 @@
 #define KHEAP_H
 
 #include <defs.h>
+#include <paging/paging.h>
 #include <lib/ordered_map.h>
 
 #define KHEAP_START         0xC0000000

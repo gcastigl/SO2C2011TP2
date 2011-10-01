@@ -1,12 +1,18 @@
 #include <shell.h>
 
+// "user"@tty"n" "currPath" >
+#define SHELL_PROMPT	"%s@tty%d %s >"
+#define UPDATE_PROMPT	sprintf(shell_text, SHELL_PROMPT, user_getName(), tty_getCurrent() + 1, \
+			tty_getCurrentTTY()->currPath);
+
 void excecuteCmd(char* buffer);
 int parse_cmd(char* buffer);
 char** getArguments(char* buffer, int* argc);
+void cleanBuffer();
+void printShellLabel();
+//FIXME: checkReset & checkTTY could be in a separated keyboard manager file
 void checkReset();
 void checkTTY();
-void printShellLabel();
-void cleanBuffer();
 
 static char shell_text[15];
 static char* argv[MAX_ARG_DIM];
@@ -36,6 +42,9 @@ cmd_table_entry cmd_table[] = {
 void shell_init() {
 	cleanBuffer();
 	newTTY = -1;
+	TTY* currTTY = tty_getCurrentTTY();
+	currTTY->currDirectory = fs_getRootDirectory();
+	strcpy(currTTY->currPath, currTTY->currDirectory->name);
 }
 
 void shell_update() {
@@ -43,7 +52,6 @@ void shell_update() {
 	checkTTY();
 	if (!user_isLoggedIn()) {
 		user_doLogin();
-		sprintf(shell_text, "%s@tty%d >", user_getName(), tty_getCurrent() + 1);
 		printShellLabel();
 	}
 	if (bufferIsEmpty()) {
@@ -183,7 +191,6 @@ void checkTTY() {
 	if (!IS_CTRL() && newTTY != -1) {
 		if (newTTY != tty_getCurrent()) { // Do not switch to the same tty!
 			tty_setCurrent(newTTY);
-			sprintf(shell_text, "%s@tty%d >", user_getName(), tty_getCurrent() + 1);
 			if (tty_getCurrentTTY()->offset == 0) printShellLabel();
 		}
 		newTTY = -1;
@@ -191,6 +198,7 @@ void checkTTY() {
 }
 
 void printShellLabel() {
+	UPDATE_PROMPT;
 	char oldFormat = tty_getCurrTTYFormat();
 	tty_setFormatToCurrTTY(video_getFormattedColor(CYAN, BLACK));
 	printf(shell_text);
