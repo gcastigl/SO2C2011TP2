@@ -141,6 +141,7 @@ int sprintf(char* s, const char *template, ...) {
 		}
 		template++;
 	}
+	*s = '\0';
 	va_end(args);
 	return read;
 }
