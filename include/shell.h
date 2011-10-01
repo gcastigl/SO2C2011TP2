@@ -7,6 +7,7 @@
 #include <command.h>
 #include <user.h>
 #include <driver/keyboard.h>
+#include <file.h>
 
 #define WELCOME_MSG	"\t\t\t\t\tWelcome to GAT O.S.\n\tFor a list of availables commands \
 please type in help\n"

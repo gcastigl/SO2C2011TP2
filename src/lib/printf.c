@@ -52,6 +52,7 @@ void printf(char * formatString, ...) {
                     prints(numberBaseNtoString(integer, 8, out));
                     break;
                 case 'x':
+                case 'p':
                     unsigenedInteger = va_arg(args, unsigned int);
                     prints(numberBaseNtoString(unsigenedInteger, 16, out));
                     break;
