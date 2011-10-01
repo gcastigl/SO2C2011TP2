@@ -18,6 +18,6 @@ void *memset(void *s, int c, u32int n);
 
 void strncpy(char *to, const char *from, int size);
 
-int indexOf(char* str, char c, int startIndex);
+int strIndexOf(char* str, char c, int startIndex);
 
 #endif

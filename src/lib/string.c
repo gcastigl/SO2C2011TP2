@@ -62,13 +62,19 @@ void strncpy(char *to, const char *from, int size) {
 	*to = '\0';
 }
 
-int indexOf(char* str, char c, int startIndex) {
-	int i = 0;
-	while(str[i] != '\0') {
+int strIndexOf(char* str, char c, int startIndex) {
+	boolean searchBackwards = false;
+	if (startIndex < 0) {	// searching backwards...
+		startIndex = -startIndex;
+		searchBackwards = true;
+	}
+	int i = startIndex;
+	while(str[i] != '\0' && i >= 0) {
 		if (str[i] == c) {
 			return i;
 		}
-		i++;
+		if (searchBackwards) i--;
+		else i++;
 	}
 	return -1;
 }
