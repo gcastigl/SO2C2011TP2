@@ -12,8 +12,9 @@ int main(struct multiboot *mboot_ptr) {
 		initialise_paging();
 		keyboard_init();
 		video_init();
-		tty_init();
 		setFD(STD_OUT);
+		fs_init();
+		tty_init();
 		shell_init();
 		_initTTCounter();
 	_sti();
