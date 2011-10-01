@@ -18,8 +18,12 @@ gcc -m32 -g -c ../src/interrupts/interrupts.c -o interrupts.o 	-I../include -fno
 gcc -m32 -g -c ../src/io.c -o io.o 							    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/shell.c -o shell.o 					    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/command.c -o command.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -g -c ../src/fs.c -o fs.o		 					    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/tty.c -o tty.o 						    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/driver/videoUtils.c -o videoUtils.o 	    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/user.c -o user.o		 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -g -c ../src/initrd.c -o initrd.o		 				-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -g -c ../src/driver/ata_disk.c -o ata_disk.o		 			-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+
 ld -melf_i386 -T ../src/link.ld -o kernel.bin main.o boot.o initInterupts.o cpuSpeed.o asmInterrupts.o libasm.o video.o interrupts.o \
-	keyboard.o io.o stdlib.o string.o shell.o command.o math.o tty.o printf.o scanf.o videoUtils.o user.o
+	keyboard.o io.o stdlib.o string.o shell.o command.o math.o tty.o printf.o scanf.o videoUtils.o user.o initrd.o fs.o ata_disk.o
