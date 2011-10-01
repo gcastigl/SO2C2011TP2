@@ -44,29 +44,17 @@
 #define PART_TABLE     0x1C6	/* IBM partition table starts here in sect 0 */
 #define DEV_PER_DRIVE      5	/* hd0 + hd1 + hd2 + hd3 + hd4 = 5 */
 
-struct disk_t {
-	void (*read)(int, char *, unsigned short, int, int);
-	void (*write)(int, char *, int, unsigned short, int);
-};
-
-enum {
-	READ_DISK = 0,
-	WRITE_DISK,
-	OK,
-	ERROR
-};
-
-typedef struct disk_cmd{
+typedef struct disk_cmd {
 	int ata;
 	int sector;
 	int offset;
-	int count; // Bytes count
+	int bytes;
 	char * buffer;
 } disk_cmd;
 
-typedef struct disk_cmd * disk_cmd_t;
+void write(int ata, char * msg, int bytes, unsigned short sector, int offset);
 
-int driver(char * ata);
+void read(int ata, char * ans, int bytes, unsigned short sector, int offset);
 
 unsigned short getStatusRegister(int ata);
 
@@ -75,9 +63,5 @@ void identifyDevice(int ata);
 void check_drive(int ata);
 
 unsigned short getErrorRegister(int ata);
-
-void write(int ata, char * msg, int bytes, unsigned short sector, int offset);
-
-void read(int ata, char * ans, unsigned short sector, int offset, int count);
 
 #endif

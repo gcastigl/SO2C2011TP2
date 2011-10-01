@@ -1,24 +1,7 @@
 #include <at_wini.h>
 
 #define BIT(i)	(1 << (i))
-/*
-#define BIT0 1
-#define BIT1 2
-#define BIT2 4
-#define BIT3 8
-#define BIT4 16
-#define BIT5 32
-#define BIT6 64
-#define BIT7 128
-#define BIT8 256
-#define BIT9 512
-#define BIT10 1024
-#define BIT11 2048
-#define BIT12 4096
-#define BIT13 8192
-#define BIT14 16384
-#define BIT15 32768
-*/
+
 #define IS_REMOVABLE(D) 	printf("Is %sremovable\n", (D & BIT(7)) ? "" : "not ")
 #define IS_ATA_DRIVE(D) 	printf("Is %sATA\n", (D & BIT(15)) ? "not " : "")
 #define DMA_SUP(D) 			printf("DMA is %ssupported\n", (D & BIT(8)) ? "" : "not ")
@@ -26,11 +9,7 @@
 #define DMA_QUEUED_SUP(D) 	printf("DMA QUEUED supported\n", (D & BIT(1)) ? "" : "not ")
 
 void sendComm(int ata, int rdwr, unsigned short sector);
-
-void read(int ata, char * ans, unsigned short sector, int offset, int count);
 void _read(int ata, char * ans, unsigned short sector, int offset, int count);
-
-void write(int ata, char * msg, int bytes, unsigned short sector, int offset);
 void _write(int ata, char * msg, int bytes, unsigned short sector, int offset);
 
 unsigned short getDataRegister(int ata);
@@ -38,33 +17,26 @@ void writeDataToRegister(int ata, char upper, char lower);
 
 void translateBytes(char ans[], unsigned short sector);
 
-/* Namespace structure */
-struct disk_t Disk = {
-	read,
-	write
-};
-
-void read(int ata, char * ans, unsigned short sector, int offset, int count) {
-	while (count != 0) {
+void read(int ata, char * ans, int bytes, unsigned short sector, int offset) {
+	while (bytes != 0) {
 		int size;
-		if (offset + count > 512) {	// read remaming part from the sector
+		if (offset + bytes > 512) {	// read remaming part from the sector
 			size = 512 - offset;
 			_read(ata, ans,sector, offset, size);
 			sector++;
 			offset = 0;
-			count -= size;
+			bytes -= size;
 			ans += size;
 		} else {					// The remaning msg fits in the actual sector
-			size = count;
+			size = bytes;
 			_read(ata, ans, sector, offset, size);
 			offset += size;
-			count = 0;
+			bytes = 0;
 			ans += size;
 		}
 	}
 }
 
-// To read N bytes from hard disk, must alloc N+1 bytes for ans, as N+1 byte is used to null-character
 void _read(int ata, char * ans, unsigned short sector, int offset, int count){
 	char tmp[512];
 	sendComm(ata, LBA_READ, sector);
@@ -86,13 +58,11 @@ void translateBytes(char * ans, unsigned short databyte) {
 	ans[1] = databyte >> 8;
 }
 
-// Wrapper para manejar muchos sectores
 void write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
 	while (bytes != 0) {
 		int size;
 		if (offset + bytes > 512) {	// Fill sector
 			size = 512 - offset;
-			printf("writing: sec: %d / offs: %d / size: %d - %s\n", sector, offset, size, msg);
 			_write(ata, msg, size, sector, offset);
 			sector++;
 			offset = 0;
@@ -100,7 +70,6 @@ void write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
 			msg += size;
 		} else {					// The remaning msg fits in the actual sector
 			size = bytes;
-			printf("writing: sec: %d / offs: %d / size: %d - %s\n", sector, offset, size, msg);
 			_write(ata, msg, size, sector, offset);
 			offset += size;
 			bytes = 0;
@@ -109,7 +78,6 @@ void write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
 	}
 }
 
-// Single sector write.
 void _write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
 	int i = 0;
 	char tmp[512];
