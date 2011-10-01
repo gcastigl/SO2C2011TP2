@@ -1,9 +1,9 @@
 #include <shell.h>
 
 // "user"@tty"n" "currPath" >
-#define SHELL_PROMPT	"%s@tty%d %s >"
+#define SHELL_PROMPT	"%s@tty%d %s > "
 #define UPDATE_PROMPT	sprintf(shell_text, SHELL_PROMPT, user_getName(), tty_getCurrent() + 1, \
-			tty_getCurrentTTY()->currPath);
+				tty_getCurrentTTY()->currPath);
 
 void excecuteCmd(char* buffer);
 int parse_cmd(char* buffer);
@@ -30,11 +30,13 @@ cmd_table_entry cmd_table[] = {
 	{"getCPUspeed", 	HELP_GETCPUSPEED, getCPUspeed_cmd},
 	{"random", 			HELP_RANDOM, random_cmd},
 	{"echo", 			HELP_ECHO, echo_cmd},
-	{"setAppearance",	HELP_SETAPPEARANCE, setAppearance_cmd},
+	//{"setAppearance",	HELP_SETAPPEARANCE, setAppearance_cmd},
 	{"cd", 				"switch current directory", cd},
-	{"getchar", "Funcion para la catedra para testeo de getchar\n", getchar_cmd},
-	{"printf", "Funcion para la catedra para testeo de printf\n", printf_cmd},
-	{"scanf", "Funcion para la catedra para testeo de scanf\n", scanf_cmd},
+	{"ls", 				"List information about the FILEs (the current directory by default).", ls},
+	{"mkdir", 			"Create the DIRECTORY(ies), if they do not already exist.", mkdir},
+	//{"getchar", "Funcion para la catedra para testeo de getchar\n", getchar_cmd},
+	//{"printf", "Funcion para la catedra para testeo de printf\n", printf_cmd},
+	//{"scanf", "Funcion para la catedra para testeo de scanf\n", scanf_cmd},
 	{"logout", "Logout current user\n", logout},
 	{"", "", NULL}
 };
@@ -96,14 +98,13 @@ void excecuteCmd(char* buffer) {
 	char ** arguments;
 
 	char oldFormat = tty_getCurrTTYFormat();
-	tty_setFormatToCurrTTY(video_getFormattedColor(DARK_GRAY, BLACK));
+	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
 
 	int cmdIndex = parse_cmd(buffer);
 	if (cmdIndex != -1) {
 		cmdLen = strlen(cmd_table[cmdIndex].name);
 		arguments = getArguments(buffer + cmdLen, &argc);
 		cmd_table[cmdIndex].func(argc, arguments);
-		printf("\n");
 	} else if(buffer[0]!='\0') {
 		tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
 		printf("\n\tUnknown command\n");
