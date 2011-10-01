@@ -19,10 +19,11 @@ typedef struct {
 
 typedef struct {
 	char* terminal;
-	Directory_t* currDirectory;
-	char currPath[64];
 	int offset;
 	BUFFERTYPE buffer;
+	Directory_t* currDirectory;
+	char currPath[64];
+	int currPathOffset;
 	// FIXME: This values could be wrappeed up in a VideoAttributtes structure
 	char bgColor;
 	char fgColor;
