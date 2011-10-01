@@ -2,45 +2,12 @@
 #define FS_H
 
 #include <defs.h>
-#include <lib/kheap.h>
-#include <lib/stdio.h>
-#include <lib/string.h>
+#include <directory.h>
 #include <driver/ata_disk.h>
 
-#define MAX_FILENAME_LENGTH		64
-#define MAX_FILES_PER_FOLDER	64
-#define MAX_FOLDERS_PER_FOLDER	64
-
-// ERROR CODES
-#define	FS_DIR_EXISTS	1
-#define FS_DIR_FULL	2
-
-typedef struct {
-	char name[MAX_FILENAME_LENGTH];
-	u32int sector;
-	u32int offset;
-	char* contents;
-	int length;
-} iNode;
-
-typedef struct Directory_t {
-	char name[MAX_FILENAME_LENGTH];
-	iNode* files[MAX_FILES_PER_FOLDER];
-	u32int filesCount;
-	struct Directory_t* parent;
-	struct Directory_t* subDirs[MAX_FOLDERS_PER_FOLDER];
-	u32int subDirsCount;
-} Directory_t;
+#define MAX_INODES	64
 
 void fs_init();
-
-int fs_createSubDirectory(Directory_t* parent, char* name);
-
-Directory_t* fs_getDirectory(Directory_t* dir, char* name);
-
-Directory_t* fs_getRootDirectory();
-
-boolean fs_directoryExist(Directory_t* dir, char* name);
 
 /*
 #define FS_FILE        0x01

@@ -18,7 +18,7 @@ int cd(int argc, char *argv[]) {
 		//TODO:
 		printf("Not implemented yet...\n");
 	} else {										// Relative path
-		Directory_t* next = fs_getDirectory(tty_getCurrentTTY()->currDirectory, argv[0]);
+		Directory_t* next = directory_get(tty_getCurrentTTY()->currDirectory, argv[0]);
 		if (next != NULL) { // Switch directory (advance one folder)
 			currTTy->currDirectory = next;
 			int offset = currTTy->currPathOffset;
@@ -56,15 +56,15 @@ int mkdir(int argc, char *argv[]) {
 	if(argc == 0 ) {
 		printf("mkdir: missing operand\n");
 	} else {
-		int created = fs_createSubDirectory(tty_getCurrentTTY()->currDirectory, argv[0]);
+		int created = directory_create(tty_getCurrentTTY()->currDirectory, argv[0]);
 		char* err = NULL;
 		switch(created) {
 			case 0:		// Directory was created OK
 				break;
-			case FS_DIR_EXISTS:
+			case DIR_EXISTS:
 				err = "File exists";
 				break;
-			case FS_DIR_FULL:
+			case DIR_FULL:
 				err = "Directory is full";
 				break;
 			default:

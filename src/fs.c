@@ -1,16 +1,13 @@
 #include <fs.h>
 
-#define MAX_FILES 	1024
 #define FS_HEADER	"GAT_OS_FS"
-static iNode iNodes[MAX_FILES];
-static Directory_t root;
+static iNode iNodes[MAX_INODES];
 
 void fs_create();
 void fs_load();
 boolean validate_header();
 void write_header();
 
-void initEmptyDirectory(Directory_t* dir, char* name);
 
 void fs_init() {
 	printf("Initializing the file system...\n");
@@ -43,67 +40,18 @@ void fs_create() {
 
 	write_header();
 	int i;
-	for(i = 0; i < MAX_FILES; i++) {
+	for(i = 0; i < MAX_INODES; i++) {
 		iNodes[i].contents = NULL;
 	}
 	// create root
 	printf("Creating root directory...\n");
-	//root = (Directory_t*) kmalloc(sizeof(Directory_t));
-	initEmptyDirectory(&root, "~");
+	directory_initialize();
 	// create /dev
 	printf("Creating /dev directory...\n");
-	fs_createSubDirectory(&root, "dev");
+	directory_create(directory_getRoot(), "dev");
 }
 
-int fs_createSubDirectory(Directory_t* dir, char* name) {
-	if(fs_directoryExist(dir, name)) {
-		return FS_DIR_EXISTS;
-	} else if (dir->subDirsCount == MAX_FOLDERS_PER_FOLDER) {
-		return FS_DIR_FULL;
-	}
-	Directory_t* newFolder = (Directory_t*) kmalloc(sizeof(Directory_t));
-	initEmptyDirectory(newFolder, name);
-	newFolder->parent = dir;
-	dir->subDirs[dir->subDirsCount++] = newFolder;
-	return 0;
-}
 
-void initEmptyDirectory(Directory_t* dir, char* name) {
-	int i;
-	strcpy(dir->name, name);
-	dir->filesCount = 0;
-	for(i = 0; i < MAX_FILES_PER_FOLDER; i++) {
-		dir->files[i] = NULL;
-	}
-	dir->subDirsCount = 0;
-	for(i = 0; i < MAX_FOLDERS_PER_FOLDER; i++) {
-		dir->subDirs[i] = NULL;
-	}
-}
-
-Directory_t* fs_getDirectory(Directory_t* dir, char* name) {
-	int i;
-	for (i = 0; i < dir->subDirsCount; i++) {
-		if (strcmp(dir->subDirs[i]->name, name) == 0) {
-			return dir->subDirs[i];
-		}
-	}
-	return NULL;
-}
-
-Directory_t* fs_getRootDirectory() {
-	return &root;
-}
-
-boolean fs_directoryExist(Directory_t* dir, char* name) {
-	int i;
-	for (i = 0; i < dir->subDirsCount; i++) {
-		if (strcmp(dir->subDirs[i]->name, name) == 0) {
-			return true;
-		}
-	}
-	return false;
-}
 /*
 fs_node_t *fs_root = 0; // The root of the filesystem.
 

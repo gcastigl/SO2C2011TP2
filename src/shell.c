@@ -34,7 +34,7 @@ cmd_table_entry cmd_table[] = {
 	{"cd", 				"switch current directory", cd},
 	{"ls", 				"List information about the FILEs (the current directory by default).", ls},
 	{"mkdir", 			"Create the DIRECTORY(ies), if they do not already exist.", mkdir},
-	{"pwd"				"Show current user path", pwd},
+	{"pwd",				"Show current user path", pwd},
 	//{"getchar", "Funcion para la catedra para testeo de getchar\n", getchar_cmd},
 	//{"printf", "Funcion para la catedra para testeo de printf\n", printf_cmd},
 	//{"scanf", "Funcion para la catedra para testeo de scanf\n", scanf_cmd},
