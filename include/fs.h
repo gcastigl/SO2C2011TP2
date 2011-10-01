@@ -11,6 +11,10 @@
 #define MAX_FILES_PER_FOLDER	64
 #define MAX_FOLDERS_PER_FOLDER	64
 
+// ERROR CODES
+#define	FS_DIR_EXISTS	1
+#define FS_DIR_FULL	2
+
 typedef struct {
 	char name[MAX_FILENAME_LENGTH];
 	u32int sector;
@@ -30,9 +34,13 @@ typedef struct Directory_t {
 
 void fs_init();
 
-void fs_createFolder(Directory_t* parent, char* name);
+int fs_createSubDirectory(Directory_t* parent, char* name);
+
+Directory_t* fs_getDirectory(Directory_t* dir, char* name);
 
 Directory_t* fs_getRootDirectory();
+
+boolean fs_directoryExist(Directory_t* dir, char* name);
 
 /*
 #define FS_FILE        0x01
