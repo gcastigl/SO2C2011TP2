@@ -5,13 +5,19 @@
 #define ORDERED_MAP_H
 
 #include <defs.h>
-#include <lib/kheap.h>
 #include <lib/stdlib.h>
 
 /**
   A predicate should return nonzero if the first argument is less than the second. Else
   it should return zero.
 **/
+typedef s8int (*lessthan_predicate_t)(type_t,type_t);
+typedef struct {
+    type_t *array;
+    u32int size;
+    u32int max_size;
+    lessthan_predicate_t less_than;
+} ordered_array_t;
 
 /**
   A standard less than predicate.
