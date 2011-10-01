@@ -23,7 +23,7 @@ void initTTY(int index) {
 	tty[index].fgColor = WHITE;
 	tty[index].currDirectory = fs_getRootDirectory();
 	tty[index].currPathOffset = strlen(tty[index].currDirectory->name);
-	strcpy(tty[index].currPath, tty[index].currDirectory->name);
+	strcpy(tty[index].currPath, fs_getRootDirectory()->name);
 }
 
 void tty_setCurrent(int tty) {
