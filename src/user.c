@@ -10,7 +10,7 @@ void user_doLogin() {
 	TTY* tty = tty_getCurrentTTY();
 	tty_clean(tty);
 	prntWelcomeMsg();
-	int validUser;
+	/*int validUser;
 	do {
 		printf("\nUsername: ");
 		gets(user);
@@ -20,8 +20,9 @@ void user_doLogin() {
         }
 	} while(!validUser);
 	printf("Password: ********\n");
-	printf("\nLogged in as: %s\n", user);
+	printf("\nLogged in as: %s\n", user);*/
 	isLoggedIn = true;
+	strcpy(user, "admin");
 }
 
 int user_isLoggedIn() {
