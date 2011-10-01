@@ -3,7 +3,6 @@
 static int currentPID = 0;
 static int nextPID = 1;
 
-void doubleFlagsFix(double n);
 
 int main(struct multiboot *mboot_ptr) {
 	_cli();
@@ -11,7 +10,6 @@ int main(struct multiboot *mboot_ptr) {
 		nextPID = 0;
 		_mascaraPIC1(0xFC);
 		_mascaraPIC2(0xFF);
-		doubleFlagsFix(1.1);
 		keyboard_init();
 		video_init();
 		tty_init();
@@ -51,8 +49,5 @@ u32int __read(int fd, void * buffer, u32int count) {
 u32int __write(int fd, const void * buffer, u32int count) {
 	_SysCall(SYSTEM_WRITE, fd, buffer, count);
 	return count;
-}
-
-void doubleFlagsFix(double n) {
 }
 
