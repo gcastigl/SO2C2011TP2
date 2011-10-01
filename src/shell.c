@@ -3,7 +3,7 @@
 // "user"@tty"n" "currPath" >
 #define SHELL_PROMPT	"%s@tty%d %s >"
 #define UPDATE_PROMPT	sprintf(shell_text, SHELL_PROMPT, user_getName(), tty_getCurrent() + 1, \
-			"");//tty_getCurrentTTY()->currPath);
+			tty_getCurrentTTY()->currPath);
 
 void excecuteCmd(char* buffer);
 int parse_cmd(char* buffer);
@@ -42,9 +42,9 @@ cmd_table_entry cmd_table[] = {
 void shell_init() {
 	cleanBuffer();
 	newTTY = -1;
-	//TTY* currTTY = tty_getCurrentTTY();
-	//currTTY->currDirectory = fs_getRootDirectory();
-	//strcpy(currTTY->currPath, currTTY->currDirectory);
+	TTY* currTTY = tty_getCurrentTTY();
+	currTTY->currDirectory = fs_getRootDirectory();
+	strcpy(currTTY->currPath, currTTY->currDirectory->name);
 }
 
 void shell_update() {
