@@ -45,28 +45,29 @@ struct disk_t Disk = {
 };
 
 void read(int ata, char * ans, unsigned short sector, int offset, int count) {
-	int i;
-	// Quantity of necessary sectors
-	int sectors = ((count-1) / 512) + 1;
-	for(i = 0;i < sectors; i++){
-		int size =  (i == sectors - 1) ? count % 513 : 512;
-		if(!i)
-			_read(ata, ans, sector, offset, (offset + count > 512)? size - offset : size);
-		else
-			_read(ata, ans + (i * 512) - offset, sector + i, 0, size);
+	while (count != 0) {
+		int size;
+		if (offset + count > 512) {	// read remaming part from the sector
+			size = 512 - offset;
+			_read(ata, ans,sector, offset, size);
+			sector++;
+			offset = 0;
+			count -= size;
+			ans += size;
+		} else {					// The remaning msg fits in the actual sector
+			size = count;
+			_read(ata, ans, sector, offset, size);
+			offset += size;
+			count = 0;
+			ans += size;
+		}
 	}
 }
 
 // To read N bytes from hard disk, must alloc N+1 bytes for ans, as N+1 byte is used to null-character
 void _read(int ata, char * ans, unsigned short sector, int offset, int count){
-
-	// Just a sector...
-	if(count > 512 - offset)
-		return;
-
 	char tmp[512];
 	sendComm(ata, LBA_READ, sector);
-
 	// Now read sector
 	int b;
 	unsigned short data;
@@ -75,8 +76,9 @@ void _read(int ata, char * ans, unsigned short sector, int offset, int count){
 		translateBytes(tmp + b, data);
 	}
 	int i;
-	for (i = 0;i < count; i++)
+	for (i = 0;i < count; i++) {
 		ans[i] = tmp[offset + i];
+	}
 }
 
 void translateBytes(char * ans, unsigned short databyte) {
@@ -85,56 +87,43 @@ void translateBytes(char * ans, unsigned short databyte) {
 }
 
 // Wrapper para manejar muchos sectores
-void write(int ata, char * msg, int bytes, unsigned short sector, int offset){
-	int i;
-
-	if(bytes == 0)
-		return;
-
-	// Quantity of necessary sectors
-	int sectors = (bytes / 512) + 1;
-	for(i=0;i<sectors;i++){
-		int size =  (i == sectors - 1) ? bytes%513 : 512;
-		// First sector, check offset
-		if(!i)
-			_write(ata, msg, (offset+bytes > 512)? size-offset :size, sector,offset);
-		else
-			_write(ata, msg + (i * 512) - offset, size, sector + i, 0);
-
+void write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
+	while (bytes != 0) {
+		int size;
+		if (offset + bytes > 512) {	// Fill sector
+			size = 512 - offset;
+			printf("writing: sec: %d / offs: %d / size: %d - %s\n", sector, offset, size, msg);
+			_write(ata, msg, size, sector, offset);
+			sector++;
+			offset = 0;
+			bytes -= size;
+			msg += size;
+		} else {					// The remaning msg fits in the actual sector
+			size = bytes;
+			printf("writing: sec: %d / offs: %d / size: %d - %s\n", sector, offset, size, msg);
+			_write(ata, msg, size, sector, offset);
+			offset += size;
+			bytes = 0;
+			msg += size;
+		}
 	}
 }
 
 // Single sector write.
-void _write(int ata, char * msg, int bytes, unsigned short sector, int offset){
+void _write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
 	int i = 0;
-	// Just a sector...
-	if(bytes > 512 - offset)
-		return;
 	char tmp[512];
-	// Read all sectors necessary
-	_read(ata,tmp,sector,0,512);
-	//DEBUG
-/*	printf("Sector %d before:\n", sector);
-	for(i=0;i<512;i++)
-		putchar(tmp[i]);
-	printf("\n");
-	getchar();*/
-	// Prepare sectors with new data
-	for(i=0;i<bytes;i++)
-		tmp[offset+i] = msg[i];
-	//DEBUG
-/*	printf("Sector %d after:\n", sector);
-	printf("Offset %d\n", offset);
-	for(i=0;i<512;i++)
-		putchar(tmp[i]);
-	printf("\n");
-	getchar();*/
-	// Send write command
+	// Read actual sector because ATA always writes a complete sector!
+	// Don't step previour values!
+	_read(ata, tmp, sector, 0, 512);
+	for (i = 0; i < bytes; i++) {
+		tmp[offset + i] = msg[i];
+	}
 	sendComm(ata, LBA_WRITE, sector);
-	// Now write all sector
-	int b;
-	for(b = 0;b <= 512;b += 2)
-		writeDataToRegister(ata, tmp[b+1], tmp[b]);
+	// Write updated sector
+	for(i = 0; i <= 512; i += 2) {
+		writeDataToRegister(ata, tmp[i + 1], tmp[i]);
+	}
 }
 
 void writeDataToRegister(int ata, char upper, char lower){

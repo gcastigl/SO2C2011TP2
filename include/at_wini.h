@@ -76,4 +76,8 @@ void check_drive(int ata);
 
 unsigned short getErrorRegister(int ata);
 
+void write(int ata, char * msg, int bytes, unsigned short sector, int offset);
+
+void read(int ata, char * ans, unsigned short sector, int offset, int count);
+
 #endif
