@@ -21,6 +21,9 @@ void initTTY(int index) {
 	tty[index].buffer.tail = 0;
 	tty[index].bgColor = BLACK;
 	tty[index].fgColor = WHITE;
+	tty[index].currDirectory = fs_getRootDirectory();
+	tty[index].currPathOffset = strlen(tty[index].currDirectory->name);
+	strcpy(tty[index].currPath, tty[index].currDirectory->name);
 }
 
 void tty_setCurrent(int tty) {
@@ -74,6 +77,7 @@ void tty_clean(TTY* tty) {
 	video_setOffset(0);
 	video_write(tty->terminal, tty->offset);
 }
+
 char tty_getCurrTTYFormat() {
 	TTY* currTTY = tty_getCurrentTTY();
 	return video_getFormattedColor(currTTY->fgColor, currTTY->bgColor);

@@ -31,6 +31,7 @@ cmd_table_entry cmd_table[] = {
 	{"random", 			HELP_RANDOM, random_cmd},
 	{"echo", 			HELP_ECHO, echo_cmd},
 	{"setAppearance",	HELP_SETAPPEARANCE, setAppearance_cmd},
+	{"cd", 				"switch current directory", cd},
 	{"getchar", "Funcion para la catedra para testeo de getchar\n", getchar_cmd},
 	{"printf", "Funcion para la catedra para testeo de printf\n", printf_cmd},
 	{"scanf", "Funcion para la catedra para testeo de scanf\n", scanf_cmd},
@@ -42,9 +43,6 @@ cmd_table_entry cmd_table[] = {
 void shell_init() {
 	cleanBuffer();
 	newTTY = -1;
-	TTY* currTTY = tty_getCurrentTTY();
-	currTTY->currDirectory = fs_getRootDirectory();
-	strcpy(currTTY->currPath, currTTY->currDirectory->name);
 }
 
 void shell_update() {
