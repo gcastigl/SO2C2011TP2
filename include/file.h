@@ -16,6 +16,8 @@ int ls(int argc, char *argv[]);
 
 int mkdir(int argc, char *argv[]);
 
+int pwd(int argc, char *argv[]);
+
 /*
 void createFilesystem();
 

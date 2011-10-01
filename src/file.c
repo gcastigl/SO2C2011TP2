@@ -5,15 +5,27 @@ int cd(int argc, char *argv[]) {
 		printf("This cmd must be called with one argument!\n");
 		return 1;
 	}
-	if (strcmp("..", argv[0]) == 0) {
-		// Go up one direcotry;
-	} else {
+	TTY* currTTy = tty_getCurrentTTY();
+	if (strcmp("..", argv[0]) == 0) { 				// Go up one direcotry
+		Directory_t* next = currTTy->currDirectory->parent;
+		if (next != NULL) {
+			int folderNameLen = strlen(currTTy->currDirectory->name);
+			currTTy->currPathOffset -= folderNameLen + 1;
+			currTTy->currPath[currTTy->currPathOffset] = '\0';
+			currTTy->currDirectory = next;
+		}
+	} else if (argv[0][0] == '/') {					// Absolute path directory
+		//TODO:
+		printf("Not implemented yet...\n");
+	} else {										// Relative path
 		Directory_t* next = fs_getDirectory(tty_getCurrentTTY()->currDirectory, argv[0]);
 		if (next != NULL) { // Switch directory (advance one folder)
-			tty_getCurrentTTY()->currDirectory = next;
-			int offset = tty_getCurrentTTY()->currPathOffset;
-			strcpy(tty_getCurrentTTY()->currPath + offset++, "/");
-			strcpy(tty_getCurrentTTY()->currPath + offset, next->name);
+			currTTy->currDirectory = next;
+			int offset = currTTy->currPathOffset;
+			strcpy(currTTy->currPath + offset++, "/");
+			strcpy(currTTy->currPath + offset, next->name);
+			offset += strlen(next->name);
+			currTTy->currPathOffset = offset;
 		} else {
 			printf("cd: The directory %s does not exist\n", argv[0]);
 		}
@@ -30,10 +42,12 @@ int ls(int argc, char *argv[]) {
 		}
 		return 0;
 	}
-	if (strcmp(argv[0], "/") == 0) {	// Absolute path
-
-	} else {
-
+	if (strcmp(argv[0], "/") == 0) {				// Absolute path
+		//TODO:
+		printf("Not implemented yet...\n");
+	} else {										// Relative path
+		//TODO:
+		printf("Not implemented yet...\n");
 	}
 	return 0;
 }
@@ -60,6 +74,11 @@ int mkdir(int argc, char *argv[]) {
 			printf("mkdir: cannot create directory %s: %s\n", argv[0], err);
 		}
 	}
+	return 0;
+}
+
+int pwd(int argc, char *argv[]) {
+	printf("%s\n", tty_getCurrentTTY()->currPath);
 	return 0;
 }
 
