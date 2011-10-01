@@ -10,6 +10,7 @@
 #include <asm/libasm.h>
 #include <io.h>
 #include <lib/stdio.h>
+#include <paging/paging.h>
 #include <interrupts/interruptDefs.h>
 #include <driver/ata_disk.h>
 

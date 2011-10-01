@@ -10,6 +10,7 @@ int main(struct multiboot *mboot_ptr) {
 		nextPID = 0;
 		_mascaraPIC1(0xFC);
 		_mascaraPIC2(0xFF);
+		initialise_paging();
 		keyboard_init();
 		video_init();
 		tty_init();

@@ -2,6 +2,7 @@
 #define FS_H
 
 #include <defs.h>
+#include <lib/kheap.h>
 #include <lib/stdio.h>
 #include <lib/string.h>
 #include <driver/ata_disk.h>
@@ -32,6 +33,7 @@ void fs_init();
 void fs_createFolder(Directory_t* parent, char* name);
 
 Directory_t* fs_getRootDirectory();
+
 /*
 #define FS_FILE        0x01
 #define FS_DIRECTORY   0x02

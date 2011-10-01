@@ -26,6 +26,13 @@ int _rdmsrTest();
 void _int_08_hand();	/* Timer tick */
 void _int_09_hand();	/* Keyboard */
 void _int_80_hand();
+void _invop_hand(void);
+void _snp_hand(void);
+void _bounds_hand(void);
+void _ssf_hand(void);
+void _div0_hand(void);
+void _gpf_hand(void);
+void _pageFault_hand(void);
 
 void _SysCall();
 

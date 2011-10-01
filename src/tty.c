@@ -3,11 +3,10 @@
 void initTTY(int index);
 
 static TTY tty[MAX_TTYs];
-static int currentTTY;
+static int currentTTY = 0;
 
 void tty_init() {
 	int i;
-	currentTTY = 0;
 	for (i = 0; i < MAX_TTYs; i++) {
 		initTTY(i);
 	}
@@ -16,7 +15,7 @@ void tty_init() {
 }
 
 void initTTY(int index) {
-	tty[index].terminal = (char*) calloc(TOTAL_VIDEO_SIZE);
+	tty[index].terminal = (char*) kmalloc(TOTAL_VIDEO_SIZE);
 	tty[index].offset = 0;
 	tty[index].buffer.head = 0;
 	tty[index].buffer.tail = 0;

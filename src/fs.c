@@ -58,7 +58,7 @@ void fs_createFolder(Directory_t* parent, char* name) {
 }
 
 Directory_t* newFolder(Directory_t* parent, char* name) {
-	Directory_t* newFolder = malloc(sizeof(Directory_t));
+	Directory_t* newFolder = (Directory_t*) kmalloc(sizeof(Directory_t));
 	int i;
 	strcpy(newFolder->name, name);
 	newFolder->parent = parent;

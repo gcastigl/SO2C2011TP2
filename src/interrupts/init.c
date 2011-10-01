@@ -45,9 +45,16 @@ static void init_idt() {
     idt_ptr.base  = (u32int)&idt_entries;
 
     memset(&idt_entries, 0, sizeof(idt_entry_t)*256);
-    idt_set_gate(0x08, (u32int)&_int_08_hand , 0x08, ACS_INT);
-    idt_set_gate(0x09, (u32int)&_int_09_hand , 0x08, ACS_INT);
+	idt_set_gate(0x00, (u32int)&_div0_hand, 0x08, ACS_INT);
+    idt_set_gate(0x08, (u32int)&_int_08_hand, 0x08, ACS_INT);
+    idt_set_gate(0x09, (u32int)&_int_09_hand, 0x08, ACS_INT);
     idt_set_gate(0x80, (u32int)&_int_80_hand, 0x08, ACS_INT);
+	idt_set_gate(0x05, (u32int)&_bounds_hand, 0x08, ACS_INT);
+    idt_set_gate(0x06, (u32int)&_invop_hand, 0x08, ACS_INT);
+	idt_set_gate(0x0B, (u32int)&_snp_hand, 0x08, ACS_INT);
+	idt_set_gate(0x0C, (u32int)&_ssf_hand, 0x08, ACS_INT);
+	idt_set_gate(0x0D, (u32int)&_gpf_hand, 0x08, ACS_INT);
+	idt_set_gate(0x0E, (u32int)&_pageFault_hand, 0x08, ACS_INT);
 
    _idt_flush((u32int)&idt_ptr);
 }
