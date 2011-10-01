@@ -1,5 +1,6 @@
 #include <lib/ordered_map.h>
 #include <lib/kheap.h>
+
 s8int standard_lessthan_predicate(type_t a, type_t b)
 {
    return (a<b)?1:0;
