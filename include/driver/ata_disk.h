@@ -52,15 +52,15 @@ typedef struct disk_cmd {
 	char * buffer;
 } disk_cmd;
 
-void write(int ata, char * msg, int bytes, unsigned short sector, int offset);
+void ata_write(int ata, char * msg, int bytes, unsigned short sector, int offset);
 
-void read(int ata, char * ans, int bytes, unsigned short sector, int offset);
+void ata_read(int ata, char * ans, int bytes, unsigned short sector, int offset);
 
-unsigned short getStatusRegister(int ata);
+unsigned short ata_getStatusRegister(int ata);
 
 void identifyDevice(int ata);
 
-void check_drive(int ata);
+void ata_checkDrive(int ata);
 
 unsigned short getErrorRegister(int ata);
 

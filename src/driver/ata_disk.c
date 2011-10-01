@@ -17,7 +17,7 @@ void writeDataToRegister(int ata, char upper, char lower);
 
 void translateBytes(char ans[], unsigned short sector);
 
-void read(int ata, char * ans, int bytes, unsigned short sector, int offset) {
+void ata_read(int ata, char * ans, int bytes, unsigned short sector, int offset) {
 	while (bytes != 0) {
 		int size;
 		if (offset + bytes > 512) {	// read remaming part from the sector
@@ -58,7 +58,7 @@ void translateBytes(char * ans, unsigned short databyte) {
 	ans[1] = databyte >> 8;
 }
 
-void write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
+void ata_write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
 	while (bytes != 0) {
 		int size;
 		if (offset + bytes > 512) {	// Fill sector
@@ -146,7 +146,7 @@ void sendComm(int ata, int rdwr, unsigned short sector){
 	_sti();
 }
 
-unsigned short getStatusRegister(int ata){
+unsigned short ata_getStatusRegister(int ata){
 	unsigned short rta;
 	_cli();
 	rta = _port_in(ata + WIN_REG7) & 0x00000FFFF;
@@ -162,7 +162,7 @@ void identifyDevice(int ata){
 }
 
 // Check disk features
-void check_drive(int ata) {
+void ata_checkDrive(int ata) {
 	printf("-----------------------\n");
 	printf("Identifying device ");
 	switch(ata) {
