@@ -2,6 +2,7 @@
 
 //Timer Tick
 void int_08() {
+    switch_task();
 }
 
 //Keyboard

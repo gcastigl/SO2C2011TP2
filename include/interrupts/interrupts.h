@@ -6,6 +6,7 @@
 #include <driver/keyboard.h>
 #include <main.h>
 #include <command.h>
+#include <process/task.h>
 
 #define TT_MEDITIONS	100
 

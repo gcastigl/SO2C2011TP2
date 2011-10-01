@@ -15,6 +15,8 @@ unsigned int _portw_in(ushort port);
 void _mascaraPIC1 (byte mascara);  /* Escribe mascara de PIC1 */
 void _mascaraPIC2 (byte mascara);  /* Escribe mascara de PIC2 */
 
+void copy_page_physical(int,int);
+
 void _cli(void);        /* Deshabilita interrupciones  */
 void _sti(void);	 /* Habilita interrupciones  */
 

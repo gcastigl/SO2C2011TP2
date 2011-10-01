@@ -4,17 +4,20 @@ static int currentPID = 0;
 static int nextPID = 1;
 
 void doubleFlagsFix(double n);
+u32int initial_esp; // New global variable.
 
-int main(struct multiboot *mboot_ptr) {
+int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 	_cli();
+        initial_esp = initial_stack;
 		init_descriptor_tables();
-		nextPID = 0;
 		_mascaraPIC1(0xFC);
 		_mascaraPIC2(0xFF);
 		doubleFlagsFix(1.1);
 		initialise_paging();
 		keyboard_init();
 		video_init();
+		initialize_tasking();
+        panic("Yeah!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", TRUE);
 		tty_init();
 		setFD(STD_OUT);
 		shell_init();

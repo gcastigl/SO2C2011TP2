@@ -31,10 +31,12 @@ _int_08_hand:				; Handler de INT 8 ( Timer tick)
 	inc eax
 	mov [ttcounter], eax
 	pop eax
-	
-	mov		ax, 10h			; a utilizar.
-	mov		ds, ax
-	mov		es, ax
+
+	mov ax, 0x10  ; load the kernel data segment descriptor
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
 	call	int_08
 	mov		al,20h			; Envio de EOI generico al PIC
 	out		20h,al
