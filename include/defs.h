@@ -41,8 +41,6 @@ typedef enum { false = 0, true} boolean;
 #define FALSE !TRUE
 #define ERROR -1
 
-// EVENTUALLY REMOVE THIS OR CHANGE THE WHOLE CODE TO USE THIS!
-// I SAY WE USE THIS! (PS: I'M NOT SHOUTIIING)
 typedef unsigned int    u32int;
 typedef          int    s32int;
 typedef unsigned short  u16int;
