@@ -56,7 +56,7 @@ int mkdir(int argc, char *argv[]) {
 	if(argc == 0 ) {
 		printf("mkdir: missing operand\n");
 	} else {
-		int created = directory_create(tty_getCurrentTTY()->currDirectory, argv[0]);
+		int created = fs_createDirectory(tty_getCurrentTTY()->currDirectory, argv[0]);
 		char* err = NULL;
 		switch(created) {
 			case 0:		// Directory was created OK
