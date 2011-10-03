@@ -1,6 +1,3 @@
-// ordered_array.h -- Interface for creating, inserting and deleting
-// from ordered arrays.
-// Written for JamesM's kernel development tutorials.
 #ifndef ORDERED_MAP_H
 #define ORDERED_MAP_H
 
@@ -10,6 +7,13 @@
   A predicate should return nonzero if the first argument is less than the second. Else
   it should return zero.
 **/
+typedef s8int (*lessthan_predicate_t)(type_t,type_t);
+typedef struct {
+    type_t *array;
+    u32int size;
+    u32int max_size;
+    lessthan_predicate_t less_than;
+} ordered_array_t;
 
 /**
   A standard less than predicate.

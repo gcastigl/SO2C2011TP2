@@ -3,7 +3,6 @@
 static int currentPID = 0;
 static int nextPID = 1;
 
-void doubleFlagsFix(double n);
 u32int initial_esp; // New global variable.
 
 int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
@@ -12,15 +11,13 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 		init_descriptor_tables();
 		_mascaraPIC1(0xFC);
 		_mascaraPIC2(0xFF);
-		doubleFlagsFix(1.1);
 		initialise_paging();
 		keyboard_init();
 		video_init();
-		initialize_tasking();
-        panic("Yeah!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", TRUE);
 		tty_init();
 		setFD(STD_OUT);
 		shell_init();
+		fs_init();
 		_initTTCounter();
 	_sti();
 	while (1) {
@@ -55,8 +52,5 @@ u32int __read(int fd, void * buffer, u32int count) {
 u32int __write(int fd, const void * buffer, u32int count) {
 	_SysCall(SYSTEM_WRITE, fd, buffer, count);
 	return count;
-}
-
-void doubleFlagsFix(double n) {
 }
 

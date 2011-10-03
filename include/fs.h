@@ -2,7 +2,14 @@
 #define FS_H
 
 #include <defs.h>
+#include <directory.h>
+#include <driver/ata_disk.h>
 
+#define MAX_INODES	64
+
+void fs_init();
+
+/*
 #define FS_FILE        0x01
 #define FS_DIRECTORY   0x02
 #define FS_CHARDEVICE  0x03
@@ -63,5 +70,5 @@ void close_fs(fs_node_t *node);
 struct dirent *readdir_fs(fs_node_t *node, u32int index);
 
 fs_node_t *finddir_fs(fs_node_t *node, char *name);
-
+*/
 #endif

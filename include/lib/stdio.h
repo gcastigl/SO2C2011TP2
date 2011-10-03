@@ -1,16 +1,11 @@
 #ifndef STDIO_H
 #define STDIO_H
 
-#include <main.h>
 #include <varargs.h>
 #include <stdarg.h>
 
 
 #define F_PRECISION	6
-
-typedef struct file_s {
-	int num;
-} FILE;
 
 char getchar();
 

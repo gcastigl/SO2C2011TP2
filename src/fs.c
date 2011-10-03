@@ -1,7 +1,58 @@
-// fs.c -- Defines the interface for and structures relating to the virtual file system.
-//         Written for JamesM's kernel development tutorials.
 #include <fs.h>
 
+#define FS_HEADER	"GAT_OS_FS"
+static iNode iNodes[MAX_INODES];
+
+void fs_create();
+void fs_load();
+boolean validate_header();
+void write_header();
+
+
+void fs_init() {
+	printf("Initializing the file system...\n");
+	if (validate_header()) {
+		//fs_load();
+		fs_create();
+	} else {
+		fs_create();
+	}
+	printf("OK!");
+}
+
+boolean validate_header() {
+	int len = strlen(FS_HEADER);
+	char header[len];
+	read(ATA0, header, len, 0, 0);
+	return strcmp(header, FS_HEADER) == 0;
+}
+
+void write_header() {
+	write(ATA0, FS_HEADER, strlen(FS_HEADER), 0, 0);
+}
+
+void fs_load() {
+	printf("loading a file system!\n");
+}
+
+void fs_create() {
+	printf("Creating a new file system!\n");
+
+	write_header();
+	int i;
+	for(i = 0; i < MAX_INODES; i++) {
+		iNodes[i].contents = NULL;
+	}
+	// create root
+	printf("Creating root directory...\n");
+	directory_initialize();
+	// create /dev
+	printf("Creating /dev directory...\n");
+	directory_create(directory_getRoot(), "dev");
+}
+
+
+/*
 fs_node_t *fs_root = 0; // The root of the filesystem.
 
 u32int read_fs(fs_node_t *node, u32int offset, u32int size, u8int *buffer)
@@ -54,5 +105,5 @@ fs_node_t *finddir_fs(fs_node_t *node, char *name)
         return node->finddir(node, name);
     else
         return 0;
-}
+}*/
 

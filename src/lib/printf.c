@@ -1,4 +1,5 @@
 #include <lib/stdio.h>
+#include <main.h>
 
 static void prints(char * string);
 
@@ -51,6 +52,7 @@ void printf(char * formatString, ...) {
                     prints(numberBaseNtoString(integer, 8, out));
                     break;
                 case 'x':
+                case 'p':
                     unsigenedInteger = va_arg(args, unsigned int);
                     prints(numberBaseNtoString(unsigenedInteger, 16, out));
                     break;
@@ -139,6 +141,7 @@ int sprintf(char* s, const char *template, ...) {
 		}
 		template++;
 	}
+	*s = '\0';
 	va_end(args);
 	return read;
 }

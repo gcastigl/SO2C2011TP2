@@ -1,8 +1,3 @@
-// kheap.c -- Kernel heap functions, also provides
-//            a placement malloc() for use before the heap is 
-//            initialised.
-//            Written for JamesM's kernel development tutorials.
-
 #include <lib/kheap.h>
 
 // end is defined in the linker script.
@@ -61,6 +56,7 @@ u32int kmalloc_ap(u32int sz, u32int *phys)
     return kmalloc_int(sz, 1, phys);
 }
 
+// FIXME: It would be better for this to return a void* instaed of an int
 u32int kmalloc(u32int sz)
 {
     return kmalloc_int(sz, 0, 0);
@@ -267,7 +263,7 @@ void *alloc(u32int size, u8int page_align, heap_t *heap)
     }
 
     // If we need to page-align the data, do it now and make a new hole in front of our block.
-    if (page_align && orig_hole_pos&0xFFFFF000)
+    if (page_align && (orig_hole_pos & 0xFFFFF000))
     {
         u32int new_location   = orig_hole_pos + 0x1000 /* page size */ - (orig_hole_pos&0xFFF) - sizeof(header_t);
         header_t *hole_header = (header_t *)orig_hole_pos;

@@ -33,6 +33,7 @@ unsigned char ucase[60] =
     0, /* Alt */
   ' ' /* Space bar */
 };
+
 void keyboard_init() {
 	fKeys = 0;
 	keyboard_buffer.from = 0;

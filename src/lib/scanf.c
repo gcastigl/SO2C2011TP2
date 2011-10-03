@@ -1,5 +1,7 @@
 #include <lib/stdio.h>
 #include <lib/string.h>
+#include <lib/math.h>
+#include <main.h>
 
 char getchar() {
 	return getc(STD_IN);

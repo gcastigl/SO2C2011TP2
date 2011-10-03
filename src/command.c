@@ -11,7 +11,7 @@ int echo_cmd(int argc, char *argv[]) {
 }
 
 int restart_cmd(int argc, char *argv[]) {
-	_reset();		// Will neva get through this line! =P
+	_reset();		// Will neva get through this line!
 	return 0xCA11AB1E;
 }
 

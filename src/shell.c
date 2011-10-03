@@ -1,12 +1,18 @@
 #include <shell.h>
 
+// "user"@tty"n" "currPath" >
+#define SHELL_PROMPT	"%s@tty%d %s > "
+#define UPDATE_PROMPT	sprintf(shell_text, SHELL_PROMPT, user_getName(), tty_getCurrent() + 1, \
+				tty_getCurrentTTY()->currPath);
+
 void excecuteCmd(char* buffer);
 int parse_cmd(char* buffer);
 char** getArguments(char* buffer, int* argc);
+void cleanBuffer();
+void printShellLabel();
+//FIXME: checkReset & checkTTY could be in a separated keyboard manager file
 void checkReset();
 void checkTTY();
-void printShellLabel();
-void cleanBuffer();
 
 static char shell_text[15];
 static char* argv[MAX_ARG_DIM];
@@ -24,10 +30,14 @@ cmd_table_entry cmd_table[] = {
 	{"getCPUspeed", 	HELP_GETCPUSPEED, getCPUspeed_cmd},
 	{"random", 			HELP_RANDOM, random_cmd},
 	{"echo", 			HELP_ECHO, echo_cmd},
-	{"setAppearance",	HELP_SETAPPEARANCE, setAppearance_cmd},
-	{"getchar", "Funcion para la catedra para testeo de getchar\n", getchar_cmd},
-	{"printf", "Funcion para la catedra para testeo de printf\n", printf_cmd},
-	{"scanf", "Funcion para la catedra para testeo de scanf\n", scanf_cmd},
+	//{"setAppearance",	HELP_SETAPPEARANCE, setAppearance_cmd},
+	{"cd", 				"switch current directory", cd},
+	{"ls", 				"List information about the FILEs (the current directory by default).", ls},
+	{"mkdir", 			"Create the DIRECTORY(ies), if they do not already exist.", mkdir},
+	{"pwd",				"Show current user path", pwd},
+	//{"getchar", "Funcion para la catedra para testeo de getchar\n", getchar_cmd},
+	//{"printf", "Funcion para la catedra para testeo de printf\n", printf_cmd},
+	//{"scanf", "Funcion para la catedra para testeo de scanf\n", scanf_cmd},
 	{"logout", "Logout current user\n", logout},
 	{"", "", NULL}
 };
@@ -43,7 +53,6 @@ void shell_update() {
 	checkTTY();
 	if (!user_isLoggedIn()) {
 		user_doLogin();
-		sprintf(shell_text, "%s@tty%d >", user_getName(), tty_getCurrent() + 1);
 		printShellLabel();
 	}
 	if (bufferIsEmpty()) {
@@ -90,14 +99,13 @@ void excecuteCmd(char* buffer) {
 	char ** arguments;
 
 	char oldFormat = tty_getCurrTTYFormat();
-	tty_setFormatToCurrTTY(video_getFormattedColor(DARK_GRAY, BLACK));
+	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
 
 	int cmdIndex = parse_cmd(buffer);
 	if (cmdIndex != -1) {
 		cmdLen = strlen(cmd_table[cmdIndex].name);
 		arguments = getArguments(buffer + cmdLen, &argc);
 		cmd_table[cmdIndex].func(argc, arguments);
-		printf("\n");
 	} else if(buffer[0]!='\0') {
 		tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
 		printf("\n\tUnknown command\n");
@@ -183,7 +191,6 @@ void checkTTY() {
 	if (!IS_CTRL() && newTTY != -1) {
 		if (newTTY != tty_getCurrent()) { // Do not switch to the same tty!
 			tty_setCurrent(newTTY);
-			sprintf(shell_text, "%s@tty%d >", user_getName(), tty_getCurrent() + 1);
 			if (tty_getCurrentTTY()->offset == 0) printShellLabel();
 		}
 		newTTY = -1;
@@ -191,6 +198,7 @@ void checkTTY() {
 }
 
 void printShellLabel() {
+	UPDATE_PROMPT;
 	char oldFormat = tty_getCurrTTYFormat();
 	tty_setFormatToCurrTTY(video_getFormattedColor(CYAN, BLACK));
 	printf(shell_text);

@@ -1,30 +1,12 @@
-EXTERN  int_08
-EXTERN	int_09
-EXTERN	int_80
-EXTERN	div0
-EXTERN	bounds
-EXTERN	gpf
-EXTERN	ssf
-EXTERN	snp
-EXTERN	invop
-EXTERN 	pageFault
-GLOBAL  _int_08_hand
-GLOBAL	_int_09_hand
-GLOBAL _int_80_hand
-GLOBAL _div0_hand
-GLOBAL _bounds_hand
-GLOBAL _gpf_hand
-GLOBAL _ssf_hand
-GLOBAL _snp_hand
-GLOBAL _invop_hand
-GLOBAL  _pageFault_hand
+EXTERN	systemCallHandler
+GLOBAL  _increaseTTCounter
+GLOBAL _systemCallHandler
 
 common ttcounter 4
 
-_int_08_hand:				; Handler de INT 8 ( Timer tick)
-	push	ds
-	push	es              ; Se salvan los registros
-	pusha                   ; Carga de DS y ES con el valor del selector
+_increaseTTCounter:				; increase ticks
+	push ebp
+	mov ebp, esp
 	
 	push eax
 	mov eax, [ttcounter]
@@ -32,35 +14,11 @@ _int_08_hand:				; Handler de INT 8 ( Timer tick)
 	mov [ttcounter], eax
 	pop eax
 
-	mov ax, 0x10  ; load the kernel data segment descriptor
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-	call	int_08
-	mov		al,20h			; Envio de EOI generico al PIC
-	out		20h,al
-	popa
-	pop		es
-	pop		ds
-	iret
+	mov esp, ebp
+	pop ebp
+	ret
 
-_int_09_hand:				; Handler de INT 9 ( Teclado )
-	push	ds
-	push	es
-	pusha
-	mov		ax, 10h			; a utilizar.
-	mov		ds, ax
-	mov		es, ax
-	call	int_09
-	mov		al,20h			; Envio de EOI generico al PIC
-	out		20h,al
-	popa
-	pop		es
-	pop		ds
-	iret
-
-_int_80_hand:				; Handler de INT 80h
+_systemCallHandler:				; Handler de INT 80h
 	push ebp
 	mov ebp, esp			;StackFrame
 	
@@ -73,7 +31,7 @@ _int_80_hand:				; Handler de INT 80h
 	mov		ax, 10h			; a utilizar.
 	mov		ds, ax
 	mov		es, ax
-	call int_80
+	call systemCallHandler
 	mov	al,20h			; Envio de EOI generico al PIC
 	out	20h,al
 	pop eax
@@ -87,129 +45,139 @@ _int_80_hand:				; Handler de INT 80h
 	pop ebp
 	iret
 
-_div0_hand:				; Handler de excepxión "Divide by zero"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax                  
-	call div0                 
-	mov al,20h			; Envio de EOI generico al PIC
-	out 20h,al
-	popf
-	popa
-	pop es
-	pop ds
-	jmp $
-	iret
+;;;;;;;;;; NEW STUFF
 
-_bounds_hand:			; Handler de excepción "BOUND range exceeded"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax
-	call bounds
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	popf
-	popa
-	pop es
-	pop ds
-	jmp $
-	iret
+%macro ISR_NOERRCODE 1  ; define a macro, taking one parameter
+  GLOBAL isr_%1        	; %1 accesses the first parameter.
+  isr_%1:
+    cli
+    push byte 0
+    push byte %1
+    jmp isr_common_stub
+%endmacro
 
-_gpf_hand:				; Handler de excepción "General protection exception"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov eax, 666666h
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax
-	call gpf
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	popf
-	popa
-	pop ax
-	pop ax
-	jmp $
-	iret
+%macro ISR_ERRCODE 1
+  GLOBAL isr_%1
+  isr_%1:
+    cli
+    push byte %1
+    jmp isr_common_stub
+%endmacro
 
-_ssf_hand:				; Handler de excepción "Stack exception"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax                  
-	call ssf
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	popf
-	popa
-	pop ax
-	pop ax
-	jmp $
-	iret
+%macro IRQ 2
+  GLOBAL irq_%1
+  irq_%1:
+    cli
+    push byte 0
+    push byte %2
+    jmp irq_common_stub
+%endmacro
 
-_snp_hand:				; Handler de excepción "Segment not present"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax
-	call snp
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	popf
-	popa
-	pop ax
-	pop ax
-	jmp $
-	iret
+ISR_NOERRCODE 0
+ISR_NOERRCODE 1
+ISR_NOERRCODE 2
+ISR_NOERRCODE 3
+ISR_NOERRCODE 4
+ISR_NOERRCODE 5
+ISR_NOERRCODE 6
+ISR_NOERRCODE 7
+ISR_ERRCODE   8
+ISR_NOERRCODE 9
+ISR_ERRCODE   10
+ISR_ERRCODE   11
+ISR_ERRCODE   12
+ISR_ERRCODE   13
+ISR_ERRCODE   14
+ISR_NOERRCODE 15
+ISR_NOERRCODE 16
+ISR_NOERRCODE 17
+ISR_NOERRCODE 18
+ISR_NOERRCODE 19
+ISR_NOERRCODE 20
+ISR_NOERRCODE 21
+ISR_NOERRCODE 22
+ISR_NOERRCODE 23
+ISR_NOERRCODE 24
+ISR_NOERRCODE 25
+ISR_NOERRCODE 26
+ISR_NOERRCODE 27
+ISR_NOERRCODE 28
+ISR_NOERRCODE 29
+ISR_NOERRCODE 30
+ISR_NOERRCODE 31
+IRQ   0,    32
+IRQ   1,    33
+IRQ   2,    34
+IRQ   3,    35
+IRQ   4,    36
+IRQ   5,    37
+IRQ   6,    38
+IRQ   7,    39
+IRQ   8,    40
+IRQ   9,    41
+IRQ  10,    42
+IRQ  11,    43
+IRQ  12,    44
+IRQ  13,    45
+IRQ  14,    46
+IRQ  15,    47
 
-_pageFault_hand:				; Handler de excepción "Segment not present"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax
-	call pageFault
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	popf
-	popa
-	pop ax
-	pop ax
-	jmp $
-	iret
+EXTERN isr_handler
 
-_invop_hand:				; Handler de excepción "Invalid opcode"
-	push ds
-	push es				; Se salvan los registros
-	pusha				; Carga de DS y ES con el valor del selector
-	pushf
-	mov ax, 10h			; a utilizar.
-	mov ds, ax
-	mov es, ax
-	call invop
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	pop ax
-	popa
-	pop ax
-	pop ax
-	jmp $
-	iret
+; This is our common ISR stub. It saves the processor state, sets
+; up for kernel mode segments, calls the C-level fault handler,
+; and finally restores the stack frame.
+isr_common_stub:
+    pusha                    ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
+
+    mov ax, ds               ; Lower 16-bits of eax = ds.
+    push eax                 ; save the data segment descriptor
+
+    mov ax, 0x10  ; load the kernel data segment descriptor
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    call isr_handler
+
+    pop ebx        ; reload the original data segment descriptor
+    mov ds, bx
+    mov es, bx
+    mov fs, bx
+    mov gs, bx
+
+    popa                     ; Pops edi,esi,ebp...
+    add esp, 8     ; Cleans up the pushed error code and pushed ISR number
+    sti
+    iret           ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
+
+EXTERN irq_handler
+
+; This is our common IRQ stub. It saves the processor state, sets
+; up for kernel mode segments, calls the C-level fault handler,
+; and finally restores the stack frame.
+irq_common_stub:
+    pusha                    ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
+
+    mov ax, ds               ; Lower 16-bits of eax = ds.
+    push eax                 ; save the data segment descriptor
+
+    mov ax, 0x10  ; load the kernel data segment descriptor
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    call irq_handler
+
+    pop ebx        ; reload the original data segment descriptor
+    mov ds, bx
+    mov es, bx
+    mov fs, bx
+    mov gs, bx
+
+    popa                     ; Pops edi,esi,ebp...
+    add esp, 8     ; Cleans up the pushed error code and pushed ISR number
+    sti
+    iret           ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP

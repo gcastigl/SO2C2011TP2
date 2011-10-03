@@ -2,11 +2,10 @@
 #define COMMAND_H
 
 #include <defs.h>
-#include <asm/libasm.h>
 #include <shell.h>
+#include <asm/libasm.h>
 #include <driver/video.h>
 #include <lib/math.h>
-#include <interrupts/interrupts.h>
 
 #define HELP_HELP			"Shows this help function"
 

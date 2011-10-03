@@ -2,8 +2,8 @@ GLOBAL copy_page_physical
 GLOBAL read_eip
 
 read_eip:
-	pop eax
-	jmp eax
+	mov eax, [esp]
+	ret
 
 copy_page_physical:
 	push ebx

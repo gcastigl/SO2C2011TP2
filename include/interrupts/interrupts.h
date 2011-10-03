@@ -3,22 +3,20 @@
 
 #include <defs.h>
 #include <io.h>
-#include <driver/keyboard.h>
-#include <main.h>
 #include <command.h>
 #include <process/task.h>
+#include <asm/interrupts.h>
+#include <interrupts/defs.h>
 
-#define TT_MEDITIONS	100
+void initBasicHandlers();
+extern void _gdt_flush(u32int);
+extern void _idt_flush(u32int);
+void init_descriptor_tables();
+void timerTickHandler(registers_t regs);
+void keyboardHandler(registers_t regs);
+void systemCallHandler(int sysCallNumber, void ** args);
 
-void int_08();
-void int_09();
-void int_80(int sysCallNumber, void ** args);
-void bounds(void);
-void invop(void);
-void div0(void);
-void gpf(void);
-void ssf(void);
-void snp(void);
-void pageFault(void);
+isr_t interruptHandlers[256];
+
 #endif
 

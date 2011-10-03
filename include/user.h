@@ -1,7 +1,11 @@
 #ifndef USER_H
 #define USER_H
 
+#include <tty.h>
+#include <shell.h>
 #include <driver/video.h>
+#include <lib/stdio.h>
+#include <lib/string.h>
 
 #define NAME_MAX_LENGTH	20
 

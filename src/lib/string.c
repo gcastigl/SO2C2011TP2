@@ -41,13 +41,41 @@ int substr(const char * s1, const char *s2) {
 }
 
 void strcpy(char* to, char* from) {
-	int len = strlen(from) + 1;
-	memcpy(to, from, len);
+	while(*from != '\0') {
+		*to++ = *from++;
+	}
+	*to = '\0';
 }
 
 void *memset(void *s, int c, u32int n) {
     unsigned char* p=s;
     while(n--)
-        *p++ = (unsigned char)c;
+        *p++ = (unsigned char) c;
     return s;
 }
+
+void strncpy(char *to, const char *from, int size) {
+	while(size < 0) {
+		*to++ = *from++;
+		size--;
+	}
+	*to = '\0';
+}
+
+int strIndexOf(char* str, char c, int startIndex) {
+	boolean searchBackwards = false;
+	if (startIndex < 0) {	// searching backwards...
+		startIndex = -startIndex;
+		searchBackwards = true;
+	}
+	int i = startIndex;
+	while(str[i] != '\0' && i >= 0) {
+		if (str[i] == c) {
+			return i;
+		}
+		if (searchBackwards) i--;
+		else i++;
+	}
+	return -1;
+}
+

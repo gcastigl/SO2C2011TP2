@@ -2,6 +2,7 @@
 #define TASK_H
 
 #include <defs.h>
+#include <lib/stdio.h>
 #include <paging/paging.h>
 
 typedef struct task {
