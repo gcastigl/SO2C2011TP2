@@ -3,19 +3,21 @@
 static int currentPID = 0;
 static int nextPID = 1;
 
-int main(struct multiboot *mboot_ptr) {
+u32int initial_esp; // New global variable.
+
+int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 	_cli();
+        initial_esp = initial_stack;
 		init_descriptor_tables();
-		nextPID = 0;
 		_mascaraPIC1(0xFC);
 		_mascaraPIC2(0xFF);
 		initialise_paging();
 		keyboard_init();
 		video_init();
-		setFD(STD_OUT);
-		fs_init();
 		tty_init();
+		setFD(STD_OUT);
 		shell_init();
+		fs_init();
 		_initTTCounter();
 	_sti();
 	while (1) {

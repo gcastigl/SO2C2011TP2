@@ -1,10 +1,16 @@
-#include <interrupts/interruptDefs.h>
+#include <interrupts/interrupts.h>
 
+#define SET_ISR(n) (idt_set_gate(n, (u32int)&isr##_##n, 0x08, ACS_INT))
+#define SET_IRQ(n) (idt_set_gate((n+32), (u32int)&irq##_##n, 0x08, ACS_INT))
 // Internal function prototypes.
 static void init_gdt();
 static void gdt_set_gate(s32int,u32int,u32int,u8int,u8int);
 static void init_idt();
 static void idt_set_gate(u8int,u32int,u16int,u8int);
+
+void registerInterruptHandler(u8int number, isr_t handler) {
+    interruptHandlers[number] = handler;
+}
 
 // Initialisation routine - zeroes all the interrupt service routines,
 // initialises the GDT and IDT.
@@ -12,6 +18,13 @@ void init_descriptor_tables() {
    // Initialise the global descriptor table.
    init_gdt();
    init_idt();
+   initBasicHandlers();
+}
+
+void initBasicHandlers() {
+    memset(&interruptHandlers, 0, 256 * sizeof(isr_t));
+    registerInterruptHandler(IRQ0, &timerTickHandler);
+    registerInterruptHandler(IRQ1, &keyboardHandler);
 }
 
 static void init_gdt() {
@@ -43,18 +56,40 @@ static void gdt_set_gate(s32int num, u32int base, u32int limit, u8int access, u8
 static void init_idt() {
     idt_ptr.limit = sizeof(idt_entry_t) * 256 -1;
     idt_ptr.base  = (u32int)&idt_entries;
-
-    memset(&idt_entries, 0, sizeof(idt_entry_t)*256);
-	idt_set_gate(0x00, (u32int)&_div0_hand, 0x08, ACS_INT);
-    idt_set_gate(0x08, (u32int)&_int_08_hand, 0x08, ACS_INT);
-    idt_set_gate(0x09, (u32int)&_int_09_hand, 0x08, ACS_INT);
-    idt_set_gate(0x80, (u32int)&_int_80_hand, 0x08, ACS_INT);
-	idt_set_gate(0x05, (u32int)&_bounds_hand, 0x08, ACS_INT);
-    idt_set_gate(0x06, (u32int)&_invop_hand, 0x08, ACS_INT);
-	idt_set_gate(0x0B, (u32int)&_snp_hand, 0x08, ACS_INT);
-	idt_set_gate(0x0C, (u32int)&_ssf_hand, 0x08, ACS_INT);
-	idt_set_gate(0x0D, (u32int)&_gpf_hand, 0x08, ACS_INT);
-	idt_set_gate(0x0E, (u32int)&_pageFault_hand, 0x08, ACS_INT);
+    
+    u8int pic1mask, pic2mask;
+    pic1mask = _port_in(0x21);
+    pic2mask = _port_in(0xA1);
+    
+    // Remapping the irq table.
+    _port_out(0x20, 0x11);
+    _port_out(0xA0, 0x11);
+    _port_out(0x21, 0x20);
+    _port_out(0xA1, 0x28);
+    _port_out(0x21, 0x04);
+    _port_out(0xA1, 0x02);
+    _port_out(0x21, 0x01);
+    _port_out(0xA1, 0x01);
+    _port_out(0x21, pic1mask);
+    _port_out(0xA1, pic2mask);
+    
+    memset(&idt_entries, 0, sizeof(idt_entry_t) * 256);
+    
+    SET_ISR(0);     SET_ISR(1);     SET_ISR(2);     SET_ISR(3);
+    SET_ISR(4);     SET_ISR(5);     SET_ISR(6);     SET_ISR(7);
+    SET_ISR(8);     SET_ISR(9);     SET_ISR(10);    SET_ISR(11);
+    SET_ISR(12);    SET_ISR(13);    SET_ISR(14);    SET_ISR(15);
+    SET_ISR(16);    SET_ISR(17);    SET_ISR(18);    SET_ISR(19);
+    SET_ISR(20);    SET_ISR(21);    SET_ISR(22);    SET_ISR(23);
+    SET_ISR(24);    SET_ISR(25);    SET_ISR(26);    SET_ISR(27);
+    SET_ISR(28);    SET_ISR(29);    SET_ISR(30);    SET_ISR(31);
+    
+    SET_IRQ(0);     SET_IRQ(1);     SET_IRQ(2);     SET_IRQ(3);
+    SET_IRQ(4);     SET_IRQ(5);     SET_IRQ(6);     SET_IRQ(7);
+    SET_IRQ(8);     SET_IRQ(9);     SET_IRQ(10);    SET_IRQ(11);
+    SET_IRQ(12);    SET_IRQ(13);    SET_IRQ(14);    SET_IRQ(15);
+    
+	idt_set_gate(0x80, (u32int)_systemCallHandler, 0x08, ACS_INT); // System Call
 
    _idt_flush((u32int)&idt_ptr);
 }

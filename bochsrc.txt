@@ -2,6 +2,7 @@
 # how much memory the emulated machine will have
 megs: 32
 
+#gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
 # filename of ROM images
 romimage: file=./img/BIOS-bochs-latest
 #vgaromimage: file=./img/vgabios.bin
@@ -25,7 +26,6 @@ boot: floppy
 #uncoment to enable debugging.
 #to debug, run bochs.
 #from gdb: target remote localhost:1234
-#gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
 #boot: disk
 #ata0-slave: type=cdrom,       path=/dev/cdrom
 # default config interface is textconfig.

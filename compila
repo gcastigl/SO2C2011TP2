@@ -4,6 +4,7 @@ rm -rf *
 nasm -f aout ../src/asm/libasm.asm -o libasm.o
 nasm -f aout ../src/asm/cpuSpeed.asm -o cpuSpeed.o
 nasm -f aout ../src/asm/asmInterrupts.asm -o asmInterrupts.o
+nasm -f aout ../src/asm/process.asm -o processAsm.o
 nasm -f aout ../src/asm/boot.asm -o boot.o
 gcc -m32 -g -c ../src/main.c -o main.o 						    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/interrupts/init.c  -o initInterupts.o     -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
@@ -14,7 +15,7 @@ gcc -m32 -g -c ../src/lib/stdlib.c -o stdlib.o 				    -I../include -fno-builtin
 gcc -m32 -g -c ../src/lib/math.c -o math.o 					    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/lib/printf.c -o printf.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/lib/scanf.c -o scanf.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/interrupts/interrupts.c -o interrupts.o 	-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -g -c ../src/interrupts/handlers.c -o handlers.o    	-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/io.c -o io.o 							    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/shell.c -o shell.o 					    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/command.c -o command.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
@@ -26,9 +27,9 @@ gcc -m32 -g -c ../src/driver/ata_disk.c -o ata_disk.o		 	-I../include -fno-built
 gcc -m32 -g -c ../src/lib/kheap.c -o kheap.o		 			-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/paging/paging.c -o paging.o		 		-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/lib/ordered_map.c -o ordered_map.o		-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -g -c ../src/process/task.c -o task.o              	-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/file.c -o file.o							-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/directory.c -o directory.o							-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-
-ld -melf_i386 -T ../src/link.ld -o kernel.bin main.o boot.o initInterupts.o cpuSpeed.o asmInterrupts.o libasm.o video.o interrupts.o \
+gcc -m32 -g -c ../src/directory.c -o directory.o				-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+ld -melf_i386 -T ../src/link.ld -o kernel.bin main.o boot.o initInterupts.o cpuSpeed.o asmInterrupts.o libasm.o video.o handlers.o \
 	keyboard.o io.o stdlib.o string.o shell.o command.o math.o tty.o printf.o scanf.o videoUtils.o user.o kheap.o paging.o \
-	ordered_map.o ata_disk.o fs.o file.o directory.o
+	ordered_map.o task.o processAsm.o ata_disk.o fs.o file.o directory.o

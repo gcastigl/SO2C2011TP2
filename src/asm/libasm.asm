@@ -2,8 +2,6 @@ GLOBAL  _read_msw,
 GLOBAL  _mascaraPIC1,_mascaraPIC2,_cli,_sti
 GLOBAL  _debug
 
-GLOBAL	_outb
-GLOBAL	_inb
 GLOBAL _port_in
 GLOBAL _port_out
 GLOBAL _portw_in
@@ -72,25 +70,6 @@ _sti:
 
 	sti	; habilita interrupciones por flag
 	ret
-
-; FIXME _outb and _inb should be removed and use port_in and port_out instaed
-_outb:
-	push	ebp
-	mov		ebp, esp
-	mov		edx, [ss:ebp+8] ;Grab data
-	mov		eax, [ss:ebp+12] ;Grab port
-	out		dx, ax
-	pop		ebp
-	retn
-
-_inb:
-	push	ebp
-	mov		ebp, esp
-	mov		dx, [ss:ebp+8] ;Grab port
-	in		ax, dx
-	mov		esp, ebp
-	pop		ebp
-	retn
 
 _mascaraPIC1:			; Escribe mascara del PIC 1
 	push	ebp

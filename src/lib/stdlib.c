@@ -33,17 +33,18 @@ void memcpy(void* to, void* from, u32int count) {
 	}
 }
 
-void panic(char* str, int lock) {
-    _sti();
-    char format = video_getFormattedColor(WHITE, BLACK);
-    char *video = (char*) VIDEO_ADDRESS;
-    video_clearScreen(format);
+void panic(char* str, int line ,int lock) {
+    _cli();
+//    char format = video_getFormattedColor(WHITE, BLACK);
+    char *video = (char*) VIDEO_ADDRESS + 160 * (line - 1);
+    //video_clearScreen(format);
     int i;
     int msgLength = strlen(str);
     for (i = 0; i < msgLength * 2; i+=2) {
         *(video + i) = str[i/2];
     }
-    while(lock);
-    _cli();
+    if (lock) {
+        asm volatile("hlt");
+    }
+    _sti();
 }
-

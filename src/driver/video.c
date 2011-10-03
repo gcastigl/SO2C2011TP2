@@ -16,11 +16,11 @@ void video_write(char *string, u32int count) {
 void video_setCursor(int offset) {
 	if (0 <= offset && offset < ROWS * COLUMNS) {
 		// cursor LOW port to vga INDEX register
-		outb(0x3D4, 0x0F);
-		outb(0x3D5, (ushort)(offset & 0xFF));
+		_port_out(0x3D4, 0x0F);
+		_port_out(0x3D5, (ushort)(offset & 0xFF));
 		// cursor HIGH port to vga INDEX register
-		outb(0x3D4, 0x0E);
-		outb(0x3D5, (ushort)((offset >> 8) & 0xFF));
+		_port_out(0x3D4, 0x0E);
+		_port_out(0x3D5, (ushort)((offset >> 8) & 0xFF));
 	}
 }
 

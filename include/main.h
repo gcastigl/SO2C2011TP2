@@ -11,7 +11,7 @@
 #include <io.h>
 #include <lib/stdio.h>
 #include <paging/paging.h>
-#include <interrupts/interruptDefs.h>
+#include <process/task.h>
 #include <driver/ata_disk.h>
 
 int getNextPID();

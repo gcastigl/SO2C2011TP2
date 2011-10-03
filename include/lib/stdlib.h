@@ -12,7 +12,7 @@ void free(void * pointer);
 */
 void memcpy(void* to, void* from, u32int count);
 
-void panic(char* msg, int lock);
+void panic(char* msg, int line, int lock);
 
 #endif
 
