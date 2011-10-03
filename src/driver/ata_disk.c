@@ -1,5 +1,5 @@
 #include <driver/ata_disk.h>
-
+#include <lib/stdlib.h>
 #define BIT(i)	(1 << (i))
 
 #define IS_REMOVABLE(D) 	printf("Is %sremovable\n", (D & BIT(7)) ? "" : "not ")
@@ -17,12 +17,17 @@ void writeDataToRegister(int ata, char upper, char lower);
 
 void translateBytes(char ans[], unsigned short sector);
 
-void read(int ata, char * ans, int bytes, unsigned short sector, int offset) {
+void ata_read(int ata, void* msg, int bytes, unsigned short sector, int offset) {
+	char* ans = (char*) msg;
 	while (bytes != 0) {
+		if (offset >= 512) {
+			sector += (offset / 512);
+			offset %= 512;
+		}
 		int size;
 		if (offset + bytes > 512) {	// read remaming part from the sector
 			size = 512 - offset;
-			_read(ata, ans,sector, offset, size);
+			_read(ata, ans, sector, offset, size);
 			sector++;
 			offset = 0;
 			bytes -= size;
@@ -35,9 +40,10 @@ void read(int ata, char * ans, int bytes, unsigned short sector, int offset) {
 			ans += size;
 		}
 	}
+	*ans = '\0';
 }
 
-void _read(int ata, char * ans, unsigned short sector, int offset, int count){
+void _read(int ata, char * ans, unsigned short sector, int offset, int count) {
 	char tmp[512];
 	sendComm(ata, LBA_READ, sector);
 	// Now read sector
@@ -58,22 +64,27 @@ void translateBytes(char * ans, unsigned short databyte) {
 	ans[1] = databyte >> 8;
 }
 
-void write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
+void ata_write(int ata, void * msg, int bytes, unsigned short sector, int offset) {
+	char* ans = (char*) msg;
 	while (bytes != 0) {
+		if (offset >= 512) {
+			sector += (offset / 512);
+			offset %= 512;
+		}
 		int size;
 		if (offset + bytes > 512) {	// Fill sector
 			size = 512 - offset;
-			_write(ata, msg, size, sector, offset);
+			_write(ata, ans, size, sector, offset);
 			sector++;
 			offset = 0;
 			bytes -= size;
-			msg += size;
+			ans += size;
 		} else {					// The remaning msg fits in the actual sector
 			size = bytes;
-			_write(ata, msg, size, sector, offset);
+			_write(ata, ans, size, sector, offset);
 			offset += size;
 			bytes = 0;
-			msg += size;
+			ans += size;
 		}
 	}
 }
@@ -146,7 +157,7 @@ void sendComm(int ata, int rdwr, unsigned short sector){
 	_sti();
 }
 
-unsigned short getStatusRegister(int ata){
+unsigned short ata_getStatusRegister(int ata) {
 	unsigned short rta;
 	_cli();
 	rta = _port_in(ata + WIN_REG7) & 0x00000FFFF;
@@ -154,7 +165,7 @@ unsigned short getStatusRegister(int ata){
 	return rta;
 }
 
-void identifyDevice(int ata){
+void identifyDevice(int ata) {
 	_cli();
 	_port_out(ata + WIN_REG6, 0);
 	_port_out(ata + WIN_REG7, WIN_IDENTIFY);
@@ -162,7 +173,7 @@ void identifyDevice(int ata){
 }
 
 // Check disk features
-void check_drive(int ata) {
+void ata_checkDrive(int ata) {
 	printf("-----------------------\n");
 	printf("Identifying device ");
 	switch(ata) {

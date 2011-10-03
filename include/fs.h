@@ -9,6 +9,8 @@
 
 void fs_init();
 
+int fs_createDirectory(Directory_t* parent, char* name);
+
 /*
 #define FS_FILE        0x01
 #define FS_DIRECTORY   0x02

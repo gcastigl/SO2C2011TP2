@@ -3,6 +3,7 @@
 Directory_t root;
 
 void initEmptyDirectory(Directory_t* dir, char* name);
+Directory_t* find_r(Directory_t* curr, char* name);
 
 void directory_initialize() {
 	initEmptyDirectory(&root, "~");
@@ -34,6 +35,7 @@ void initEmptyDirectory(Directory_t* dir, char* name) {
 	}
 }
 
+// Devuelve (en el caso de existir) el subdirectorio con nombre "name". NULL en caso contrario.
 Directory_t* directory_get(Directory_t* dir, char* name) {
 	int i;
 	for (i = 0; i < dir->subDirsCount; i++) {
@@ -48,6 +50,10 @@ Directory_t* directory_getRoot() {
 	return &root;
 }
 
+void directory_setRoot(Directory_t* dir) {
+	memcpy(&root, dir, sizeof(Directory_t));
+}
+
 boolean directory_exists(Directory_t* dir, char* name) {
 	int i;
 	for (i = 0; i < dir->subDirsCount; i++) {
@@ -57,3 +63,34 @@ boolean directory_exists(Directory_t* dir, char* name) {
 	}
 	return false;
 }
+
+// Busca a partir del directorio from el directorio con nombre "name" y lo devuelve.
+// Si el pramatero en NULL, comienza la busqueda desde el directorio root.
+// Retorna NULL en caso de no existir el directorio.
+Directory_t* directory_find(Directory_t* from, char* name) {
+	if (from == NULL) {
+		from = &root;
+	}
+	return find_r(from, name);
+}
+
+Directory_t* find_r(Directory_t* curr, char* name) {
+	if (strcmp(curr->name, name) == 0) {
+		return curr;
+	}
+	int i;
+	Directory_t* found;
+	for (i = 0; i < curr->subDirsCount; i++) {
+		found = find_r(curr->subDirs[i], name);
+		if (found != NULL) {
+			return found;
+		}
+	}
+	return NULL;
+}
+
+
+
+
+
+
