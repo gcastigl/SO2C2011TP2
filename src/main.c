@@ -14,10 +14,10 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 		initialise_paging();
 		keyboard_init();
 		video_init();
-		tty_init();
 		setFD(STD_OUT);
 		shell_init();
 		fs_init();
+		tty_init();
 		_initTTCounter();
 	_sti();
 	while (1) {

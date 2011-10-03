@@ -36,7 +36,7 @@ void fs_init() {
 	currDisk = ATA0;
 	currSector = 1;		// Start working at sector 1
 	currOffset = 0;
-	if (false && validate_header()) {
+	if (validate_header()) {
 		fs_load();
 	} else {
 		fs_create();
@@ -75,7 +75,7 @@ int fs_createDirectory(Directory_t* parent, char* name) {
 	currOffset = 0;
 	// Save changes to disk
 	persistDirectory(directory_getRoot());
-	updateNumberOfFoldersOnDisk(true);
+	//updateNumberOfFoldersOnDisk(true);
 	return 0;
 }
 
@@ -103,8 +103,6 @@ void persistDirectory(Directory_t* dir) {
 char* serializeDirectory(Directory_t* dir, int* finalSize) {
 	char* serial = (char*) kmalloc(2 * MAX_FILENAME_LENGTH + 2 * sizeof(u32int));
 	int offset = 0;
-	int header = FS_FILE;
-	memcpy(serial + offset, &header, sizeof(u32int)); 	offset += sizeof(u32int);
 	memcpy(serial + offset, &dir->subDirsCount, sizeof(u32int)); 	offset += sizeof(u32int);
 	memcpy(serial + offset, dir->name, MAX_FILENAME_LENGTH);		offset += MAX_FILENAME_LENGTH;
 	if (dir->parent == NULL) {
@@ -143,7 +141,6 @@ char* serializeFile(iNode* file, int* finalSize) {
 }
 
 void fs_load() {
-	currOffset += sizeof(u32int);
 	directory_initialize();
 	Directory_t* root = directory_getRoot();
 	parseDirectories(root, NULL);
@@ -154,7 +151,7 @@ void fs_load() {
 void parseDirectories(Directory_t* dir, Directory_t* parent) {
 	u32int i;
 	unserializeDirectory(dir, parent);
-	printf("%s -> %d childs\n", dir->name, dir->subDirsCount);
+	//printf("%s -> %d childs\n", dir->name, dir->subDirsCount);
 	for(i = 0; i < dir->subDirsCount; i++) {
 		dir->subDirs[i] = (Directory_t*) kmalloc(sizeof(Directory_t));
 		parseDirectories(dir->subDirs[i], dir);
@@ -163,7 +160,7 @@ void parseDirectories(Directory_t* dir, Directory_t* parent) {
 
 // Lee del disco un directorio desde la posicion actual de currSector y currOffset y lo guarda en dir.
 void unserializeDirectory(Directory_t* dir, Directory_t* parent) {
-	printf("reading %d bytes at: (%d, %d) to (%d, %d)\n", 68, currSector, currOffset, currSector, currOffset + 68);
+	//printf("reading %d bytes at: (%d, %d) to (%d, %d)\n", 68, currSector, currOffset, currSector, currOffset + 68);
 	dir->parent = parent;
 	char parentName[MAX_FILENAME_LENGTH];		// Not used for now sine we already know the parent
 	ata_read(currDisk,  &dir->subDirsCount, sizeof(u32int), currSector, currOffset);	currOffset += sizeof(u32int);
