@@ -11,13 +11,17 @@ void fs_init();
 
 int fs_createDirectory(Directory_t* parent, char* name);
 
+int fs_createFile(Directory_t* parent, char* name);
+
+#define FS_HEADER		"GAT_OS_FS"
+
+#define FS_FILE			0x01
+#define FS_DIRECTORY   	0x02
+#define FS_PIPE        	0x05
+#define FS_SYMLINK     	0x06
 /*
-#define FS_FILE        0x01
-#define FS_DIRECTORY   0x02
 #define FS_CHARDEVICE  0x03
 #define FS_BLOCKDEVICE 0x04
-#define FS_PIPE        0x05
-#define FS_SYMLINK     0x06
 #define FS_MOUNTPOINT  0x08 // Is the file an active mountpoint?
 
 struct fs_node;

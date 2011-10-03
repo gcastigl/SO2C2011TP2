@@ -9,7 +9,7 @@ void directory_initialize() {
 	initEmptyDirectory(&root, "~");
 }
 
-int directory_create(Directory_t* dir, char* name) {
+int directory_createDir(Directory_t* dir, char* name) {
 	if(directory_exists(dir, name)) {
 		return DIR_EXISTS;
 	} else if (dir->subDirsCount == MAX_FOLDERS_PER_FOLDER) {
@@ -22,13 +22,20 @@ int directory_create(Directory_t* dir, char* name) {
 	return 0;
 }
 
+int directory_createFile(Directory_t* dir, char* name) {
+	if(directory_exists(dir, name)) {
+		return DIR_EXISTS;
+	} else if (dir->subDirsCount == MAX_FOLDERS_PER_FOLDER) {
+		return DIR_FULL;
+	}
+
+	return 0;
+}
+
 void initEmptyDirectory(Directory_t* dir, char* name) {
 	int i;
 	strcpy(dir->name, name);
 	dir->filesCount = 0;
-	for(i = 0; i < MAX_FILES_PER_FOLDER; i++) {
-		dir->files[i] = NULL;
-	}
 	dir->subDirsCount = 0;
 	for(i = 0; i < MAX_FOLDERS_PER_FOLDER; i++) {
 		dir->subDirs[i] = NULL;

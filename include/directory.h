@@ -21,21 +21,27 @@ typedef struct {
 	char* contents;
 	u32int contentsLength;
 	u32int used;			// if true, it means the file need to be written to disk
-	struct Directory* folder;
+	//struct Directory* folder;
 } iNode;
 
 typedef struct Directory {
 	char name[MAX_FILENAME_LENGTH];
-	iNode* files[MAX_FILES_PER_FOLDER];
 	u32int filesCount;
 	struct Directory* parent;
 	u32int subDirsCount;
 	struct Directory* subDirs[MAX_FOLDERS_PER_FOLDER];
 } Directory_t;
 
+typedef struct {
+	Directory_t* dir;
+	iNode* files[MAX_FILES_PER_FOLDER];
+} fileTable;
+
 void directory_initialize();
 
-int directory_create(Directory_t* parent, char* name);
+int directory_createDir(Directory_t* parent, char* name);
+
+int directory_createFile(Directory_t* dir, char* name);
 
 Directory_t* directory_get(Directory_t* dir, char* name);
 

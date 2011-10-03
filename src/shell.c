@@ -35,6 +35,7 @@ cmd_table_entry cmd_table[] = {
 	{"ls", 				"List information about the FILEs (the current directory by default).", ls},
 	{"mkdir", 			"Create the DIRECTORY(ies), if they do not already exist.", mkdir},
 	{"pwd",				"Show current user path", pwd},
+	{"touch",			"Creates a new empty file", touch},
 	//{"getchar", "Funcion para la catedra para testeo de getchar\n", getchar_cmd},
 	//{"printf", "Funcion para la catedra para testeo de printf\n", printf_cmd},
 	//{"scanf", "Funcion para la catedra para testeo de scanf\n", scanf_cmd},

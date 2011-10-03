@@ -82,6 +82,10 @@ int pwd(int argc, char *argv[]) {
 	return 0;
 }
 
+int touch(int argc, char *argv[]) {
+	return 0;
+}
+
 /*
 int mkdir(char * arg){
 	if(strlen(arg) == 0 )

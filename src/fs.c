@@ -1,7 +1,7 @@
 #include <fs.h>
 #include <driver/video.h>
 
-#define FS_HEADER	"GAT_OS_FS"
+#define FILE_TABLE_SECTOR		1024
 
 static iNode iNodes[MAX_INODES];
 
@@ -18,6 +18,7 @@ void write_header();
 // =======================================================
 // Functions used to persist files and folders on disk
 // =======================================================
+
 void persistDirectory(Directory_t* dir);
 void persist(char* string, int size);
 
@@ -40,7 +41,6 @@ void fs_init() {
 	} else {
 		fs_create();
 	}
-	printf("OK!");
 }
 
 boolean validate_header() {
@@ -52,8 +52,6 @@ boolean validate_header() {
 
 void write_header() {
 	ata_write(currDisk, FS_HEADER, strlen(FS_HEADER), 0, 0);
-	u32int numberOfFiles = 0;
-	ata_write(currDisk, &numberOfFiles, sizeof(u32int), currSector, currOffset); currOffset += sizeof(u32int);
 }
 
 void fs_create() {
@@ -69,15 +67,19 @@ void fs_create() {
 }
 
 int fs_createDirectory(Directory_t* parent, char* name) {
-	int created = directory_create(parent, name);
+	int created = directory_createDir(parent, name);
 	if (created != 0) {			// There was an error creating the directory
 		return created;
 	}
 	currSector = 1;
-	currOffset = 4;
+	currOffset = 0;
 	// Save changes to disk
 	persistDirectory(directory_getRoot());
 	updateNumberOfFoldersOnDisk(true);
+	return 0;
+}
+
+int fs_createFile(Directory_t* parent, char* name) {
 	return 0;
 }
 
@@ -93,20 +95,16 @@ void persistDirectory(Directory_t* dir) {
 	char* serializedDir = serializeDirectory(dir, &size);
 	persist(serializedDir, size);
 	kfree(serializedDir);
-	/*for(i = 0; i < dir->filesCount; i++) {
-		char* serialzedFile = serializeFile(dir->files[i], &size);
-		persist(serialzedFile, size);
-		kfree(serialzedFile);
-	}*/
-	// Perist each sub-dirctory
 	for(i = 0; i < dir->subDirsCount; i++) {
 		persistDirectory(dir->subDirs[i]);
 	}
 }
 
 char* serializeDirectory(Directory_t* dir, int* finalSize) {
-	char* serial = (char*) kmalloc(2 * MAX_FILENAME_LENGTH + sizeof(u32int));
+	char* serial = (char*) kmalloc(2 * MAX_FILENAME_LENGTH + 2 * sizeof(u32int));
 	int offset = 0;
+	int header = FS_FILE;
+	memcpy(serial + offset, &header, sizeof(u32int)); 	offset += sizeof(u32int);
 	memcpy(serial + offset, &dir->subDirsCount, sizeof(u32int)); 	offset += sizeof(u32int);
 	memcpy(serial + offset, dir->name, MAX_FILENAME_LENGTH);		offset += MAX_FILENAME_LENGTH;
 	if (dir->parent == NULL) {
@@ -121,10 +119,9 @@ char* serializeDirectory(Directory_t* dir, int* finalSize) {
 }
 
 void persist(char* string, int size) {
-	printf("saving from %d byted at: (%d, %d) to (%d, %d)\n", size, currSector, currOffset, currSector, currOffset + size);
+	//printf("saving from %d byted at: (%d, %d) to (%d, %d)\n", size, currSector, currOffset, currSector, currOffset + size);
 	ata_write(currDisk, string, size, currSector, currOffset);
 	currOffset += size;
-	// TODO: reduce currOffset when over than 512 and increment currSector
 }
 
 void updateNumberOfFoldersOnDisk(boolean increment) {
@@ -151,6 +148,7 @@ void fs_load() {
 	Directory_t* root = directory_getRoot();
 	parseDirectories(root, NULL);
 }
+
 // Funcion recursiva que se encarga de leer el arbol de directorios del disco a partir de la posicion actual
 // de currSector y currSector.
 void parseDirectories(Directory_t* dir, Directory_t* parent) {
@@ -171,12 +169,10 @@ void unserializeDirectory(Directory_t* dir, Directory_t* parent) {
 	ata_read(currDisk,  &dir->subDirsCount, sizeof(u32int), currSector, currOffset);	currOffset += sizeof(u32int);
 	ata_read(currDisk, dir->name, MAX_FILENAME_LENGTH, currSector, currOffset);		currOffset += MAX_FILENAME_LENGTH;
 	ata_read(currDisk, parentName, MAX_FILENAME_LENGTH, currSector, currOffset);	currOffset += MAX_FILENAME_LENGTH;
-	//ata_read(currDisk,  &dir->filesCount, sizeof(u32int), currSector, currOffset);	currOffset += sizeof(u32int);
 }
 
 iNode* unserializeFile(Directory_t* folder) {
 	iNode* file = (iNode*) kmalloc(sizeof(iNode));
-	file->folder = folder;
 	file->sector = currSector;
 	file->offset = currOffset;
 	ata_read(currDisk, file->name, MAX_FILENAME_LENGTH, currSector, currOffset); 		currOffset += MAX_FILENAME_LENGTH;
