@@ -36,7 +36,7 @@ void fs_init() {
 	currDisk = ATA0;
 	currSector = 1;		// Start working at sector 1
 	currOffset = 0;
-	if (validate_header()) {
+	if (false && validate_header()) {
 		fs_load();
 	} else {
 		fs_create();
