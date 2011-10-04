@@ -1,9 +1,12 @@
 #include <fs.h>
 #include <driver/video.h>
 
-#define FILE_TABLE_SECTOR		1024
+#define FS_HEADER		"GAT_OS_FS"
+#define FILE_MAGIC_NUMBER	123456
 
-static iNode iNodes[MAX_INODES];
+#define FILE_BLOCK_SIZE_BYTES		200
+#define FILE_TABLE_INIT_SECTOR		1024
+#define FILE_TABLE_FINAL_SECTOR		2048
 
 static u32int currDisk;
 static u32int currSector;
@@ -31,6 +34,7 @@ void unserializeDirectory(Directory_t* dir, Directory_t* parent);
 iNode* unserializeFile(Directory_t* folder);
 
 void updateNumberOfFoldersOnDisk(boolean increment);
+static void findHole(FilePage* page, int size);
 
 void fs_init() {
 	currDisk = ATA0;
@@ -56,10 +60,6 @@ void write_header() {
 
 void fs_create() {
 	write_header();				// Save header for the next time the system starts...
-	int i;
-	for(i = 0; i < MAX_INODES; i++) {
-		iNodes[i].contents = NULL;
-	}
 	// create root and save it to disk
 	directory_initialize();
 	// create /dev
@@ -80,6 +80,19 @@ int fs_createDirectory(Directory_t* parent, char* name) {
 }
 
 int fs_createFile(Directory_t* parent, char* name) {
+	int created = directory_createDir(parent, name);
+	if (created != 0) {			// There was an error creating the file
+		return created;
+	}
+	FilePage page;
+	findHole(&page, 50);
+	if (page.sector == -1) {		// No more memory available
+		return E_OUT_OF_MEMORY;
+	}
+	int fileIndex = parent->fileTable->filesCount++;
+	parent->fileTable->files[fileIndex]->sector = page.sector;
+	parent->fileTable->files[fileIndex]->offset = page.offset;
+	parent->fileTable->files[fileIndex]->contents = NULL;
 	return 0;
 }
 
@@ -87,7 +100,7 @@ int fs_createFile(Directory_t* parent, char* name) {
 //			FS persiatnce
 // ==============================================================
 
-// Funcion recursiva que, dado un directorio, guarda en disco todo su contenido
+// Funcion recursiva que, dado un directorio, guarda en disco tod su contenido
 // a partir de la posicion currSector y currOffset
 void persistDirectory(Directory_t* dir) {
 	int size = 0;
@@ -178,4 +191,50 @@ iNode* unserializeFile(Directory_t* folder) {
 	ata_read(currDisk, file->contents, sizeof(u32int), currSector, currOffset); 		currOffset += file->contentsLength;
 	return file;
 }
+
+// Busca desde el sector FILE_TABLE_INIT_SECTOR hasta el FILE_TABLE_FINAL_SECTOR por un espacio vacio de size
+// bytes para crear un archivo.
+// De encontrarse setea header con los valors adecuados. Sino setea a sector con -1.
+static void findHole(FilePage* page, int size) {
+	FileHeader fileHeader;	// this is where the information read from the disk will be stored temporarily
+	int sector = FILE_TABLE_INIT_SECTOR;
+	int offset = 0;
+	int index = 0;
+	int previousSector, previousOffset;		// auxiliary variables
+
+	u32int maxOffset = (FILE_TABLE_FINAL_SECTOR - FILE_TABLE_INIT_SECTOR) * SECTOR_SIZE;
+	int neededPages = (size / (FILE_BLOCK_SIZE_BYTES + 1)) + 1;
+
+	while (index != neededPages && offset < maxOffset) {
+		ata_read(currDisk, &fileHeader, sizeof(FileHeader), sector, offset);
+		if (fileHeader.magic != FILE_MAGIC_NUMBER) {					// The block is empty... can be used
+			fileHeader.magic = FILE_MAGIC_NUMBER;
+			fileHeader.nextSector = -1;
+			fileHeader.length = FILE_BLOCK_SIZE_BYTES - sizeof(FileHeader);
+			ata_write(currDisk, &fileHeader, sizeof(FileHeader), sector, offset);			// write header to disk
+			if (index > 0) {											// Set previous header to point to this one
+				fileHeader.nextSector = sector;
+				fileHeader.nextOffset = offset;
+				ata_write(currDisk, &fileHeader, sizeof(FileHeader), previousSector, previousOffset);
+			} else {													// save first page to return
+				page->sector = sector;
+				page->offset = offset;
+			}
+			previousSector = sector;
+			previousOffset = offset;
+			index++;
+		}
+		offset += FILE_BLOCK_SIZE_BYTES;
+	}
+	if (offset >= maxOffset) {
+		page->sector = -1;
+	}
+}
+
+
+
+
+
+
+
 

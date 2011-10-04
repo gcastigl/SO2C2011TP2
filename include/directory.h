@@ -6,6 +6,7 @@
 #include <lib/stdio.h>
 #include <lib/string.h>
 
+#define FILES_TABLES_SIZE		64
 #define MAX_FILENAME_LENGTH		32
 #define MAX_FILES_PER_FOLDER	32
 #define MAX_FOLDERS_PER_FOLDER	32
@@ -26,12 +27,14 @@ typedef struct Directory {
 	struct Directory* parent;
 	u32int subDirsCount;
 	struct Directory* subDirs[MAX_FOLDERS_PER_FOLDER];
+	struct FileTable_t* fileTable;
 } Directory_t;
 
-typedef struct {
+typedef struct FileTable_t {
 	Directory_t* dir;
 	iNode* files[MAX_FILES_PER_FOLDER];
-} fileTable;
+	u32int filesCount;
+} FileTable;
 
 void directory_initialize();
 

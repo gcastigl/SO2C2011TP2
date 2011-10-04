@@ -5,7 +5,6 @@
 #include <directory.h>
 #include <driver/ata_disk.h>
 
-#define MAX_INODES	64
 
 void fs_init();
 
@@ -13,7 +12,17 @@ int fs_createDirectory(Directory_t* parent, char* name);
 
 int fs_createFile(Directory_t* parent, char* name);
 
-#define FS_HEADER		"GAT_OS_FS"
+typedef struct {
+	u32int sector;
+	u32int offset;
+} FilePage;
+
+typedef struct {
+	u32int magic;
+	u32int length;
+	u32int nextSector;
+	u32int nextOffset;
+} FileHeader;
 
 #define FS_FILE			0x01
 #define FS_DIRECTORY   	0x02

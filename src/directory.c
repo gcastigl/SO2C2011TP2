@@ -1,19 +1,27 @@
 #include <directory.h>
 
-Directory_t root;
+static Directory_t root;
 
-void initEmptyDirectory(Directory_t* dir, char* name);
+static FileTable files[FILES_TABLES_SIZE];
+
+static void initEmptyDirectory(Directory_t* dir, char* name);
+static boolean fileExists(FileTable* fileTable, char* fileName);
 Directory_t* find_r(Directory_t* curr, char* name);
 
 void directory_initialize() {
 	initEmptyDirectory(&root, "~");
+	int i;
+	for(i = 0; i < FILES_TABLES_SIZE; i++) {
+		files[i].dir = NULL;
+		files[i].filesCount = 0;
+	}
 }
 
 int directory_createDir(Directory_t* dir, char* name) {
 	if(directory_exists(dir, name)) {
-		return DIR_EXISTS;
+		return E_DIR_EXISTS;
 	} else if (dir->subDirsCount == MAX_FOLDERS_PER_FOLDER) {
-		return DIR_FULL;
+		return E_DIR_FULL;
 	}
 	Directory_t* newFolder = (Directory_t*) kmalloc(sizeof(Directory_t));
 	initEmptyDirectory(newFolder, name);
@@ -22,17 +30,34 @@ int directory_createDir(Directory_t* dir, char* name) {
 	return 0;
 }
 
-int directory_createFile(Directory_t* dir, char* name) {
-	if(directory_exists(dir, name)) {
-		return DIR_EXISTS;
-	} else if (dir->subDirsCount == MAX_FOLDERS_PER_FOLDER) {
-		return DIR_FULL;
+int directory_createFile(Directory_t* dir, char* fileName) {
+	if (fileExists(dir->fileTable, fileName)) {
+		return E_DIR_EXISTS;
+	} else if (dir->fileTable->filesCount == MAX_FILES_PER_FOLDER - 1) {
+		return E_DIR_FULL;
 	}
-
+	iNode* file = (iNode*) kmalloc(sizeof(iNode));
+	int index = dir->fileTable->filesCount;
+	strcpy(file->name, fileName);
+	dir->fileTable->files[index] = file;
+	file->contents = NULL;
+	file->contentsLength = 0;
+	file->used = 0;
+	dir->fileTable->filesCount++;
 	return 0;
 }
 
-void initEmptyDirectory(Directory_t* dir, char* name) {
+static boolean fileExists(FileTable* fileTable, char* fileName) {
+	int i;
+	for (i = 0; i < fileTable->filesCount; i++) {
+		if (strcmp(fileTable->files[i]->name, fileName) == 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
+static void initEmptyDirectory(Directory_t* dir, char* name) {
 	int i;
 	strcpy(dir->name, name);
 	dir->filesCount = 0;
