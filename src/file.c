@@ -61,10 +61,10 @@ int mkdir(int argc, char *argv[]) {
 		switch(created) {
 			case 0:		// Directory was created OK
 				break;
-			case DIR_EXISTS:
-				err = "File exists";
+			case E_DIR_EXISTS:
+				err = "Directory exists";
 				break;
-			case DIR_FULL:
+			case E_DIR_FULL:
 				err = "Directory is full";
 				break;
 			default:

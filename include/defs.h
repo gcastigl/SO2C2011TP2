@@ -57,6 +57,11 @@ typedef void*           type_t;
 
 #define K_BUFFER_SIZE	10
 
+// ERROR CODES
+#define	E_DIR_EXISTS		1
+#define E_DIR_FULL			2
+#define E_OUT_OF_MEMORY		3
+
 typedef struct page
 {
    u32int present    : 1;   // Page present in memory

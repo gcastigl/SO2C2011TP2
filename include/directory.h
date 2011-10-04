@@ -10,10 +10,6 @@
 #define MAX_FILES_PER_FOLDER	32
 #define MAX_FOLDERS_PER_FOLDER	32
 
-// ERROR CODES
-#define	DIR_EXISTS	1
-#define DIR_FULL	2
-
 typedef struct {
 	char name[MAX_FILENAME_LENGTH];
 	u32int sector;
