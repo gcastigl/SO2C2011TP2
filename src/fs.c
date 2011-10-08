@@ -12,8 +12,6 @@ static u32int currDisk;
 static u32int currSector;
 static u32int currOffset;
 
-static boolean fsLoading;
-
 void fs_create();
 void fs_load();
 
@@ -42,11 +40,8 @@ void fs_init() {
 	currDisk = ATA0;
 	currSector = 1;		// Start working at sector 1
 	currOffset = 0;
-	//ata_write(ATA0, "00", 2, 0, 0);
 	if (validate_header()) {
-		fsLoading = true;
 		fs_load();
-		fsLoading = false;
 	} else {
 		fs_create();
 	}
@@ -67,8 +62,14 @@ void fs_create() {
 	write_header();				// Save header for the next time the system starts...
 	// create root and save it to disk
 	directory_initialize();
+	// initialize root
+	Directory* root = directory_getRoot();
+	initEmptyDirectory(root, "~");
 	// create /dev
-	fs_createDirectory(directory_getRoot(), "dev");
+	directory_createDir(root, "dev");
+	directory_createDir(root, "home");
+	// persist new directory for the next time system starts
+	persistDirectory(root);
 }
 
 int fs_createDirectory(Directory* parent, char* name) {
@@ -76,12 +77,10 @@ int fs_createDirectory(Directory* parent, char* name) {
 	if (created != 0) {			// There was an error creating the directory
 		return created;
 	}
-	if (!fsLoading) {
-		// Save changes to disk
-		currSector = 1;
-		currOffset = 0;
-		persistDirectory(directory_getRoot());
-	}
+	// Save changes to disk
+	currSector = 1;
+	currOffset = 0;
+	persistDirectory(directory_getRoot());
 	//updateNumberOfFoldersOnDisk(true);
 	return 0;
 }
