@@ -237,8 +237,20 @@ static void findHole(FilePage* page, int size) {
 	}
 }
 
-
-
+void fs_format() {
+	FileHeader fileHeader;
+	fileHeader.magic = FILE_MAGIC_NUMBER + 1; // Always different from the FILE_MAGIC_NUMBER!
+	int sector = FILE_TABLE_INIT_SECTOR;
+	int offset = 0;
+	// Delete FS header
+	ata_write(ATA0, "000000", 6, 0, 0);
+	int times = 0;
+	while(times < 100) {
+		ata_write(ATA0, &fileHeader, sizeof(FileHeader), sector, offset);
+		offset += FILE_TABLE_INIT_SECTOR;
+		times++;
+	}
+}
 
 
 
