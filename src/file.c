@@ -40,7 +40,7 @@ int ls(int argc, char *argv[]) {
 		tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
 		for (i = 0; i < current->subDirsCount; i++) {
 			printf("\t%s\n", current->subDirs[i]->name);
-			printf("\t\tThis directory has %d files\n", current->subDirs[i]->fileTableEntry->filesCount);
+			//printf("\t\tThis directory has %d files\n", current->subDirs[i]->fileTableEntry->filesCount);
 		}
 		tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_GREEN, BLACK));
 		for (i = 0; i < current->fileTableEntry->filesCount; i++) {
