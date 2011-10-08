@@ -33,7 +33,6 @@ void parseDirectories(Directory* current);
 void unserializeDirectory(char* name, u32int* childs);
 iNode* unserializeFile(Directory* folder);
 
-void updateNumberOfFoldersOnDisk(boolean increment);
 static void findHole(FilePage* page, int size);
 
 void fs_init() {
@@ -81,7 +80,6 @@ int fs_createDirectory(Directory* parent, char* name) {
 	currSector = 1;
 	currOffset = 0;
 	persistDirectory(directory_getRoot());
-	//updateNumberOfFoldersOnDisk(true);
 	return 0;
 }
 
@@ -95,7 +93,7 @@ int fs_createFile(Directory* parent, char* name) {
 	if (page.sector == (u32int) -1) {		// No more memory available
 		return E_OUT_OF_MEMORY;
 	}
-	int fileIndex = parent->fileTableEntry->filesCount;
+	int fileIndex = parent->fileTableEntry->filesCount - 1;
 	parent->fileTableEntry->files[fileIndex]->sector = page.sector;
 	parent->fileTableEntry->files[fileIndex]->offset = page.offset;
 	parent->fileTableEntry->files[fileIndex]->contents = NULL;
@@ -133,14 +131,6 @@ void persist(char* string, int size) {
 	//printf("saving from %d byted at: (%d, %d) to (%d, %d)\n", size, currSector, currOffset, currSector, currOffset + size);
 	ata_write(currDisk, string, size, currSector, currOffset);
 	currOffset += size;
-}
-
-void updateNumberOfFoldersOnDisk(boolean increment) {
-	u32int currnumberOfDirs;
-	ata_read(currDisk, &currnumberOfDirs, sizeof(u32int), 1, 0);
-	if (increment)	currnumberOfDirs++;
-	else currnumberOfDirs --;
-	ata_write(currDisk, &currnumberOfDirs, sizeof(u32int), 1, 0);
 }
 
 char* serializeFile(iNode* file, int* finalSize) {
@@ -209,7 +199,6 @@ static void findHole(FilePage* page, int size) {
 	int neededPages = (size / (FILE_BLOCK_SIZE_BYTES + 1)) + 1;
 	while (index < neededPages && offset < maxOffset) {
 		ata_read(currDisk, &fileHeader, sizeof(FileHeader), sector, offset);
-		//fileHeader.magic = 456;											//DELETE THIS LINE!!!!
 		//printf("[%d, %d] -> %d\n", sector, offset, fileHeader.magic);
 		if (fileHeader.magic != FILE_MAGIC_NUMBER) {					// The block is empty... can be used
 			fileHeader.magic = FILE_MAGIC_NUMBER;

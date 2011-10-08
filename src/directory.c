@@ -12,12 +12,6 @@ static void freeINodeResources(iNode** files, int length);
 
 void directory_initialize() {
 	filesCurrentIndex = 0;
-	int i;
-	for(i = 0; i < FILE_TABLE_SIZE; i++) {
-		fileTable[i].dir = NULL;
-		fileTable[i].files = NULL;
-		fileTable[i].filesCount = 0;
-	}
 }
 
 int directory_createDir(Directory* dir, char* name) {
