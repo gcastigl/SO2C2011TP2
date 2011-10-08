@@ -7,7 +7,7 @@ int cd(int argc, char *argv[]) {
 	}
 	TTY* currTTy = tty_getCurrentTTY();
 	if (strcmp("..", argv[0]) == 0) { 				// Go up one direcotry
-		Directory_t* next = currTTy->currDirectory->parent;
+		Directory* next = currTTy->currDirectory->parent;
 		if (next != NULL) {
 			int folderNameLen = strlen(currTTy->currDirectory->name);
 			currTTy->currPathOffset -= folderNameLen + 1;
@@ -18,7 +18,7 @@ int cd(int argc, char *argv[]) {
 		//TODO:
 		printf("Not implemented yet...\n");
 	} else {										// Relative path
-		Directory_t* next = directory_get(tty_getCurrentTTY()->currDirectory, argv[0]);
+		Directory* next = directory_get(tty_getCurrentTTY()->currDirectory, argv[0]);
 		if (next != NULL) { // Switch directory (advance one folder)
 			currTTy->currDirectory = next;
 			int offset = currTTy->currPathOffset;
@@ -35,10 +35,16 @@ int cd(int argc, char *argv[]) {
 
 int ls(int argc, char *argv[]) {
 	if (argc == 0) {
-		Directory_t* current = tty_getCurrentTTY()->currDirectory;
+		Directory* current = tty_getCurrentTTY()->currDirectory;
 		int i;
+		tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
 		for (i = 0; i < current->subDirsCount; i++) {
 			printf("\t%s\n", current->subDirs[i]->name);
+			printf("\t\tThis directory has %d files\n", current->subDirs[i]->fileTableEntry->filesCount);
+		}
+		tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_GREEN, BLACK));
+		for (i = 0; i < current->fileTableEntry->filesCount; i++) {
+			printf("\t%s\n", current->fileTableEntry->files[i]->name);
 		}
 		return 0;
 	}
@@ -83,6 +89,30 @@ int pwd(int argc, char *argv[]) {
 }
 
 int touch(int argc, char *argv[]) {
+	if(argc == 0 ) {
+		printf("mkdir: missing operand\n");
+	} else {
+		int created = fs_createFile(tty_getCurrentTTY()->currDirectory, argv[0]);
+		char* err = NULL;
+		switch(created) {
+			case 0:		// Directory was created OK
+				break;
+			case E_DIR_EXISTS:
+				err = "File exists";
+				break;
+			case E_DIR_FULL:
+				err = "File is full";
+				break;
+			case E_OUT_OF_MEMORY:
+				err = "Out of memory";
+				break;
+			default:
+				err = "Unknown error";
+		}
+		if (err != NULL) {
+			printf("touch: cannot create File %s: %s\n", argv[0], err);
+		}
+	}
 	return 0;
 }
 

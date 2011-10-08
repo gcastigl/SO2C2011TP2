@@ -40,7 +40,6 @@ void ata_read(int ata, void* msg, int bytes, unsigned short sector, int offset) 
 			ans += size;
 		}
 	}
-	*ans = '\0';
 }
 
 void _read(int ata, char * ans, unsigned short sector, int offset, int count) {

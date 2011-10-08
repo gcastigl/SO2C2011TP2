@@ -21,7 +21,7 @@ typedef struct {
 	char* terminal;
 	int offset;
 	BUFFERTYPE buffer;
-	Directory_t* currDirectory;
+	Directory* currDirectory;
 	char currPath[64];
 	int currPathOffset;
 	// FIXME: This values could be wrappeed up in a VideoAttributtes structure

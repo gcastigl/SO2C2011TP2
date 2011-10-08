@@ -8,9 +8,9 @@
 
 void fs_init();
 
-int fs_createDirectory(Directory_t* parent, char* name);
+int fs_createDirectory(Directory* parent, char* name);
 
-int fs_createFile(Directory_t* parent, char* name);
+int fs_createFile(Directory* parent, char* name);
 
 typedef struct {
 	u32int sector;
