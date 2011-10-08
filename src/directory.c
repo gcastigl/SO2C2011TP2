@@ -1,49 +1,75 @@
 #include <directory.h>
 
-Directory_t root;
+static Directory root;
 
-void initEmptyDirectory(Directory_t* dir, char* name);
-Directory_t* find_r(Directory_t* curr, char* name);
+static FileTableEntry fileTable[FILE_TABLE_SIZE];
+static int filesCurrentIndex;
+
+static boolean entryContainsFile(FileTableEntry* fileEntryTable, char* fileName);
+Directory* find_r(Directory* curr, char* name);
+static void createFileTableEntry(Directory* dir);
+static void freeINodeResources(iNode** files, int length);
 
 void directory_initialize() {
-	initEmptyDirectory(&root, "~");
-}
-
-int directory_createDir(Directory_t* dir, char* name) {
-	if(directory_exists(dir, name)) {
-		return DIR_EXISTS;
-	} else if (dir->subDirsCount == MAX_FOLDERS_PER_FOLDER) {
-		return DIR_FULL;
-	}
-	Directory_t* newFolder = (Directory_t*) kmalloc(sizeof(Directory_t));
-	initEmptyDirectory(newFolder, name);
-	newFolder->parent = dir;
-	dir->subDirs[dir->subDirsCount++] = newFolder;
-	return 0;
-}
-
-int directory_createFile(Directory_t* dir, char* name) {
-	if(directory_exists(dir, name)) {
-		return DIR_EXISTS;
-	} else if (dir->subDirsCount == MAX_FOLDERS_PER_FOLDER) {
-		return DIR_FULL;
-	}
-
-	return 0;
-}
-
-void initEmptyDirectory(Directory_t* dir, char* name) {
+	filesCurrentIndex = 0;
 	int i;
-	strcpy(dir->name, name);
-	dir->filesCount = 0;
-	dir->subDirsCount = 0;
-	for(i = 0; i < MAX_FOLDERS_PER_FOLDER; i++) {
-		dir->subDirs[i] = NULL;
+	for(i = 0; i < FILE_TABLE_SIZE; i++) {
+		fileTable[i].dir = NULL;
+		fileTable[i].files = NULL;
+		fileTable[i].filesCount = 0;
 	}
+}
+
+int directory_createDir(Directory* dir, char* name) {
+	if(directory_exists(dir, name)) {
+		return E_DIR_EXISTS;
+	} else if (dir->subDirsCount == MAX_FOLDERS_PER_FOLDER) {
+		return E_DIR_FULL;
+	}
+	Directory* newDirectory = (Directory*) kmalloc(sizeof(Directory));
+	initEmptyDirectory(newDirectory, name);
+	newDirectory->parent = dir;
+	dir->subDirs[dir->subDirsCount++] = newDirectory;
+	return 0;
+}
+
+void initEmptyDirectory(Directory* dir, char* name) {
+	strcpy(dir->name, name);
+	dir->subDirsCount = 0;
+	createFileTableEntry(dir);
+}
+
+int directory_createFile(Directory* dir, char* fileName) {
+	if (entryContainsFile(dir->fileTableEntry, fileName)) {
+		return E_DIR_EXISTS;
+	} else if (dir->fileTableEntry->filesCount == MAX_FILES_PER_FOLDER - 1) {
+		return E_DIR_FULL;
+	}
+	if (dir->fileTableEntry->files == NULL) {
+		dir->fileTableEntry->files = (iNode**) kmalloc(sizeof(iNode*) * MAX_FILES_PER_FOLDER);
+	}
+	iNode* file = (iNode*) kmalloc(sizeof(iNode));
+	strcpy(file->name, fileName);
+	file->contents = NULL;
+	file->contentsLength = 0;
+	file->used = 0;
+	dir->fileTableEntry->files[dir->fileTableEntry->filesCount] = file;
+	dir->fileTableEntry->filesCount++;
+	return 0;
+}
+
+static boolean entryContainsFile(FileTableEntry* fileEntryTable, char* fileName) {
+	int i;
+	for (i = 0; i < fileTable->filesCount; i++) {
+		if (strcmp(fileTable->files[i]->name, fileName) == 0) {
+			return true;
+		}
+	}
+	return false;
 }
 
 // Devuelve (en el caso de existir) el subdirectorio con nombre "name". NULL en caso contrario.
-Directory_t* directory_get(Directory_t* dir, char* name) {
+Directory* directory_get(Directory* dir, char* name) {
 	int i;
 	for (i = 0; i < dir->subDirsCount; i++) {
 		if (strcmp(dir->subDirs[i]->name, name) == 0) {
@@ -53,15 +79,15 @@ Directory_t* directory_get(Directory_t* dir, char* name) {
 	return NULL;
 }
 
-Directory_t* directory_getRoot() {
+Directory* directory_getRoot() {
 	return &root;
 }
 
-void directory_setRoot(Directory_t* dir) {
-	memcpy(&root, dir, sizeof(Directory_t));
+void directory_setRoot(Directory* dir) {
+	memcpy(&root, dir, sizeof(Directory));
 }
 
-boolean directory_exists(Directory_t* dir, char* name) {
+boolean directory_exists(Directory* dir, char* name) {
 	int i;
 	for (i = 0; i < dir->subDirsCount; i++) {
 		if (strcmp(dir->subDirs[i]->name, name) == 0) {
@@ -74,19 +100,19 @@ boolean directory_exists(Directory_t* dir, char* name) {
 // Busca a partir del directorio from el directorio con nombre "name" y lo devuelve.
 // Si el pramatero en NULL, comienza la busqueda desde el directorio root.
 // Retorna NULL en caso de no existir el directorio.
-Directory_t* directory_find(Directory_t* from, char* name) {
+Directory* directory_find(Directory* from, char* name) {
 	if (from == NULL) {
 		from = &root;
 	}
 	return find_r(from, name);
 }
 
-Directory_t* find_r(Directory_t* curr, char* name) {
+Directory* find_r(Directory* curr, char* name) {
 	if (strcmp(curr->name, name) == 0) {
 		return curr;
 	}
 	int i;
-	Directory_t* found;
+	Directory* found;
 	for (i = 0; i < curr->subDirsCount; i++) {
 		found = find_r(curr->subDirs[i], name);
 		if (found != NULL) {
@@ -97,7 +123,28 @@ Directory_t* find_r(Directory_t* curr, char* name) {
 }
 
 
+static void createFileTableEntry(Directory* dir) {
+	if (fileTable[filesCurrentIndex].dir == NULL) {
+		fileTable[filesCurrentIndex].files = (iNode**) kmalloc(sizeof(iNode*) * MAX_FILES_PER_FOLDER);
+	} else {
+		// There is another directory using this entry, free entry resources
+		freeINodeResources(fileTable[filesCurrentIndex].files, MAX_FILES_PER_FOLDER);
+	}
+	dir->fileTableEntry = fileTable + filesCurrentIndex;
+	fileTable[filesCurrentIndex].dir = dir;
+	fileTable[filesCurrentIndex].filesCount = 0;
+	fileTable[filesCurrentIndex].files = NULL;
+	filesCurrentIndex++;
+	filesCurrentIndex %= FILE_TABLE_SIZE;
+}
 
-
+static void freeINodeResources(iNode** files, int length) {
+	int i;
+	for (i = 0; i < length; i++) {
+		if (files[i]->contents != NULL) {
+			kfree(files[i]->contents);
+		}
+	}
+}
 
 
