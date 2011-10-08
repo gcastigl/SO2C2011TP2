@@ -36,6 +36,7 @@ cmd_table_entry cmd_table[] = {
 	{"mkdir", 			"Create the DIRECTORY(ies), if they do not already exist.", mkdir},
 	{"pwd",				"Show current user path", pwd},
 	{"touch",			"Creates a new empty file", touch},
+	{"format",			"Formats disk ATA0!", format},
 	//{"getchar", "Funcion para la catedra para testeo de getchar\n", getchar_cmd},
 	//{"printf", "Funcion para la catedra para testeo de printf\n", printf_cmd},
 	//{"scanf", "Funcion para la catedra para testeo de scanf\n", scanf_cmd},

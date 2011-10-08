@@ -12,6 +12,8 @@ int fs_createDirectory(Directory* parent, char* name);
 
 int fs_createFile(Directory* parent, char* name);
 
+void fs_format();
+
 typedef struct {
 	u32int sector;
 	u32int offset;

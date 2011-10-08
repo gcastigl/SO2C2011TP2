@@ -12,8 +12,6 @@ static u32int currDisk;
 static u32int currSector;
 static u32int currOffset;
 
-static boolean fsLoading;
-
 void fs_create();
 void fs_load();
 
@@ -35,18 +33,14 @@ void parseDirectories(Directory* current);
 void unserializeDirectory(char* name, u32int* childs);
 iNode* unserializeFile(Directory* folder);
 
-void updateNumberOfFoldersOnDisk(boolean increment);
 static void findHole(FilePage* page, int size);
 
 void fs_init() {
 	currDisk = ATA0;
 	currSector = 1;		// Start working at sector 1
 	currOffset = 0;
-	//ata_write(ATA0, "00", 2, 0, 0);
 	if (validate_header()) {
-		fsLoading = true;
 		fs_load();
-		fsLoading = false;
 	} else {
 		fs_create();
 	}
@@ -67,8 +61,15 @@ void fs_create() {
 	write_header();				// Save header for the next time the system starts...
 	// create root and save it to disk
 	directory_initialize();
+	// initialize root
+	Directory* root = directory_getRoot();
+	initEmptyDirectory(root, "~");
 	// create /dev
-	fs_createDirectory(directory_getRoot(), "dev");
+	directory_createDir(root, "dev");
+	directory_createDir(root, "home");
+	directory_createDir(root, "etc");
+	// persist new directory for the next time system starts
+	persistDirectory(root);
 }
 
 int fs_createDirectory(Directory* parent, char* name) {
@@ -76,13 +77,10 @@ int fs_createDirectory(Directory* parent, char* name) {
 	if (created != 0) {			// There was an error creating the directory
 		return created;
 	}
-	if (!fsLoading) {
-		// Save changes to disk
-		currSector = 1;
-		currOffset = 0;
-		persistDirectory(directory_getRoot());
-	}
-	//updateNumberOfFoldersOnDisk(true);
+	// Save changes to disk
+	currSector = 1;
+	currOffset = 0;
+	persistDirectory(directory_getRoot());
 	return 0;
 }
 
@@ -96,7 +94,7 @@ int fs_createFile(Directory* parent, char* name) {
 	if (page.sector == (u32int) -1) {		// No more memory available
 		return E_OUT_OF_MEMORY;
 	}
-	int fileIndex = parent->fileTableEntry->filesCount;
+	int fileIndex = parent->fileTableEntry->filesCount - 1;
 	parent->fileTableEntry->files[fileIndex]->sector = page.sector;
 	parent->fileTableEntry->files[fileIndex]->offset = page.offset;
 	parent->fileTableEntry->files[fileIndex]->contents = NULL;
@@ -134,14 +132,6 @@ void persist(char* string, int size) {
 	//printf("saving from %d byted at: (%d, %d) to (%d, %d)\n", size, currSector, currOffset, currSector, currOffset + size);
 	ata_write(currDisk, string, size, currSector, currOffset);
 	currOffset += size;
-}
-
-void updateNumberOfFoldersOnDisk(boolean increment) {
-	u32int currnumberOfDirs;
-	ata_read(currDisk, &currnumberOfDirs, sizeof(u32int), 1, 0);
-	if (increment)	currnumberOfDirs++;
-	else currnumberOfDirs --;
-	ata_write(currDisk, &currnumberOfDirs, sizeof(u32int), 1, 0);
 }
 
 char* serializeFile(iNode* file, int* finalSize) {
@@ -210,7 +200,6 @@ static void findHole(FilePage* page, int size) {
 	int neededPages = (size / (FILE_BLOCK_SIZE_BYTES + 1)) + 1;
 	while (index < neededPages && offset < maxOffset) {
 		ata_read(currDisk, &fileHeader, sizeof(FileHeader), sector, offset);
-		//fileHeader.magic = 456;											//DELETE THIS LINE!!!!
 		//printf("[%d, %d] -> %d\n", sector, offset, fileHeader.magic);
 		if (fileHeader.magic != FILE_MAGIC_NUMBER) {					// The block is empty... can be used
 			fileHeader.magic = FILE_MAGIC_NUMBER;
@@ -238,8 +227,20 @@ static void findHole(FilePage* page, int size) {
 	}
 }
 
-
-
+void fs_format() {
+	FileHeader fileHeader;
+	fileHeader.magic = FILE_MAGIC_NUMBER + 1; // Always different from the FILE_MAGIC_NUMBER!
+	int sector = FILE_TABLE_INIT_SECTOR;
+	int offset = 0;
+	// Delete FS header
+	ata_write(ATA0, "000000", 6, 0, 0);
+	int times = 0;
+	while(times < 100) {
+		ata_write(ATA0, &fileHeader, sizeof(FileHeader), sector, offset);
+		offset += FILE_TABLE_INIT_SECTOR;
+		times++;
+	}
+}
 
 
 

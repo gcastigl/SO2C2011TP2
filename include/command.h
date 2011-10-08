@@ -35,6 +35,7 @@ int countDown_cmd(int argc, char *argv[]);
 int getCPUspeed_cmd(int argc, char *argv[]);
 int random_cmd(int argc, char *argv[]);
 int setAppearance_cmd(int argc, char *argv[]);
+int format(int argc, char *argv[]);
 int logout(int argc, char *argv[]);
 
 int getchar_cmd(int argc, char *argv[]);
