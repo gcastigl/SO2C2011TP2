@@ -9,7 +9,6 @@ GLOBAL _portw_out
 
 GLOBAL _reset
 
-GLOBAL _getTTCounter
 GLOBAL _initTTCounter
 GLOBAL ttcounter
 
@@ -50,14 +49,6 @@ _initTTCounter:
 	mov eax, 0
 	mov [ttcounter], eax
 	pop ax
-	mov esp, ebp
-	pop ebp
-	ret
-
-_getTTCounter:
-	push ebp
-	mov ebp, esp
-	mov eax, [ttcounter]
 	mov esp, ebp
 	pop ebp
 	ret

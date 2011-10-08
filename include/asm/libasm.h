@@ -1,6 +1,7 @@
 #ifndef LIBASM_H
 #define LIBASM_H
 #include <defs.h>
+#include <process/process.h>
 
 unsigned int _read_msw();
 
@@ -13,7 +14,8 @@ void _mascaraPIC1 (byte mascara);  /* Escribe mascara de PIC1 */
 void _mascaraPIC2 (byte mascara);  /* Escribe mascara de PIC2 */
 
 void copy_page_physical(int,int);
-
+void loadStackFrame(PROCESS*,int, int, char**, int);
+void switchProcess(void);
 void _cli(void);        /* Deshabilita interrupciones  */
 void _sti(void);	 /* Habilita interrupciones  */
 

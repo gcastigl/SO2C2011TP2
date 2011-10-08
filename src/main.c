@@ -1,7 +1,8 @@
 #include <main.h>
 
-static int currentPID = 0;
+int currentPID = 0;
 static int nextPID = 1;
+PROCESS process[MAX_PROCESSES];
 
 u32int initial_esp; // New global variable.
 
@@ -11,13 +12,16 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 		init_descriptor_tables();
 		_mascaraPIC1(0xFC);
 		_mascaraPIC2(0xFF);
-		initialise_paging();
+		initialize_paging();
 		keyboard_init();
 		video_init();
 		setFD(STD_OUT);
 		shell_init();
 		fs_init();
 		tty_init();
+        /*initScheduler();
+        createProcessAt("idle", idle, 0, 0, (char **)0, 0x4000, 0, BACKGROUND, READY); //Crea el proceso Init, su pid va a ser el 1
+        */
 		_initTTCounter();
 	_sti();
 	while (1) {
@@ -26,12 +30,20 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 	return 0;
 }
 
-int getCurrPID() {
-	return currentPID;
-}
-
 int getNextPID() {
 	return nextPID++;
+}
+
+PROCESS *getProcessByPID(int pid) {
+    int i;
+    for (i = 0; i < MAX_PROCESSES; i++) {
+        if (process[i].freeSlot != 0) {
+            if (process[i].pid == pid) {
+                return &process[i];
+            }
+        }
+    }
+    return NULL;
 }
 
 /*

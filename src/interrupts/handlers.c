@@ -1,5 +1,7 @@
 #include <interrupts/interrupts.h>
 
+extern int schedulerActive;
+extern void switchProcess(void);
 char *exceptionString[32] = {
     "Division by zero exception",
     "Debug exception",
@@ -38,6 +40,11 @@ char *exceptionString[32] = {
 //Timer Tick
 void timerTickHandler(registers_t regs) {
     _increaseTTCounter();
+    if (schedulerActive == true) {
+        if ((_getTTCounter() % 2)) {
+            switchProcess();
+        }
+    }
 }
 
 //Keyboard
