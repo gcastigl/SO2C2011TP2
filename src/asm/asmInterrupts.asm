@@ -1,6 +1,7 @@
 EXTERN	systemCallHandler
+GLOBAL	_systemCallHandler
 GLOBAL  _increaseTTCounter
-GLOBAL _systemCallHandler
+GLOBAL	_getTTCounter
 
 common ttcounter 4
 
@@ -14,6 +15,14 @@ _increaseTTCounter:				; increase ticks
 	mov [ttcounter], eax
 	pop eax
 
+	mov esp, ebp
+	pop ebp
+	ret
+
+_getTTCounter:
+	push ebp
+	mov ebp, esp
+	mov eax, [ttcounter]
 	mov esp, ebp
 	pop ebp
 	ret

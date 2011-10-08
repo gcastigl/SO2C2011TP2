@@ -15,14 +15,14 @@ page_directory_t* kernel_directory = 0;
 
 static void set_frame(int frameAddress );
 static void clear_frame(int frameAddress );
-static int test_frame(int frameAddress );
+//static int test_frame(int frameAddress );
 static int first_fframe( void );
 
 
 
 void initialize_paging(void) 
 {
-    int i=0;
+    int i = 0;
     int mem_end_page = 0x1000000;   // TEMPORALMENTE se asume que la memoria fisica total es de 32 MB
     
     nframes= mem_end_page / 0x1000; // Se inicializa nframes: se divide la memoria total en secciones de 4KB
@@ -160,7 +160,7 @@ static void clear_frame(int frameAddress )
   int off= OFFSET_FROM_BIT( frame );	// dentro de ese int en que posicion se encuentra el bit a encender
   frames[idx] &= ~( 0x1 << off );	// apago el bit correspondiente
 }
-
+/*
 // retorna 1 en caso que el indice que corresponde al frameAddress este asignado
 static int test_frame(int frameAddress )
 {
@@ -169,7 +169,7 @@ static int test_frame(int frameAddress )
   int off= OFFSET_FROM_BIT( frame );	// dentro de ese int en que posicion se encuentra el bit a encender
   return (frames[idx] & ( 0x1 << off ));// al frame referenciado le encienco el bit correspondiente
 }
-
+*/
 // Busca dentro del arreglo frames el primer lugar libre (bit apagado) de derecha a izquierda
 // Este representa el primer frame que esta disponible para ser usado
 // De encontrarlo retorna su indice traducido a bits en caso contrario retorna -1

@@ -3,7 +3,6 @@
 int currentPID = 0;
 static int nextPID = 1;
 PROCESS process[MAX_PROCESSES];
-PROCESS idle;
 
 u32int initial_esp; // New global variable.
 
@@ -18,18 +17,17 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 		video_init();
 		setFD(STD_OUT);
 		shell_init();
-		//fs_init();
+		fs_init();
 		tty_init();
+        /*initScheduler();
+        createProcessAt("idle", idle, 0, 0, (char **)0, 0x4000, 0, BACKGROUND, READY); //Crea el proceso Init, su pid va a ser el 1
+        */
 		_initTTCounter();
 	_sti();
 	while (1) {
 		shell_update();
 	}
 	return 0;
-}
-
-int getCurrPID() {
-	return currentPID;
 }
 
 int getNextPID() {
@@ -39,7 +37,7 @@ int getNextPID() {
 PROCESS *getProcessByPID(int pid) {
     int i;
     for (i = 0; i < MAX_PROCESSES; i++) {
-        if (process[i].free != 0) {
+        if (process[i].freeSlot != 0) {
             if (process[i].pid == pid) {
                 return &process[i];
             }
