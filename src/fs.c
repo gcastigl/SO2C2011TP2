@@ -67,6 +67,7 @@ void fs_create() {
 	// create /dev
 	directory_createDir(root, "dev");
 	directory_createDir(root, "home");
+	directory_createDir(root, "etc");
 	// persist new directory for the next time system starts
 	persistDirectory(root);
 }
