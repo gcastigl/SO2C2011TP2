@@ -2,7 +2,7 @@
 #define PROCESS_H
 
 #define MAX_PROCESS_NAME 	32
-#define MAX_PROCESS			64
+#define MAX_PROCESSES		64
 
 typedef struct {
 	int pid;

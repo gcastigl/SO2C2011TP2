@@ -13,7 +13,7 @@
 #include <paging/paging.h>
 #include <process/task.h>
 #include <driver/ata_disk.h>
-
+#include <process/process.h>
 int getNextPID();
 
 int getCurrPID();

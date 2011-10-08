@@ -27,9 +27,9 @@ gcc -m32 -g -c ../src/driver/ata_disk.c -o ata_disk.o		 	-I../include -fno-built
 gcc -m32 -g -c ../src/lib/kheap.c -o kheap.o		 			-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/paging/paging.c -o paging.o		 		-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/lib/ordered_map.c -o ordered_map.o		-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/process/task.c -o task.o              	-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+#gcc -m32 -g -c ../src/process/task.c -o task.o              	-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/file.c -o file.o							-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/directory.c -o directory.o				-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 ld -melf_i386 -T ../src/link.ld -o kernel.bin main.o boot.o initInterupts.o cpuSpeed.o asmInterrupts.o libasm.o video.o handlers.o \
 	keyboard.o io.o stdlib.o string.o shell.o command.o math.o tty.o printf.o scanf.o videoUtils.o user.o kheap.o paging.o \
-	ordered_map.o task.o processAsm.o ata_disk.o fs.o file.o directory.o
+	ordered_map.o processAsm.o ata_disk.o fs.o file.o directory.o #task.o
