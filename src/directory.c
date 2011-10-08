@@ -5,7 +5,7 @@ static Directory root;
 static FileTableEntry fileTable[FILE_TABLE_SIZE];
 static int filesCurrentIndex;
 
-static boolean entryContainsFile(FileTableEntry* fileEntryTable, char* fileName);
+static boolean entryContainsFile(FileTableEntry* tableEntry, char* fileName);
 Directory* find_r(Directory* curr, char* name);
 static void createFileTableEntry(Directory* dir);
 static void freeINodeResources(iNode** files, int length);
@@ -58,10 +58,10 @@ int directory_createFile(Directory* dir, char* fileName) {
 	return 0;
 }
 
-static boolean entryContainsFile(FileTableEntry* fileEntryTable, char* fileName) {
+static boolean entryContainsFile(FileTableEntry* tableEntry, char* fileName) {
 	int i;
-	for (i = 0; i < fileTable->filesCount; i++) {
-		if (strcmp(fileTable->files[i]->name, fileName) == 0) {
+	for (i = 0; i < tableEntry->filesCount; i++) {
+		if (strcmp(tableEntry->files[i]->name, fileName) == 0) {
 			return true;
 		}
 	}
