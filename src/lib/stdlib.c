@@ -33,6 +33,11 @@ void memcpy(void* to, void* from, u32int count) {
 	}
 }
 
+void* realloc(void* ptr, int newsize) {
+	// TODO: do realloc!!!
+	return NULL;
+}
+
 void panic(char* str, int line ,int lock) {
     _cli();
 //    char format = video_getFormattedColor(WHITE, BLACK);

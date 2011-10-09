@@ -61,6 +61,7 @@ typedef void*           type_t;
 #define	E_DIR_EXISTS		1
 #define E_DIR_FULL			2
 #define E_OUT_OF_MEMORY		3
+#define E_CORRUPTED_FILE	4
 
 typedef struct page
 {

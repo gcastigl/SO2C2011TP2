@@ -1,5 +1,5 @@
 #include <directory.h>
-
+/*
 static Directory root;
 
 static FileTableEntry fileTable[FILE_TABLE_SIZE];
@@ -139,6 +139,6 @@ static void freeINodeResources(iNode** files, int length) {
 			kfree(files[i]->contents);
 		}
 	}
-}
+}*/
 
 

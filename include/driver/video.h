@@ -4,6 +4,7 @@
 #include <defs.h>
 #include <io.h>
 #include <lib/stdlib.h>
+#include <asm/libasm.h>
 
 #define VIDEO_ADDRESS 	0xb8000
 
