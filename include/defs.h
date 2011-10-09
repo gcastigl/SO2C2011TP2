@@ -1,6 +1,9 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+#define PUBLIC 
+#define PRIVATE static
+
 #define byte unsigned char
 #define word short int
 #define dword int
