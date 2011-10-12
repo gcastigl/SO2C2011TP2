@@ -1,39 +1,47 @@
 #include <fs/diskManager.h>
 
-extern int currDisk;
+static u32int currDisk;
+static u32int currSector;
+static u32int currOffset;
 
 static void findHole(FilePage* page, int size, u32int initialSector, u32int initialOffset);
 
-boolean validate_header() {
+void diskManager_init() {
+	currDisk = ATA0;
+	currSector = 1;		// Start working at sector 1
+	currOffset = 0;
+}
+
+boolean diskManager_validateHeader() {
 	FSHeader header;
 	ata_read(currDisk, &header, sizeof(FSHeader), 0, 0);
 	return header.magic == MAGIC_NUMBER;
 }
 
-void write_header() {
+void diskManager_writeHeader() {
 	FSHeader header;
 	header.magic = 123456;
 	header.totalNodes = 0;
 	ata_write(currDisk, &header, sizeof(FSHeader), 0, 0);
 }
 
-static int writeFsNode(iNode inode) {
+int diskManager_writeiNode(iNode* inode) {
 	FilePage page;
 	FileHeader fileHeader;
 
-	ata_read(currDisk, &fileHeader, sizeof(FileHeader), inode.sector, inode.offset);	// Read contents
+	ata_read(currDisk, &fileHeader, sizeof(FileHeader), inode->sector, inode->offset);	// Read contents
 	if (fileHeader.magic != MAGIC_NUMBER) {
 		return E_CORRUPTED_FILE;
 	}
-	if (inode.length > fileHeader.length) { // Space in this sector is not long enough for new contents
+	if (inode->length > fileHeader.length) { // Space in this sector is not long enough for new contents
 		fileHeader.magic = 0;
-		ata_write(currDisk,&fileHeader, sizeof(FileHeader), inode.sector, inode.offset);
-		findHole(&page, inode.length, FILES_INITIAL_SECTOR, 0);
+		ata_write(currDisk,&fileHeader, sizeof(FileHeader), inode->sector, inode->offset);
+		findHole(&page, inode->length, FILES_INITIAL_SECTOR, 0);
 	} else {								// Space is enough, use the same page
-		page.sector = inode.sector;
-		page.offset = inode.offset;
+		page.sector = inode->sector;
+		page.offset = inode->offset;
 	}
-	ata_write(currDisk, inode.contents, inode.length, page.sector, page.offset);
+	ata_write(currDisk, inode->contents, inode->length, page.sector, page.offset);
 	return 0;
 }
 

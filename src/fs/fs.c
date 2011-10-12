@@ -3,10 +3,6 @@
 static fs_node_t *root;             // Our root directory node.
 static iNode *inodes;				// List of file nodes.
 
-u32int currDisk;
-u32int currSector;
-u32int currOffset;
-
 void fs_create();
 void fs_load();
 
@@ -22,10 +18,8 @@ static void atadisk_open(struct fs_node* fsnode);
 static void atadisk_close(struct fs_node* fsnode);
 
 void fs_init() {
-	currDisk = ATA0;
-	currSector = 1;		// Start working at sector 1
-	currOffset = 0;
-	if (false && validate_header()) {
+	diskManager_init();
+	if (false && diskManager_validateHeader()) {
 		fs_load();
 	} else {
 		fs_create();
@@ -33,7 +27,7 @@ void fs_init() {
 }
 
 void fs_create() {
-	write_header();				// Save header for the next time the system starts...
+	diskManager_writeHeader();				// Save header for the next time the system starts...
 
 	inodes = kmalloc(INODES * sizeof(iNode));
 	// Initialize root directory
@@ -54,7 +48,7 @@ void fs_create() {
     inodes[0].contents = NULL;
     inodes[0].contentsSize = 0;
     inodes[0].length = 0;
-    //writeFsNode(root);
+    diskManager_writeiNode(&inodes[0]);
 }
 
 
@@ -114,6 +108,7 @@ static u32int atadisk_write(struct fs_node *fsnode, u32int offset, u32int size, 
 }
 
 static void atadisk_open(struct fs_node* fsnode) {
+	/*
 	iNode inode = inodes[fsnode->inode];
 	FileHeader header;
 	if(inode.contents == NULL) {
@@ -131,7 +126,7 @@ static void atadisk_open(struct fs_node* fsnode) {
 			sector = header.nextSector;
 			offset = header.nextOffset;
 		}
-	}
+	}*/
 }
 
 static void atadisk_close(struct fs_node* fsnode) {

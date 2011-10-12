@@ -37,8 +37,13 @@ typedef struct {
 	u32int nextOffset;
 } FileHeader;
 
-void write_header();
+void diskManager_init();
 
-boolean validate_header();
+boolean diskManager_validateHeader();
+
+void diskManager_writeHeader();
+
+int diskManager_writeiNode(iNode* inode);
+
 
 #endif
