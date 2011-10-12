@@ -2,8 +2,7 @@
 #define TTY_H
 
 #include <defs.h>
-#include <fs.h>
-#include <atadisk.h>
+#include <fs/fs.h>
 #include <lib/kheap.h>
 #include <lib/stdlib.h>
 #include <driver/video.h>

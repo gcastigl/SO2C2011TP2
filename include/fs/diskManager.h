@@ -1,14 +1,13 @@
-#ifndef ATADISK_H_
-#define ATADISK_H_
+#ifndef DISKMANAGER_H
+#define DISKMANAGER_H
 
-#include <defs.h>
-#include <fs.h>
 #include <driver/ata_disk.h>
-#include <driver/video.h>
 
-#define INODES					50
-#define FILE_BLOCK_SIZE_BYTES	200
+#define FILES_INITIAL_SECTOR	1024
+
 #define MAX_NAME_LENGTH			32
+#define N_FILE_PAGES			250
+#define FILE_BLOCK_SIZE_BYTES	200
 
 #define MAGIC_NUMBER			123456
 
@@ -26,8 +25,9 @@ typedef struct {
 } FSHeader;
 
 typedef struct {
-	u32int sector;
+	int sector;
 	u32int offset;
+	u32int totalLength;
 } FilePage;
 
 typedef struct {
@@ -37,8 +37,8 @@ typedef struct {
 	u32int nextOffset;
 } FileHeader;
 
-void atadisk_init();
+void write_header();
 
-fs_node_t* atadisk_getRoot();
+boolean validate_header();
 
 #endif

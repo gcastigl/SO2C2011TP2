@@ -1,4 +1,4 @@
-#include "../include/file.h"
+#include <fs/file.h>
 
 //FIXME: this cmds should't be here....
 int cd(int argc, char *argv[]) {

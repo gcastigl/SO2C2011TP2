@@ -1,6 +1,7 @@
 #ifndef DIRECTORY_H_
 #define DIRECTORY_H_
 
+/*
 #include <defs.h>
 #include <lib/kheap.h>
 #include <lib/stdio.h>
@@ -52,5 +53,5 @@ boolean directory_exists(Directory* dir, char* name);
 Directory* directory_find(Directory* from, char* name);
 
 void initEmptyDirectory(Directory* dir, char* name);
-
+*/
 #endif

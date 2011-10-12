@@ -21,9 +21,9 @@ void initTTY(int index) {
 	tty[index].buffer.tail = 0;
 	tty[index].bgColor = BLACK;
 	tty[index].fgColor = WHITE;
-	tty[index].currDirectory = atadisk_getRoot();
+	tty[index].currDirectory = fs_getRoot();
 	tty[index].currPathOffset = strlen(tty[index].currDirectory->name);
-	strcpy(tty[index].currPath, atadisk_getRoot()->name);
+	strcpy(tty[index].currPath, fs_getRoot()->name);
 }
 
 void tty_setCurrent(int tty) {

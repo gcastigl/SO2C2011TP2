@@ -3,8 +3,8 @@
 
 #include <defs.h>
 #include <lib/stdio.h>
-#include <fs.h>
 #include <tty.h>
+//FIXME: fix this includes....
 
 typedef struct {
 	u32int index;

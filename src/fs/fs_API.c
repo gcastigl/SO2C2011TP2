@@ -1,4 +1,4 @@
-#include <fs.h>
+#include <fs/fs_API.h>
 
 fs_node_t *fs_root = 0; // The root of the filesystem.
 
@@ -35,7 +35,6 @@ struct dirent *readdir_fs(fs_node_t *node, u32int index) {
     if ((node->flags&0x7) == FS_DIRECTORY && node->readdir != 0) {
         return node->readdir(node, index);
     } else {
-    	printf("returnning null\n");
         return 0;
     }
 }

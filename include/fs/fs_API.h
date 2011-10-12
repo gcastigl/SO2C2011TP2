@@ -2,7 +2,6 @@
 #define FS_H
 
 #include <defs.h>
-#include <lib/stdio.h>
 
 #define MAX_NAME_SIZE	128
 

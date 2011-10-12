@@ -17,7 +17,7 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 		video_init();
 		setFD(STD_OUT);
 		shell_init();
-		atadisk_init();
+		fs_init();
 		tty_init();
         /*initScheduler();
         createProcessAt("idle", idle, 0, 0, (char **)0, 0x4000, 0, BACKGROUND, READY); //Crea el proceso Init, su pid va a ser el 1
