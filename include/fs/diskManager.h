@@ -11,30 +11,36 @@
 
 #define MAGIC_NUMBER			123456
 
+#define MODE_ALL_CONTENTS	-1
+#define MODE_NO_CONTENTS	0
+
 typedef struct {
 	u32int sector;
 	u32int offset;
 	u32int length;
 	char* contents;
-	int contentsSize;
 } iNode;
 
 typedef struct {
 	u32int magic;
 	u32int totalNodes;
+	u32int maxNodes;
 } FSHeader;
 
 typedef struct {
-	int sector;
+	u32int sector;
 	u32int offset;
 	u32int totalLength;
+	boolean hasContents;
 } FilePage;
 
 typedef struct {
 	u32int magic;
-	u32int length;
+	u32int usedBytes;
+	u32int maxBytes;
 	u32int nextSector;
 	u32int nextOffset;
+	boolean hasNextPage;
 } FileHeader;
 
 void diskManager_init();
@@ -43,7 +49,7 @@ boolean diskManager_validateHeader();
 
 void diskManager_writeHeader();
 
-int diskManager_writeiNode(iNode* inode);
+void diskManager_writeiNode(iNode* inode, int inodeNumber);
 
 
 #endif

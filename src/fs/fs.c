@@ -8,17 +8,17 @@ void fs_load();
 
 void loadInode(int inodeNumber, iNode* inode) ;
 
-static struct dirent* atadisk_readdir(fs_node_t *fsnode, u32int index);
-static struct fs_node* atadisk_finddir(struct fs_node *fsnode, char *name);
+static struct dirent* fs_readdir(fs_node_t *fsnode, u32int index);
+static struct fs_node* fs_finddir(struct fs_node *fsnode, char *name);
 
-static u32int atadisk_read(struct fs_node *fsnode, u32int offset, u32int size, u8int *buffer);
-static u32int atadisk_write(struct fs_node *fsnode, u32int offset, u32int size, u8int *buffer);
+static u32int fs_read(struct fs_node *fsnode, u32int offset, u32int size, u8int *buffer);
+static u32int fs_write(struct fs_node *fsnode, u32int offset, u32int size, u8int *buffer);
 
-static void atadisk_open(struct fs_node* fsnode);
-static void atadisk_close(struct fs_node* fsnode);
+static void fs_open(struct fs_node* fsnode);
+static void fs_close(struct fs_node* fsnode);
 
 void fs_init() {
-	diskManager_init();
+	diskManager_init(INODES);
 	if (false && diskManager_validateHeader()) {
 		fs_load();
 	} else {
@@ -40,15 +40,14 @@ void fs_create() {
     root->write = 0;
     root->open = 0;
     root->close = 0;
-    root->readdir = atadisk_readdir;
-    root->finddir = atadisk_finddir;
+    root->readdir = fs_readdir;
+    root->finddir = fs_finddir;
     root->ptr = 0;
     root->impl = 0;
 
     inodes[0].contents = NULL;
-    inodes[0].contentsSize = 0;
-    inodes[0].length = 0;
-    diskManager_writeiNode(&inodes[0]);
+   // inodes[0].length = 0;
+    diskManager_writeiNode(&inodes[0], 0);
 }
 
 
@@ -62,22 +61,13 @@ void fs_load() {
 }
 
 void loadInode(int inodeNumber, iNode* inode) {
-	FilePage page;
-	int sector = 1;
-	int offset = inodeNumber * sizeof(FilePage);
-	ata_read(ATA0, &page, sizeof(FilePage), sector, offset);
-	inode->sector = page.sector;
-	inode->offset = page.offset;
-	inode->contents = NULL;
-	inode->contentsSize = 0;
-	inode->length = 0;			// POSSIBLE FIXME....
 }
 
 //==================================================================
 //	callbacks - called when read/write/open/close are called.
 //==================================================================
 
-static struct dirent* atadisk_readdir(fs_node_t *fsnode, u32int index) {
+static struct dirent* fs_readdir(fs_node_t *fsnode, u32int index) {
 	// 123 .'\0'
 	// 247 ..'\0'
 	// 260 pepe'\0'
@@ -95,19 +85,19 @@ static struct dirent* atadisk_readdir(fs_node_t *fsnode, u32int index) {
 	return dirent;
 }
 
-static struct fs_node* atadisk_finddir(struct fs_node *fsnode, char *name) {
+static struct fs_node* fs_finddir(struct fs_node *fsnode, char *name) {
 	return NULL;
 }
 
-static u32int atadisk_read(struct fs_node *fsnode, u32int offset, u32int size, u8int *buffer) {
+static u32int fs_read(struct fs_node *fsnode, u32int offset, u32int size, u8int *buffer) {
 	return 0;
 }
 
-static u32int atadisk_write(struct fs_node *fsnode, u32int offset, u32int size, u8int *buffer) {
+static u32int fs_write(struct fs_node *fsnode, u32int offset, u32int size, u8int *buffer) {
 	return 0;
 }
 
-static void atadisk_open(struct fs_node* fsnode) {
+static void fs_open(struct fs_node* fsnode) {
 	/*
 	iNode inode = inodes[fsnode->inode];
 	FileHeader header;
@@ -129,7 +119,7 @@ static void atadisk_open(struct fs_node* fsnode) {
 	}*/
 }
 
-static void atadisk_close(struct fs_node* fsnode) {
+static void fs_close(struct fs_node* fsnode) {
 
 }
 

@@ -4,7 +4,6 @@
 #include <defs.h>
 #include <fs/fs_API.h>
 #include <fs/diskManager.h>
-#include <driver/ata_disk.h>
 #include <driver/video.h>
 
 #define INODES					50
