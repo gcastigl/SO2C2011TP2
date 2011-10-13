@@ -1,21 +1,19 @@
 #include <fs/fs.h>
 
-static fs_node_t *root;             // Our root directory node.
-static iNode *inodes;				// List of file nodes.
+PRIVATE fs_node_t *root;             // Our root directory node.
+PRIVATE iNode *inodes;				// List of file nodes.
 
 void fs_create();
 void fs_load();
 
-void loadInode(int inodeNumber, iNode* inode) ;
+PRIVATE struct dirent *fs_readdir(fs_node_t *node, u32int index);
+PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name);
 
-static struct dirent* fs_readdir(fs_node_t *fsnode, u32int index);
-static struct fs_node* fs_finddir(struct fs_node *fsnode, char *name);
+PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
+PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
 
-static u32int fs_read(struct fs_node *fsnode, u32int offset, u32int size, u8int *buffer);
-static u32int fs_write(struct fs_node *fsnode, u32int offset, u32int size, u8int *buffer);
-
-static void fs_open(struct fs_node* fsnode);
-static void fs_close(struct fs_node* fsnode);
+PRIVATE void fs_open(fs_node_t *node, u8int read, u8int write);
+PRIVATE void fs_close(fs_node_t *node);
 
 void fs_init() {
 	diskManager_init(INODES);
@@ -60,20 +58,17 @@ void fs_load() {
 	// TODO: hacer!
 }
 
-void loadInode(int inodeNumber, iNode* inode) {
-}
-
 //==================================================================
 //	callbacks - called when read/write/open/close are called.
 //==================================================================
 
-static struct dirent* fs_readdir(fs_node_t *fsnode, u32int index) {
+PRIVATE struct dirent *fs_readdir(fs_node_t *node, u32int index) {
 	// 123 .'\0'
 	// 247 ..'\0'
 	// 260 pepe'\0'
 	// 401 memos'\0'
 	struct dirent* dirent = (struct dirent*) kmalloc(sizeof(struct dirent));
-	char* contents = inodes[fsnode->inode].contents;
+	char* contents = inodes[node->inode].contents;
 	u32int i = 0;
 	while (i != index + 3) {					// Do not read first 2 strings...
 		memcpy(&dirent->ino, contents, sizeof(u32int));
@@ -85,19 +80,19 @@ static struct dirent* fs_readdir(fs_node_t *fsnode, u32int index) {
 	return dirent;
 }
 
-static struct fs_node* fs_finddir(struct fs_node *fsnode, char *name) {
+PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 	return NULL;
 }
 
-static u32int fs_read(struct fs_node *fsnode, u32int offset, u32int size, u8int *buffer) {
+PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 	return 0;
 }
 
-static u32int fs_write(struct fs_node *fsnode, u32int offset, u32int size, u8int *buffer) {
+PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 	return 0;
 }
 
-static void fs_open(struct fs_node* fsnode) {
+PRIVATE void fs_open(fs_node_t *node, u8int read, u8int write) {
 	/*
 	iNode inode = inodes[fsnode->inode];
 	FileHeader header;
@@ -119,15 +114,9 @@ static void fs_open(struct fs_node* fsnode) {
 	}*/
 }
 
-static void fs_close(struct fs_node* fsnode) {
+PRIVATE void fs_close(fs_node_t *node) {
 
 }
-
-
-
-
-
-
 
 
 
@@ -156,7 +145,7 @@ void parseDirectories(Directory* current);
 void unserializeDirectory(char* name, u32int* childs);
 iNode* unserializeFile(Directory* folder);
 
-static void findHole(FilePage* page, int size);
+PRIVATE void findHole(FilePage* page, int size);
 
 
 int fs_createDirectory(Directory* parent, char* name) {
