@@ -1,10 +1,12 @@
 #include <fs/fs.h>
 
-PRIVATE fs_node_t *root;             // Our root directory node.
+PRIVATE fs_node_t root;             // Our root directory node.
 PRIVATE iNode *inodes;				// List of file nodes.
+PRIVATE int currInodeindex;
 
-void fs_create();
-void fs_load();
+PRIVATE void fs_create();
+PRIVATE void fs_load();
+PRIVATE void _initFSNodeDirectory(fs_node_t* node, char* name, u32int inode, u32int parent) ;
 
 PRIVATE struct dirent *fs_readdir(fs_node_t *node, u32int index);
 PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name);
@@ -12,7 +14,7 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name);
 PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
 PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
 
-PRIVATE void fs_open(fs_node_t *node, u8int read, u8int write);
+PRIVATE void fs_open(fs_node_t *node);
 PRIVATE void fs_close(fs_node_t *node);
 
 void fs_init() {
@@ -24,37 +26,24 @@ void fs_init() {
 	}
 }
 
-void fs_create() {
+fs_node_t* fs_getRoot() {
+	return &root;
+}
+
+
+PRIVATE void fs_create() {
 	diskManager_writeHeader();				// Save header for the next time the system starts...
 
 	inodes = kmalloc(INODES * sizeof(iNode));
 	// Initialize root directory
-	root = (fs_node_t*) kmalloc(sizeof(fs_node_t));
-    strcpy(root->name, "~");
-    root->inode = 0;
-    root->mask = root->uid = root->gid = root->length = 0;
-    root->flags = FS_DIRECTORY;
-    root->read = 0;
-    root->write = 0;
-    root->open = 0;
-    root->close = 0;
-    root->readdir = fs_readdir;
-    root->finddir = fs_finddir;
-    root->ptr = 0;
-    root->impl = 0;
-
-    inodes[0].contents = NULL;
-   // inodes[0].length = 0;
+	//root = (fs_node_t*) kmalloc(sizeof(fs_node_t));
+	_initFSNodeDirectory(&root, "~", 0, 0);
     diskManager_writeiNode(&inodes[0], 0);
+
+    currInodeindex = 0;
 }
 
-
-fs_node_t* fs_getRoot() {
-	return root;
-}
-
-
-void fs_load() {
+PRIVATE void fs_load() {
 	// TODO: hacer!
 }
 
@@ -70,14 +59,13 @@ PRIVATE struct dirent *fs_readdir(fs_node_t *node, u32int index) {
 	struct dirent* dirent = (struct dirent*) kmalloc(sizeof(struct dirent));
 	char* contents = inodes[node->inode].contents;
 	u32int i = 0;
-	while (i != index + 3) {					// Do not read first 2 strings...
-		memcpy(&dirent->ino, contents, sizeof(u32int));
-		contents += sizeof(u32int);
-		int len = strlen(contents);
-		contents += len;
+	while (i < 2) {
+		memcpy(&dirent->ino, contents, sizeof(u32int));	contents += sizeof(u32int);
+		printf("lei: %d - %s\n", dirent->ino, contents);
+		int len = strlen(contents) + 1;						contents += len;
 		i++;
 	}
-	return dirent;
+	return NULL;
 }
 
 PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
@@ -92,26 +80,11 @@ PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buff
 	return 0;
 }
 
-PRIVATE void fs_open(fs_node_t *node, u8int read, u8int write) {
-	/*
-	iNode inode = inodes[fsnode->inode];
-	FileHeader header;
-	if(inode.contents == NULL) {
-		u32int sector = inode.sector;
-		u32int offset = inode.offset;
-		while (sector != -1) {
-			ata_read(currDisk, &header, sizeof(FileHeader), sector, offset);
-			if (header.magic != MAGIC_NUMBER) {
-				// TODO: set errno to E_CORRUPTED_FILE!!
-				return;
-			}
-			// FIXME: here there should be a realloc(not implemented)!!
-			inode.contents = kmalloc(header.length);
-			ata_read(currDisk, inode.contents, header.length, sector, offset);
-			sector = header.nextSector;
-			offset = header.nextOffset;
-		}
-	}*/
+PRIVATE void fs_open(fs_node_t *node) {
+	/*currInodeindex++;
+	currInodeindex %= INODES;
+	diskManager_readiNode(node, currInodeindex, MODE_ALL_CONTENTS);
+	inodes[currInodeindex] = node;*/
 }
 
 PRIVATE void fs_close(fs_node_t *node) {
@@ -119,6 +92,37 @@ PRIVATE void fs_close(fs_node_t *node) {
 }
 
 
+PRIVATE void _initFSNodeDirectory(fs_node_t* node, char* name, u32int inode, u32int parent) {
+    strcpy(node->name, name);
+    node->flags = FS_DIRECTORY;
+    node->inode = inode;
+    node->mask = node->uid = node->gid = node->length = 0;
+    node->read = 0;
+    node->write = 0;
+    node->open = 0;
+    node->close = 0;
+    node->readdir = fs_readdir;
+    node->finddir = fs_finddir;
+    node->ptr = 0;
+    node->impl = 0;
+
+    inodes[inode].length = 20;
+    inodes[inode].contents = kmalloc(inodes[inode].length);
+    u32int aux, len;
+    char* p = inodes[inode].contents;
+
+    char* self = ".";
+    len = strlen(self) + 1;
+    aux = inode;
+    memcpy(p, &aux, sizeof(u32int));	p += sizeof(u32int);
+    memcpy(p, self, len);				p += len;
+
+    char* parentDir = "..";
+    len = strlen(parentDir) + 1;
+    aux = parent;
+    memcpy(p, &aux, sizeof(u32int));	p += sizeof(u32int);
+    memcpy(p, parentDir, len); 			p += len;
+}
 
 // ==============================================================
 //			FS persiatnce

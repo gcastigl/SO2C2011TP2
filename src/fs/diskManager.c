@@ -8,8 +8,6 @@
 PRIVATE u32int maxIndes;						// Once setted this value, it should never be changed!!
 
 PRIVATE u32int currDisk;
-PRIVATE u32int currSector;
-PRIVATE u32int currOffset;
 
 PRIVATE void _free(u32int sector, u32int offset);
 PRIVATE void _loadContents(u32int sector, u32int offset, char* target, int bytes);
@@ -18,8 +16,6 @@ PRIVATE void _findHole(FilePage* page, int size, u32int initialSector, u32int in
 
 void diskManager_init() {
 	currDisk = ATA0;
-	currSector = 1;		// Start working at sector 1
-	currOffset = 0;
 }
 
 boolean diskManager_validateHeader() {

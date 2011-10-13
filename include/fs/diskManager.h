@@ -51,5 +51,6 @@ void diskManager_writeHeader();
 
 void diskManager_writeiNode(iNode* inode, int inodeNumber);
 
+int diskManager_readiNode(iNode* inode, int inodeNumber, int mode);
 
 #endif
