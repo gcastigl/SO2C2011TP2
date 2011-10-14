@@ -31,7 +31,7 @@ typedef struct {
 	u32int sector;
 	u32int offset;
 	u32int totalLength;
-	boolean hasContents;
+	boolean isDeleted;
 } FilePage;
 
 typedef struct {
@@ -49,7 +49,9 @@ boolean diskManager_validateHeader();
 
 void diskManager_writeHeader();
 
-void diskManager_writeiNode(iNode* inode, int inodeNumber);
+int diskManager_createiNode();
+
+void diskManager_updateiNodeContents(u32int inodeNumber, char* contents, u32int length);
 
 int diskManager_readiNode(iNode* inode, int inodeNumber, int mode);
 

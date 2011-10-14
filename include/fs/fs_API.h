@@ -21,7 +21,7 @@ typedef u32int (*read_type_t)(struct fs_node*,u32int,u32int,u8int*);
 typedef u32int (*write_type_t)(struct fs_node*,u32int,u32int,u8int*);
 typedef void (*open_type_t)(struct fs_node*);
 typedef void (*close_type_t)(struct fs_node*);
-typedef struct dirent * (*readdir_type_t)(struct fs_node*,u32int);
+typedef struct fs_node * (*readdir_type_t)(struct fs_node*,u32int);
 typedef struct fs_node * (*finddir_type_t)(struct fs_node*,char *name);
 
 typedef struct fs_node {
@@ -60,7 +60,7 @@ void open_fs(fs_node_t *node, u8int read, u8int write);
 
 void close_fs(fs_node_t *node);
 
-struct dirent *readdir_fs(fs_node_t *node, u32int index);
+fs_node_t *readdir_fs(fs_node_t *node, u32int index);
 
 fs_node_t *finddir_fs(fs_node_t *node, char *name);
 

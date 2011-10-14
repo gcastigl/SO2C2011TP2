@@ -37,11 +37,10 @@ int cd(int argc, char *argv[]) {
 int ls(int argc, char *argv[]) {
 	fs_node_t *current = tty_getCurrentTTY()->currDirectory;
 	int i = 0;
-	struct dirent *node = 0;
+	fs_node_t *node = 0;
 	while ((node = readdir_fs(current, i)) != 0) {					// get directory i
 		printf(node->name);
-		fs_node_t *fsnode = finddir_fs(current, node->name);
-		if ((fsnode->flags&0x7) == FS_DIRECTORY) {
+		if ((node->flags&0x7) == FS_DIRECTORY) {
 			printf("\n\t(directory)\n");
 		} else {
 			printf("\n\t contents: \"");

@@ -2,13 +2,12 @@
 
 PRIVATE fs_node_t root;             // Our root directory node.
 PRIVATE iNode *inodes;				// List of file nodes.
-PRIVATE int currInodeindex;
 
 PRIVATE void fs_create();
 PRIVATE void fs_load();
 PRIVATE void _initFSNodeDirectory(fs_node_t* node, char* name, u32int inode, u32int parent) ;
 
-PRIVATE struct dirent *fs_readdir(fs_node_t *node, u32int index);
+PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index);
 PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name);
 
 PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
@@ -16,6 +15,8 @@ PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buff
 
 PRIVATE void fs_open(fs_node_t *node);
 PRIVATE void fs_close(fs_node_t *node);
+
+PRIVATE void writeDirectory(char* name, char* to, u32int inode);
 
 void fs_init() {
 	diskManager_init(INODES);
@@ -33,14 +34,20 @@ fs_node_t* fs_getRoot() {
 
 PRIVATE void fs_create() {
 	diskManager_writeHeader();				// Save header for the next time the system starts...
-
+	int i;
+	for (i = 0; i < INODES; i++) {
+		inodes[i].contents = NULL;
+	}
 	inodes = kmalloc(INODES * sizeof(iNode));
 	// Initialize root directory
 	//root = (fs_node_t*) kmalloc(sizeof(fs_node_t));
-	_initFSNodeDirectory(&root, "~", 0, 0);
-    diskManager_writeiNode(&inodes[0], 0);
+	int rootInode = diskManager_createiNode();
+	_initFSNodeDirectory(&root, "~", rootInode, rootInode);
 
-    currInodeindex = 0;
+	int devInode = diskManager_createiNode();
+	_initFSNodeDirectory(&root, "dev", devInode, rootInode);
+
+    diskManager_updateiNodeContents(0, inodes[0].contents, inodes[0].length);
 }
 
 PRIVATE void fs_load() {
@@ -51,19 +58,29 @@ PRIVATE void fs_load() {
 //	callbacks - called when read/write/open/close are called.
 //==================================================================
 
-PRIVATE struct dirent *fs_readdir(fs_node_t *node, u32int index) {
+PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 	// 123 .'\0'
 	// 247 ..'\0'
 	// 260 pepe'\0'
 	// 401 memos'\0'
-	struct dirent* dirent = (struct dirent*) kmalloc(sizeof(struct dirent));
 	char* contents = inodes[node->inode].contents;
-	u32int i = 0;
-	while (i < 2) {
-		memcpy(&dirent->ino, contents, sizeof(u32int));	contents += sizeof(u32int);
-		printf("lei: %d - %s\n", dirent->ino, contents);
-		int len = strlen(contents) + 1;						contents += len;
+	u32int i = 0, offset = 0, len;
+	while (i < index && offset < inodes[node->inode].length) {
+		offset += sizeof(u32int);					// skip inodeNumber
+		memcpy(&len, contents + offset, sizeof(u32int));
+		offset += sizeof(u32int);					// skip strlen
+		offset += len;								// skip fileName
 		i++;
+	}
+	fs_node_t* fsnode = NULL;
+	if (offset < inodes[node->inode].length) {
+		fsnode = kmalloc(sizeof(fs_node_t));
+		memcpy(&fsnode->inode, contents + offset, sizeof(u32int));
+		fsnode->flags = FS_DIRECTORY;
+		if (inodes[fsnode->inode].contents == NULL) {
+			diskManager_readiNode(&inodes[fsnode->inode], fsnode->inode, MODE_ALL_CONTENTS);
+		}
+		return fsnode;
 	}
 	return NULL;
 }
@@ -105,23 +122,20 @@ PRIVATE void _initFSNodeDirectory(fs_node_t* node, char* name, u32int inode, u32
     node->finddir = fs_finddir;
     node->ptr = 0;
     node->impl = 0;
-
-    inodes[inode].length = 20;
+    inodes[inode].length = 13;
     inodes[inode].contents = kmalloc(inodes[inode].length);
-    u32int aux, len;
+
     char* p = inodes[inode].contents;
+    writeDirectory(".", p, inode);
+    p += 2 * sizeof(u32int) + 2;
+    writeDirectory("..", p, parent);
+}
 
-    char* self = ".";
-    len = strlen(self) + 1;
-    aux = inode;
-    memcpy(p, &aux, sizeof(u32int));	p += sizeof(u32int);
-    memcpy(p, self, len);				p += len;
-
-    char* parentDir = "..";
-    len = strlen(parentDir) + 1;
-    aux = parent;
-    memcpy(p, &aux, sizeof(u32int));	p += sizeof(u32int);
-    memcpy(p, parentDir, len); 			p += len;
+PRIVATE void writeDirectory(char* name, char* to, u32int inode) {
+	u32int len = strlen(name) + 1;
+    memcpy(to, &inode, sizeof(u32int));	to += sizeof(u32int);
+    memcpy(to, &len, sizeof(u32int));	to += sizeof(u32int);
+    memcpy(to, name, len);
 }
 
 // ==============================================================

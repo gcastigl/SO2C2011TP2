@@ -30,7 +30,7 @@ void close_fs(fs_node_t *node) {
         node->close(node);
 }
 
-struct dirent *readdir_fs(fs_node_t *node, u32int index) {
+fs_node_t *readdir_fs(fs_node_t *node, u32int index) {
     // Is the node a directory, and does it have a callback?
     if ((node->flags&0x7) == FS_DIRECTORY && node->readdir != 0) {
         return node->readdir(node, index);
