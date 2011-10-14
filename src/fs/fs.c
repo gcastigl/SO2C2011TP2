@@ -16,7 +16,7 @@ PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buff
 PRIVATE void fs_open(fs_node_t *node);
 PRIVATE void fs_close(fs_node_t *node);
 
-PRIVATE void writeDirectory(char* name, char* to, u32int inode);
+PRIVATE void appendDirectory(u32int inode, char* name, u32int newDirInode);
 
 void fs_init() {
 	diskManager_init(INODES);
@@ -35,19 +35,21 @@ fs_node_t* fs_getRoot() {
 PRIVATE void fs_create() {
 	diskManager_writeHeader();				// Save header for the next time the system starts...
 	int i;
+	inodes = kmalloc(INODES * sizeof(iNode));
 	for (i = 0; i < INODES; i++) {
 		inodes[i].contents = NULL;
+		inodes[i].length = 0;
 	}
-	inodes = kmalloc(INODES * sizeof(iNode));
 	// Initialize root directory
-	//root = (fs_node_t*) kmalloc(sizeof(fs_node_t));
 	int rootInode = diskManager_createiNode();
 	_initFSNodeDirectory(&root, "~", rootInode, rootInode);
+    //diskManager_updateiNodeContents(rootInode, inodes[rootInode].contents, inodes[rootInode].length);
 
 	int devInode = diskManager_createiNode();
-	_initFSNodeDirectory(&root, "dev", devInode, rootInode);
-
-    diskManager_updateiNodeContents(0, inodes[0].contents, inodes[0].length);
+	fs_node_t *dev = kmalloc(sizeof(fs_node_t));
+	_initFSNodeDirectory(dev, "dev", devInode, rootInode);
+	appendDirectory(rootInode, dev->name, devInode);
+    //diskManager_updateiNodeContents(devInode, inodes[devInode].contents, inodes[devInode].length);
 }
 
 PRIVATE void fs_load() {
@@ -75,10 +77,13 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 	fs_node_t* fsnode = NULL;
 	if (offset < inodes[node->inode].length) {
 		fsnode = kmalloc(sizeof(fs_node_t));
-		memcpy(&fsnode->inode, contents + offset, sizeof(u32int));
 		fsnode->flags = FS_DIRECTORY;
+		memcpy(&fsnode->inode, contents + offset, sizeof(u32int));
+		offset += sizeof(u32int);					// skip inodenumber
+		offset += sizeof(u32int);					// skip fileName
+		strcpy(fsnode->name, contents + offset);
 		if (inodes[fsnode->inode].contents == NULL) {
-			diskManager_readiNode(&inodes[fsnode->inode], fsnode->inode, MODE_ALL_CONTENTS);
+			//diskManager_readiNode(&inodes[fsnode->inode], fsnode->inode, MODE_ALL_CONTENTS);
 		}
 		return fsnode;
 	}
@@ -108,12 +113,19 @@ PRIVATE void fs_close(fs_node_t *node) {
 
 }
 
-
+/*
+ * node = estructura a inicializar
+ * name = nombre del directorio
+ * inode = numero de inodo del nuevo directorio
+ * parent = numero de inido de la carpeta padre
+ */
 PRIVATE void _initFSNodeDirectory(fs_node_t* node, char* name, u32int inode, u32int parent) {
     strcpy(node->name, name);
-    node->flags = FS_DIRECTORY;
     node->inode = inode;
-    node->mask = node->uid = node->gid = node->length = 0;
+    node->flags = FS_DIRECTORY;
+    node->mask = 0;
+    node->uid = 0;
+    node->gid = 0;
     node->read = 0;
     node->write = 0;
     node->open = 0;
@@ -122,20 +134,37 @@ PRIVATE void _initFSNodeDirectory(fs_node_t* node, char* name, u32int inode, u32
     node->finddir = fs_finddir;
     node->ptr = 0;
     node->impl = 0;
-    inodes[inode].length = 13;
-    inodes[inode].contents = kmalloc(inodes[inode].length);
 
-    char* p = inodes[inode].contents;
-    writeDirectory(".", p, inode);
-    p += 2 * sizeof(u32int) + 2;
-    writeDirectory("..", p, parent);
+    inodes[inode].length = 0;
+
+    appendDirectory(inode, ".", inode);			// link to self
+    appendDirectory(inode, "..", parent);		// link to parent
 }
 
-PRIVATE void writeDirectory(char* name, char* to, u32int inode) {
-	u32int len = strlen(name) + 1;
-    memcpy(to, &inode, sizeof(u32int));	to += sizeof(u32int);
-    memcpy(to, &len, sizeof(u32int));	to += sizeof(u32int);
-    memcpy(to, name, len);
+/*
+ * inode = numero de inodo al cual se quiere agregar el directorio
+ * name = nombre del nuevo directorio
+ * newDirInode = numero de inido de nuva carpeta
+ */
+// FIXME: There should be a call to realloc! (need to be implemented)
+PRIVATE void appendDirectory(u32int inode, char* name, u32int newDirInode) {
+	iNode* node = &inodes[inode];
+	int nameLen = strlen(name) + 1;
+	int newLength = node->length + 2 * sizeof(u32int) + nameLen;
+
+	char* newContents = kmalloc(newLength);
+	if (node->contents != NULL) {
+		// When adding a directory for the first time, contents have NULL value
+		memcpy(newContents, node->contents, node->length);
+		kfree(node->contents);
+	}
+	node->contents = newContents;
+	newContents += node->length;
+	node->length = newLength;
+
+	memcpy(newContents, &inode, sizeof(u32int));	newContents += sizeof(u32int);
+	memcpy(newContents, &nameLen, sizeof(u32int));	newContents += sizeof(u32int);
+	memcpy(newContents, name, nameLen);
 }
 
 // ==============================================================
