@@ -16,8 +16,8 @@ PRIVATE void _updateiNode(int inode, FilePage* contents);
 PRIVATE void _reserveMemory(FilePage* page, int size, u32int initialSector, u32int initialOffset);
 PRIVATE void _freeMemory(FilePage* page);
 
-PRIVATE int _readContents(FilePage* page, char* target, int bytes);
-PRIVATE int _writeContents(FilePage* page, char* target, int bytes);
+PRIVATE int _readContents(FilePage* page, iNode* inode);
+PRIVATE int _writeContents(FilePage* page, iNode* inode);
 
 void diskManager_init() {
 	currDisk = ATA0;
@@ -40,44 +40,29 @@ void diskManager_writeHeader(u32int maxNodes) {
 	ata_write(currDisk, &header, sizeof(FSHeader), 0, 0);
 }
 
-int diskManager_createiNode() {
+int diskManager_nextInode() {
 	FSHeader header;
 	ata_read(currDisk, &header, sizeof(FSHeader), 0, 0);
 	int nextiNode = header.totalNodes++;
-
-	FilePage page;
-	_reserveMemory(&page, 100, FILES_INITIAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
-	_updateiNode(nextiNode, &page);
-
 	ata_write(currDisk, &header, sizeof(FSHeader), 0, 0);			// Update totalNodes value
 	return nextiNode;
 }
 
-void diskManager_updateiNodeContents(u32int inodeNumber, char* contents, u32int length) {
+void diskManager_updateiNodeContents(iNode* inode, u32int inodeNumber) {
 	FilePage page;
 	_getiNode(inodeNumber, &page);
 
-	if (length == 0) {				// inode has no loaded contents
-		_freeMemory(&page);
-		_updateiNode(inodeNumber, &page);
-		return;
-	}
 	// FIXME: doing this for every file is a bit inneficient... some valdiation here could help improve performance
 	_freeMemory(&page);
-	_reserveMemory(&page, length, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
-	_writeContents(&page, contents, length);
+	_reserveMemory(&page, sizeof(FSHeader) + inode->length, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
+	_writeContents(&page, inode);
 }
 
 int diskManager_readiNode(iNode* inode, int inodeNumber, int mode) {
-	int sector = 1;
-	int offset = inodeNumber * sizeof(FilePage);
-	int disk = currDisk;
-
 	FilePage page;
-	ata_read(disk, &page, sizeof(FilePage), sector, offset);
+	_getiNode(inodeNumber, &page);
 
-	inode->sector = page.sector;
-	inode->offset = page.offset;
+	// FIXME: actualizar la logica de esta funcion!
 	if (mode == MODE_NO_CONTENTS) {
 		inode->length = 0;
 		inode->contents = NULL;
@@ -89,46 +74,65 @@ int diskManager_readiNode(iNode* inode, int inodeNumber, int mode) {
 		inode->length = mode;
 	}
 	inode->contents = kmalloc(inode->length);
-	_readContents(&page, inode->contents, inode->length);
+	_readContents(&page, inode);
 	return 0;
 }
 
 PRIVATE void _freeMemory(FilePage* page) {
-	FileHeader fileHeader;
+	FilePage currPage;
 	u32int disk = currDisk;
-	u32int sector = page->sector;
-	u32int offset = page->offset;
+	u32int sector = page->nextSector;
+	u32int offset = page->nextOffset;
 	do {
-		ata_read(disk, &fileHeader, sizeof(FileHeader), sector, offset);
-		sector = fileHeader.nextSector;
-		offset = fileHeader.nextOffset;
-		fileHeader.magic = 0;
-		ata_write(disk, &fileHeader, sizeof(FileHeader), sector, offset);
-	} while(fileHeader.hasNextPage);
+		ata_read(disk, &currPage, sizeof(FilePage), sector, offset);
+		sector = currPage.nextSector;
+		offset = currPage.nextOffset;
+		currPage.magic = 0;
+		ata_write(disk, &currPage, sizeof(FilePage), sector, offset);
+	} while(currPage.hasNextPage);
 }
 
-PRIVATE int _readContents(FilePage* page, char* target, int bytes) {
+PRIVATE int _readContents(FilePage* page, iNode* inode) {
 	FileHeader header;
+	FilePage currPage;
 	u32int disk = currDisk;
-	u32int sector = page->sector;
-	u32int offset = page->offset;
+
+	u32int sector = page->nextSector;
+	u32int offset = page->nextOffset;
+	ata_read(disk, &currPage, sizeof(FilePage), sector, offset);
+	offset += sizeof(FilePage);
+	if (currPage.magic != MAGIC_NUMBER) {
+		errno = E_CORRUPTED_FILE;
+		return -1;
+	}
+	// Read FileHeader fisrt...
+	ata_read(disk, &header, sizeof(FileHeader), sector, offset);
+	if (header.magic != MAGIC_NUMBER) {
+		errno = E_CORRUPTED_FILE;
+		return -1;
+	}
+	strcpy(inode->name, header.name);
+	inode->flags = header.flags;
+	inode->uid = header.uid;
+	inode->gid = header.gid;
+	inode->impl = header.impl;
+	inode->mask = header.mask;
+	char *p = inode->contents;
 	do {
-		ata_read(disk, &header, sizeof(FileHeader), sector, offset);
-		if (header.magic == MAGIC_NUMBER) {
-			ata_read(disk, target, header.usedBytes, sector, offset);
-			sector = header.nextSector;
-			offset = header.nextOffset;
-			target += header.usedBytes;
-		} else {
-			errno = E_CORRUPTED_FILE;
-			return 0;
-		}
-	} while(header.hasNextPage);
+		// TODO: revisar bien la logica...
+		ata_read(disk, &currPage, sizeof(FilePage), currPage.nextSector, currPage.nextOffset);
+		offset += sizeof(FilePage);
+		ata_read(disk, p, currPage.usedBytes, sector, offset);
+		sector = currPage.nextSector;
+		offset = currPage.nextOffset;
+		p += currPage.usedBytes;
+	} while(currPage.hasNextPage);
 	return 0;
 }
 
-PRIVATE int _writeContents(FilePage* page, char* target, int bytes) {
-	FileHeader header;
+PRIVATE int _writeContents(FilePage* page, iNode* inode) {
+	// FIXME: modificar para que funcione con los nuevos cambios
+	/*FileHeader header;
 	int disk = currDisk;
 	int writtenBytes = 0;
 	u32int sector = page->sector;
@@ -151,39 +155,40 @@ PRIVATE int _writeContents(FilePage* page, char* target, int bytes) {
 			return writtenBytes;
 		}
 	} while (header.hasNextPage && bytes != 0);
-	return writtenBytes;
+	return writtenBytes;*/
+	return 0;
 }
 
 PRIVATE void _reserveMemory(FilePage* page, int size, u32int initialSector, u32int initialOffset) {
-	FileHeader fileHeader;
+	FilePage currPage;
 	int sector = initialSector;
 	int offset = initialOffset;
 	int index = 0;
 
 	int previousSector, previousOffset;
 
-	u32int maxOffset = 4098;// FIXME: implement driveCapacity() in the ata_driver
+	u32int maxOffset = 4098;	// FIXME: implement driveCapacity() in the ata_driver
 
 	int neededPages = (size / (FILE_BLOCK_SIZE_BYTES + 1)) + 1;
 	while (index < neededPages && offset < maxOffset) {
-		ata_read(currDisk, &fileHeader, sizeof(FileHeader), sector, offset);
+		ata_read(currDisk, &currPage, sizeof(FilePage), sector, offset);
 		//printf("[%d, %d] -> %d\n", sector, offset, fileHeader.magic);
-		if (fileHeader.magic != MAGIC_NUMBER) {											// The block is empty... can be used
-			fileHeader.magic = MAGIC_NUMBER;
-			fileHeader.hasNextPage = false;
-			fileHeader.usedBytes = 0;
-			fileHeader.maxBytes = FILE_BLOCK_SIZE_BYTES - sizeof(FileHeader);
-			ata_write(currDisk, &fileHeader, sizeof(FileHeader), sector, offset);		// write header to disk
+		if (currPage.magic != MAGIC_NUMBER) {											// The block is empty... can be used
+			currPage.magic = MAGIC_NUMBER;
+			currPage.hasNextPage = false;
+			currPage.usedBytes = 0;
+			currPage.totalLength = FILE_BLOCK_SIZE_BYTES - sizeof(FilePage);
+			ata_write(currDisk, &currPage, sizeof(FilePage), sector, offset);		// write header to disk
 			if (index > 0) {															// Set previous header to point to this one
-				fileHeader.nextSector = sector;
-				fileHeader.nextOffset = offset;
-				fileHeader.hasNextPage = true;
-				ata_write(currDisk, &fileHeader, sizeof(FileHeader), previousSector, previousOffset);
+				currPage.nextSector = sector;
+				currPage.nextOffset = offset;
+				currPage.hasNextPage = true;
+				ata_write(currDisk, &currPage, sizeof(FilePage), previousSector, previousOffset);
 			} else {																	// save first page to return
-				page->sector = sector;
-				page->offset = offset;
-				page->isDeleted = false;
-				page->totalLength = size;
+				page->nextSector = sector;
+				page->nextOffset = offset;
+				page->usedBytes = 0;
+				page->totalLength = FILE_BLOCK_SIZE_BYTES - sizeof(FilePage);
 			}
 			previousSector = sector;
 			previousOffset = offset;

@@ -41,11 +41,11 @@ PRIVATE void fs_create() {
 		inodes[i].length = 0;
 	}
 	// Initialize root directory
-	int rootInode = diskManager_createiNode();
+	int rootInode = diskManager_nextInode();
 	_initFSNodeDirectory(&root, "~", rootInode, rootInode);
     //diskManager_updateiNodeContents(rootInode, inodes[rootInode].contents, inodes[rootInode].length);
 
-	int devInode = diskManager_createiNode();
+	int devInode = diskManager_nextInode();
 	fs_node_t *dev = kmalloc(sizeof(fs_node_t));
 	_initFSNodeDirectory(dev, "dev", devInode, rootInode);
 	appendDirectory(rootInode, dev->name, devInode);
@@ -80,7 +80,7 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 		fsnode->flags = FS_DIRECTORY;
 		memcpy(&fsnode->inode, contents + offset, sizeof(u32int));
 		offset += sizeof(u32int);					// skip inodenumber
-		offset += sizeof(u32int);					// skip fileName
+		offset += sizeof(u32int);					// skip strlen
 		strcpy(fsnode->name, contents + offset);
 		if (inodes[fsnode->inode].contents == NULL) {
 			//diskManager_readiNode(&inodes[fsnode->inode], fsnode->inode, MODE_ALL_CONTENTS);
@@ -91,6 +91,27 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 }
 
 PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
+	printf("recieved nodes: %s\n", node->name);
+	char* contents = inodes[node->inode].contents;
+	u32int offset = 0, len;
+	while (offset < inodes[node->inode].length) {
+		memcpy(&len, contents + offset, sizeof(u32int));
+		offset += sizeof(u32int);					// skip inodeNumber
+		memcpy(&len, contents + offset, sizeof(u32int));
+		offset += sizeof(u32int);					// skip strlen
+		if (strcmp(name, contents + offset) == 0) {
+			printf("directory found!!\n");
+			fs_node_t* fsnode = kmalloc(sizeof(fs_node_t));
+			fsnode->flags = FS_DIRECTORY;
+			memcpy(&fsnode->inode, contents + offset - 2 * sizeof(u32int), sizeof(u32int));
+			strcpy(fsnode->name, contents + offset);
+			if (inodes[fsnode->inode].contents == NULL) {
+				//diskManager_readiNode(&inodes[fsnode->inode], fsnode->inode, MODE_ALL_CONTENTS);
+			}
+			return fsnode;
+		}
+		offset += len;								// skip fileName
+	}
 	return NULL;
 }
 
@@ -162,7 +183,7 @@ PRIVATE void appendDirectory(u32int inode, char* name, u32int newDirInode) {
 	newContents += node->length;
 	node->length = newLength;
 
-	memcpy(newContents, &inode, sizeof(u32int));	newContents += sizeof(u32int);
+	memcpy(newContents, &newDirInode, sizeof(u32int));	newContents += sizeof(u32int);
 	memcpy(newContents, &nameLen, sizeof(u32int));	newContents += sizeof(u32int);
 	memcpy(newContents, name, nameLen);
 }

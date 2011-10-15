@@ -2,48 +2,29 @@
 
 //FIXME: this cmds should't be here....
 int cd(int argc, char *argv[]) {
-	/*if (argc != 1) {
-		printf("This cmd must be called with one argument!\n");
-		return 1;
+	if (argc == 1) {
+		TTY* tty = tty_getCurrentTTY();
+		fs_node_t *current = tty->currDirectory;
+		fs_node_t *node = finddir_fs(current, argv[0]);
+		if (node != NULL) {
+			printf("switching to: %s -> %d\n", node->name, node->inode);
+			tty->currDirectory = node;
+		}
 	}
-	TTY* currTTy = tty_getCurrentTTY();
-	if (strcmp("..", argv[0]) == 0) { 				// Go up one direcotry
-		Directory* next = currTTy->currDirectory->parent;
-		if (next != NULL) {
-			int folderNameLen = strlen(currTTy->currDirectory->name);
-			currTTy->currPathOffset -= folderNameLen + 1;
-			currTTy->currPath[currTTy->currPathOffset] = '\0';
-			currTTy->currDirectory = next;
-		}
-	} else if (argv[0][0] == '/') {					// Absolute path directory
-		//TODO:
-		printf("Not implemented yet...\n");
-	} else {										// Relative path
-		Directory* next = directory_get(tty_getCurrentTTY()->currDirectory, argv[0]);
-		if (next != NULL) { // Switch directory (advance one folder)
-			currTTy->currDirectory = next;
-			int offset = currTTy->currPathOffset;
-			strcpy(currTTy->currPath + offset++, "/");
-			strcpy(currTTy->currPath + offset, next->name);
-			offset += strlen(next->name);
-			currTTy->currPathOffset = offset;
-		} else {
-			printf("cd: The directory %s does not exist\n", argv[0]);
-		}
-	}*/
 	return 0;
 }
 
 int ls(int argc, char *argv[]) {
 	fs_node_t *current = tty_getCurrentTTY()->currDirectory;
+	printf("curr: %d\n", current);
 	int i = 0;
 	fs_node_t *node = 0;
 	while ((node = readdir_fs(current, i)) != 0) {					// get directory i
-		printf(node->name);
+		printf("%d - %s\n", node->inode, node->name);
 		if ((node->flags&0x7) == FS_DIRECTORY) {
-			printf("\n\t(directory)\n");
+			printf("\t(directory)\n");
 		} else {
-			printf("\n\t contents: \"");
+			printf("\t contents: \"");
 			/*char buf[256];
 			u32int sz = read_fs(fsnode, 0, 256, buf);
 			int j;
