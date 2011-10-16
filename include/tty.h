@@ -37,6 +37,8 @@ int tty_getCurrent();
 
 TTY* tty_getCurrentTTY();
 
+void tty_getCurrentNode(fs_node_t* node);
+
 TTY* tty_getTTY(int index);
 
 void tty_write(TTY* tty, char* buffer, u32int size);

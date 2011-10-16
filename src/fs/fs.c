@@ -5,9 +5,12 @@ PRIVATE iNode *inodes;				// List of file nodes.
 PRIVATE void fs_create();
 PRIVATE void fs_load();
 
+PRIVATE void _createFile(u32int inode, char* name, u32int dirInode);
+
 PRIVATE void _initInode(u32int inodeNumber, char* name, u32int flags);
 PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent);
-PRIVATE void appendDirectory(u32int inode, char* name, u32int dirInode);
+
+// callbacks function declarations
 
 PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index);
 PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name);
@@ -20,7 +23,7 @@ PRIVATE void fs_close(fs_node_t *node);
 
 
 void fs_init() {
-	diskManager_init(INODES);
+	diskManager_init();
 	if (false && diskManager_validateHeader()) {
 		fs_load();
 	} else {
@@ -56,7 +59,7 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 }
 
 PRIVATE void fs_create() {
-	diskManager_writeHeader();				// Save header for the next time the system starts...
+	diskManager_writeHeader(INODES);				// Save header for the next time the system starts...
 	int i;
 	inodes = kmalloc(INODES * sizeof(iNode));
 	for (i = 0; i < INODES; i++) {
@@ -71,7 +74,7 @@ PRIVATE void fs_create() {
 	_initInode_dir(devInode, "dev", rootInode);
 
 	// add dev as sub-directory of root
-	appendDirectory(rootInode, "dev", devInode);
+	_createFile(rootInode, "dev", devInode);
 }
 
 PRIVATE void fs_load() {
@@ -105,20 +108,15 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 
 PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 	char* contents = inodes[node->inode].contents;
-	u32int offset = 0, len;
+	u32int offset = 0, len, inodeNumber;
 	while (offset < inodes[node->inode].length) {
-		memcpy(&len, contents + offset, sizeof(u32int));
+		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
 		offset += sizeof(u32int);					// skip inodeNumber
 		memcpy(&len, contents + offset, sizeof(u32int));
 		offset += sizeof(u32int);					// skip strlen
 		if (strcmp(name, contents + offset) == 0) {
 			fs_node_t* fsnode = kmalloc(sizeof(fs_node_t));
-			fsnode->flags = FS_DIRECTORY;
-			memcpy(&fsnode->inode, contents + offset - 2 * sizeof(u32int), sizeof(u32int));
-			strcpy(fsnode->name, contents + offset);
-			if (inodes[fsnode->inode].contents == NULL) {
-				//diskManager_readiNode(&inodes[fsnode->inode], fsnode->inode, MODE_ALL_CONTENTS);
-			}
+			fs_getFsNode(fsnode, inodeNumber);
 			return fsnode;
 		}
 		offset += len;								// skip fileName
@@ -141,6 +139,20 @@ PRIVATE void fs_close(fs_node_t *node) {
 
 }
 
+// FIXME: figure out a way to work with files permissions
+// FIXME: this should be a little easier I think
+int fs_createFile(u32int parentiNode, char* name) {
+	fs_node_t node;
+	fs_getFsNode(&node, parentiNode);
+	if (fs_finddir(&node, name) != NULL) {
+		return E_FILE_EXISTS;
+	}
+	int inode = diskManager_nextInode();
+	_initInode(inode, name, FS_FILE);
+	_createFile(parentiNode, name, inode);
+	return 0;
+}
+
 PRIVATE void _initInode(u32int inodeNumber, char* name, u32int flags) {
 	iNode* inode = &inodes[inodeNumber];
 	strcpy(inode->name, name);
@@ -157,15 +169,16 @@ PRIVATE void _initInode(u32int inodeNumber, char* name, u32int flags) {
 
 PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent) {
 	_initInode(inodeNumber, name, FS_DIRECTORY);
-	appendDirectory(inodeNumber, ".", inodeNumber);			// link to self
-	appendDirectory(inodeNumber, "..", parent);				// link to parent
+	_createFile(inodeNumber, ".", inodeNumber);			// link to self
+	_createFile(inodeNumber, "..", parent);				// link to parent
 	diskManager_updateiNodeContents(&inodes[inodeNumber], inodeNumber);
 }
 
 // FIXME: There should be a call to realloc! (need to be implemented)
-PRIVATE void appendDirectory(u32int inodeNumber, char* name, u32int dirInode) {
+PRIVATE void _createFile(u32int inodeNumber, char* name, u32int dirInode) {
 	iNode* inode = &inodes[inodeNumber];
 	if ((inode->flags&0x07) != FS_DIRECTORY) {
+		printf("\ntrying to create a file outside a dir structure\n\n");
 		errno = E_INVALID_ARG;
 		return;
 	}

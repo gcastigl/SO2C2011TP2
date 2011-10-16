@@ -2,7 +2,7 @@
 
 #define MIN(x,y)							((x) < (y)) ? (x) : (y)
 
-#define FILE_CONTENTS_INITAL_SECTOR			1
+#define FILE_CONTENTS_INITAL_SECTOR			2
 #define FILE_CONTENTS_INITAL_OFFSET			maxIndes * sizeof(FilePage)
 
 PRIVATE u32int maxIndes;						// Once setted this value, it should never be changed!!
@@ -18,7 +18,7 @@ PRIVATE void _freeMemory(FilePage* page);
 PRIVATE int _readContents(FilePage* page, iNode* inode);
 PRIVATE int _writeContents(FilePage* page, iNode* inode);
 
-void diskManager_init() {
+void diskManager_init(u32int maxNodes) {
 	currDisk = ATA0;
 }
 
@@ -33,7 +33,7 @@ boolean diskManager_validateHeader() {
 
 void diskManager_writeHeader(u32int maxNodes) {
 	FSHeader header;
-	header.magic = 123456;
+	header.magic = MAGIC_NUMBER;
 	header.totalNodes = 0;
 	header.maxNodes = maxNodes;
 	ata_write(currDisk, &header, sizeof(FSHeader), 0, 0);
@@ -50,11 +50,16 @@ int diskManager_nextInode() {
 void diskManager_updateiNodeContents(iNode* inode, u32int inodeNumber) {
 	FilePage page;
 	_getiNode(inodeNumber, &page);
+	if (page.magic != MAGIC_NUMBER) {
+		errno = E_CORRUPTED_FILE;
+	}
 
-	// FIXME: doing this for every file is a bit inneficient... some valdiation here could help improve performance
-	_freeMemory(&page);
-	_reserveMemory(&page, sizeof(FSHeader) + inode->length, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
-	_writeContents(&page, inode);
+	if (page.totalLength != 0) {
+		//_freeMemory(&page);
+	}
+	// FIXME: doing this for every file update is a bit inneficient... some valdiation here could help improve performance
+	//_reserveMemory(&page, sizeof(FSHeader) + inode->length, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
+	//_writeContents(&page, inode);
 }
 
 int diskManager_readiNode(iNode* inode, int inodeNumber, int mode) {

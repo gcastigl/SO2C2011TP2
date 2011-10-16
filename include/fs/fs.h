@@ -14,4 +14,6 @@ void fs_getRoot(fs_node_t* fsNode);
 
 void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber);
 
+int fs_createFile(u32int parentiNode, char* name);
+
 #endif

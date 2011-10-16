@@ -48,6 +48,11 @@ TTY* tty_getCurrentTTY() {
 	return &tty[currentTTY];
 }
 
+void tty_getCurrentNode(fs_node_t* node) {
+	u32int currentiNode = tty_getCurrentTTY()->currDirectory;
+	fs_getFsNode(node, currentiNode);
+}
+
 void tty_write(TTY* tty, char* buffer, u32int size) {
 	int j;
 	char format = video_getFormattedColor(tty->fgColor, tty->bgColor);
