@@ -3,6 +3,7 @@
 
 #include <defs.h>
 #include <lib/stdio.h>
+#include <fs/fs.h>
 #include <tty.h>
 //FIXME: fix this includes....
 

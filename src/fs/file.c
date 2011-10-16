@@ -4,27 +4,29 @@
 int cd(int argc, char *argv[]) {
 	if (argc == 1) {
 		TTY* tty = tty_getCurrentTTY();
-		fs_node_t *current = tty->currDirectory;
-		fs_node_t *node = finddir_fs(current, argv[0]);
+		u32int currentiNode = tty->currDirectory;
+		fs_node_t current;
+		fs_getFsNode(&current, currentiNode);
+		fs_node_t *node = finddir_fs(&current, argv[0]);
 		if (node != NULL) {
-			printf("switching to: %s -> %d\n", node->name, node->inode);
-			tty->currDirectory = node;
+			tty->currDirectory = node->inode;
 		}
 	}
 	return 0;
 }
 
 int ls(int argc, char *argv[]) {
-	fs_node_t *current = tty_getCurrentTTY()->currDirectory;
-	printf("curr: %d\n", current);
+	u32int currentiNode = tty_getCurrentTTY()->currDirectory;
+	fs_node_t current;
+	fs_getFsNode(&current, currentiNode);
 	int i = 0;
 	fs_node_t *node = 0;
-	while ((node = readdir_fs(current, i)) != 0) {					// get directory i
-		printf("%d - %s\n", node->inode, node->name);
+	while ((node = readdir_fs(&current, i)) != 0) {					// get directory i
+		printf("%d - %s", node->inode, node->name);
 		if ((node->flags&0x7) == FS_DIRECTORY) {
 			printf("\t(directory)\n");
 		} else {
-			printf("\t contents: \"");
+			printf("\tcontents:\n");
 			/*char buf[256];
 			u32int sz = read_fs(fsnode, 0, 256, buf);
 			int j;

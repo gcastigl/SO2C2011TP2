@@ -11,7 +11,6 @@ PRIVATE u32int currDisk;
 
 
 PRIVATE void _getiNode(int inode, FilePage* contents);
-PRIVATE void _updateiNode(int inode, FilePage* contents);
 
 PRIVATE void _reserveMemory(FilePage* page, int size, u32int initialSector, u32int initialOffset);
 PRIVATE void _freeMemory(FilePage* page);
@@ -201,11 +200,6 @@ PRIVATE void _reserveMemory(FilePage* page, int size, u32int initialSector, u32i
 		_freeMemory(page);
 		errno = E_OUT_OF_MEMORY;
 	}
-}
-
-PRIVATE void _updateiNode(int inode, FilePage* contents) {
-	int sector = 1;
-	ata_write(currDisk, contents, sizeof(FilePage), sector, inode * sizeof(FilePage));
 }
 
 PRIVATE void _getiNode(int inode, FilePage* contents) {

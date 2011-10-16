@@ -21,9 +21,11 @@ void initTTY(int index) {
 	tty[index].buffer.tail = 0;
 	tty[index].bgColor = BLACK;
 	tty[index].fgColor = WHITE;
-	tty[index].currDirectory = fs_getRoot();
-	tty[index].currPathOffset = strlen(tty[index].currDirectory->name);
-	strcpy(tty[index].currPath, fs_getRoot()->name);
+	fs_node_t root;
+	fs_getRoot(&root);
+	tty[index].currDirectory = root.inode;
+	strcpy(tty[index].currPath, root.name);
+	tty[index].currPathOffset = strlen(root.name);
 }
 
 void tty_setCurrent(int tty) {

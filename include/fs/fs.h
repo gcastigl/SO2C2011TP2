@@ -10,6 +10,8 @@
 
 void fs_init();
 
-fs_node_t* fs_getRoot();
+void fs_getRoot(fs_node_t* fsNode);
+
+void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber);
 
 #endif

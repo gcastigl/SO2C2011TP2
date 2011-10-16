@@ -27,7 +27,6 @@ int strncmp(char * s1, char * s2, unsigned int n) {
 	return ret;
 }
 
-
 /*Retorna true si s1 es subString de s2*/
 int substr(const char * s1, const char *s2) {
 	int i = 0, isSubstr = true;
@@ -79,3 +78,12 @@ int strIndexOf(char* str, char c, int startIndex) {
 	return -1;
 }
 
+int strContains(char* str, char c) {
+	int i = 0;
+	while (str[i] != '\0') {
+		if (str[i] == c) {
+			return true;
+		}
+	}
+	return false;
+}
