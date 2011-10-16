@@ -2,56 +2,28 @@
 #define DIRECTORY_H_
 
 /*
-#include <defs.h>
-#include <lib/kheap.h>
-#include <lib/stdio.h>
-#include <lib/string.h>
+create
 
-#define FILE_TABLE_SIZE			64
-#define MAX_FILENAME_LENGTH		32
-#define MAX_FILES_PER_FOLDER	32
-#define MAX_FOLDERS_PER_FOLDER	32
+delete
 
-typedef struct {
-	char name[MAX_FILENAME_LENGTH];
-	u32int sector;
-	u32int offset;
-	char* contents;
-	u32int contentsLength;
-	boolean used;			// if true, it means the file need to be written to disk
-	//struct Directory* folder;
-} iNode;
+opendir
 
-typedef struct Directory_t {
-	char name[MAX_FILENAME_LENGTH];
-	struct Directory_t* parent;
-	u32int subDirsCount;
-	struct Directory_t* subDirs[MAX_FOLDERS_PER_FOLDER];
-	struct FileTableEntry_t* fileTableEntry;
-} Directory;
+closedir
 
-typedef struct FileTableEntry_t {
-	Directory* dir;
-	iNode** files;
-	u32int filesCount;
-} FileTableEntry;
+readdir
 
-void directory_initialize();
+rename
 
-int directory_createDir(Directory* parent, char* name);
+add
 
-int directory_createFile(Directory* dir, char* name);
+link (add a file to the dir)
 
-Directory* directory_get(Directory* dir, char* name);
+unlink (remove a file from the dir)
 
-Directory* directory_getRoot();
+change dir
 
-void directory_setRoot(Directory* dir);
-
-boolean directory_exists(Directory* dir, char* name);
-
-Directory* directory_find(Directory* from, char* name);
-
-void initEmptyDirectory(Directory* dir, char* name);
+find current dir
 */
+
+
 #endif
