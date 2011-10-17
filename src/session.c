@@ -1,4 +1,4 @@
-#include <user.h>
+#include <session.h>
 
 void prntWelcomeMsg();
 int isValidUser(char* userName);
@@ -6,7 +6,7 @@ int isValidUser(char* userName);
 static char user[NAME_MAX_LENGTH] = {"\0"};
 static int isLoggedIn = false;
 
-void user_doLogin() {
+void session_login() {
 	TTY* tty = tty_getCurrentTTY();
 	tty_clean(tty);
 	prntWelcomeMsg();
@@ -25,18 +25,18 @@ void user_doLogin() {
 	strcpy(user, "admin");
 }
 
-int user_isLoggedIn() {
+int session_isLoggedIn() {
 	return isLoggedIn;
 }
 
-const char* user_getName() {
-	if (user_isLoggedIn()) {
+const char* session_getName() {
+	if (session_isLoggedIn()) {
 		return (const char*) user;
 	}
 	return NULL;
 }
 
-void user_logout() {
+void session_logout() {
 	isLoggedIn = false;
 }
 

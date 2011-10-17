@@ -1,5 +1,5 @@
-#ifndef USER_H
-#define USER_H
+#ifndef SESSION_H
+#define SESSION_H
 
 #include <tty.h>
 #include <shell.h>
@@ -9,12 +9,12 @@
 
 #define NAME_MAX_LENGTH	20
 
-void user_doLogin();
+void session_login();
 
-int user_isLoggedIn();
+int session_isLoggedIn();
 
-const char* user_getName();
+const char* session_getName();
 
-void user_logout();
+void session_logout();
 
 #endif

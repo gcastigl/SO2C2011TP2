@@ -2,7 +2,7 @@
 
 // "user"@tty"n" "currPath" >
 #define SHELL_PROMPT	"%s@tty%d %s > "
-#define UPDATE_PROMPT	sprintf(shell_text, SHELL_PROMPT, user_getName(), tty_getCurrent() + 1, \
+#define UPDATE_PROMPT	sprintf(shell_text, SHELL_PROMPT, session_getName(), tty_getCurrent() + 1, \
 				tty_getCurrentTTY()->currPath);
 
 void excecuteCmd(char* buffer);
@@ -53,8 +53,8 @@ void shell_init() {
 void shell_update() {
 	checkReset();
 	checkTTY();
-	if (!user_isLoggedIn()) {
-		user_doLogin();
+	if (!session_isLoggedIn()) {
+		session_login();
 		printShellLabel();
 	}
 	if (bufferIsEmpty()) {

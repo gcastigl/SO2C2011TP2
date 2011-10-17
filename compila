@@ -37,7 +37,7 @@ gcc -m32 -g -c ../src/io.c -o io.o 							    -I../include -fno-builtin -fno-sta
 gcc -m32 -g -c ../src/shell.c -o shell.o 					    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/command.c -o command.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/tty.c -o tty.o 						    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/user.c -o user.o		 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -g -c ../src/session.c -o session.o		 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -g -c ../src/util/logger.c -o logger.o                 -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
 ld -melf_i386 -T ../src/link.ld -o kernel.bin *.o

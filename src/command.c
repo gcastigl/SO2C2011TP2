@@ -146,7 +146,7 @@ int scanf_cmd(int argc, char *argv[]) {
 }
 
 int logout(int argc, char *argv[]) {
-	user_logout();
+	session_logout();
 	return 0;
 }
 /*

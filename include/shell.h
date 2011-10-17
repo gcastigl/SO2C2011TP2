@@ -4,7 +4,7 @@
 #include <tty.h>
 #include <lib/string.h>
 #include <command.h>
-#include <user.h>
+#include <session.h>
 #include <driver/keyboard.h>
 #include <fs/file.h>
 
