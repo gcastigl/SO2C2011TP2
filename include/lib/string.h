@@ -20,4 +20,6 @@ void strncpy(char *to, const char *from, int size);
 
 int strIndexOf(char* str, char c, int startIndex);
 
+int strContains(char* str, char c);
+
 #endif

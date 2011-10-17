@@ -2,8 +2,8 @@
 #define TTY_H
 
 #include <defs.h>
-#include <fs.h>
 #include <lib/kheap.h>
+#include <fs/fs.h>
 #include <lib/stdlib.h>
 #include <driver/video.h>
 
@@ -21,7 +21,7 @@ typedef struct {
 	char* terminal;
 	int offset;
 	BUFFERTYPE buffer;
-	Directory* currDirectory;
+	u32int currDirectory;
 	char currPath[64];
 	int currPathOffset;
 	// FIXME: This values could be wrappeed up in a VideoAttributtes structure
@@ -36,6 +36,8 @@ void tty_setCurrent(int tty);
 int tty_getCurrent();
 
 TTY* tty_getCurrentTTY();
+
+void tty_getCurrentNode(fs_node_t* node);
 
 TTY* tty_getTTY(int index);
 

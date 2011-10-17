@@ -1,5 +1,6 @@
 #include <driver/ata_disk.h>
 #include <lib/stdlib.h>
+
 #define BIT(i)	(1 << (i))
 
 #define IS_REMOVABLE(D) 	printf("Is %sremovable\n", (D & BIT(7)) ? "" : "not ")

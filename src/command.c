@@ -146,12 +146,12 @@ int scanf_cmd(int argc, char *argv[]) {
 }
 
 int logout(int argc, char *argv[]) {
-	user_logout();
+	session_logout();
 	return 0;
 }
-
+/*
 int format(int argc, char *argv[]) {
 	printf("Formatting drive ATA0...\n");
 	fs_format();
 	return 0;
-}
+}*/

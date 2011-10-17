@@ -1,6 +1,9 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+#define PUBLIC 
+#define PRIVATE static
+
 #define byte unsigned char
 #define word short int
 #define dword int
@@ -32,7 +35,7 @@
 #define ACS_DATA        (ACS_PRESENT | ACS_DSEG | ACS_WRITE)
 #define ACS_STACK       (ACS_PRESENT | ACS_DSEG | ACS_WRITE)
 
-typedef enum { false = 0, true} boolean;
+typedef enum { false = 0, true } boolean;
 
 #define NULL	((void *)0)
 #define ASSERT(b) 
@@ -60,8 +63,12 @@ typedef void*           type_t;
 // ERROR CODES
 #define	E_DIR_EXISTS		1
 #define E_DIR_FULL			2
-#define E_OUT_OF_MEMORY		3
+#define	E_FILE_EXISTS		3
+#define E_OUT_OF_MEMORY		4
+#define E_CORRUPTED_FILE	5
+#define E_INVALID_ARG		6
 
+// FIXME: this should not be here!!
 typedef struct page
 {
   int present	: 1; //	Pagina presente en memoria
@@ -87,6 +94,8 @@ typedef struct page_dir
     page_table_t *tables[1024]; // punteros a las tablas de paginas
     int tablesPhysical[1024];   // direcciones físicas de las tablas de paginas
 } page_directory_t;
+
+int errno;
 
 #pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */
 

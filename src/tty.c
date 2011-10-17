@@ -21,9 +21,11 @@ void initTTY(int index) {
 	tty[index].buffer.tail = 0;
 	tty[index].bgColor = BLACK;
 	tty[index].fgColor = WHITE;
-	tty[index].currDirectory = directory_getRoot();
-	tty[index].currPathOffset = strlen(tty[index].currDirectory->name);
-	strcpy(tty[index].currPath, directory_getRoot()->name);
+	fs_node_t root;
+	fs_getRoot(&root);
+	tty[index].currDirectory = root.inode;
+	strcpy(tty[index].currPath, root.name);
+	tty[index].currPathOffset = strlen(root.name);
 }
 
 void tty_setCurrent(int tty) {
@@ -44,6 +46,11 @@ TTY* tty_getTTY(int index) {
 
 TTY* tty_getCurrentTTY() {
 	return &tty[currentTTY];
+}
+
+void tty_getCurrentNode(fs_node_t* node) {
+	u32int currentiNode = tty_getCurrentTTY()->currDirectory;
+	fs_getFsNode(node, currentiNode);
 }
 
 void tty_write(TTY* tty, char* buffer, u32int size) {

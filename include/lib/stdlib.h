@@ -14,5 +14,7 @@ void memcpy(void* to, void* from, u32int count);
 
 void panic(char* msg, int line, int lock);
 
+void* realloc(void* ptr, int newsize);
+
 #endif
 
