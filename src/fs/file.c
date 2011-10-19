@@ -1,7 +1,7 @@
 #include <fs/file.h>
 
 //FIXME: this cmds should't be here....
-int cd(int argc, char *argv[]) {
+int cd(int argc, char **argv) {
 	if (argc == 1) {
 		TTY* tty = tty_getCurrentTTY();
 		u32int currentiNode = tty->currDirectory;
@@ -16,7 +16,7 @@ int cd(int argc, char *argv[]) {
 	return 0;
 }
 
-int ls(int argc, char *argv[]) {
+int ls(int argc, char **argv) {
 	u32int currentiNode = tty_getCurrentTTY()->currDirectory;
 	fs_node_t current;
 	fs_getFsNode(&current, currentiNode);
@@ -39,16 +39,16 @@ int ls(int argc, char *argv[]) {
 	return 0;
 }
 
-int mkdir(int argc, char *argv[]) {
+int mkdir(int argc, char **argv) {
 	return 0;
 }
 
-int pwd(int argc, char *argv[]) {
+int pwd(int argc, char **argv) {
 	printf("%s\n", tty_getCurrentTTY()->currPath);
 	return 0;
 }
 
-int touch(int argc, char *argv[]) {
+int touch(int argc, char **argv) {
 	if(argc == 0 ) {
 		printf("touch: missing operand\n");
 	} else {
@@ -72,7 +72,7 @@ int touch(int argc, char *argv[]) {
 	return 0;
 }
 
-int cat(int argc, char *argv[]) {
+int cat(int argc, char **argv) {
 	return 0;
 }
 

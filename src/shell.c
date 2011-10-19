@@ -100,7 +100,7 @@ void shell_cleanScreen() {
  */
 void excecuteCmd(char* buffer) {
 	int cmdLen, argc;
-	char ** arguments;
+	char **argv;
 
 	char oldFormat = tty_getCurrTTYFormat();
 	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
@@ -108,8 +108,10 @@ void excecuteCmd(char* buffer) {
 	int cmdIndex = parse_cmd(buffer);
 	if (cmdIndex != -1) {
 		cmdLen = strlen(cmd_table[cmdIndex].name);
-		arguments = getArguments(buffer + cmdLen, &argc);
-		cmd_table[cmdIndex].func(argc, arguments);
+		argv = getArguments(buffer + cmdLen, &argc);
+		//cmd_table[cmdIndex].func(argc, arguments);
+		createProcess(cmd_table[cmdIndex].name, cmd_table[cmdIndex].func, argc, argv, DEFAULT_STACK_SIZE, &clean, 0,
+            FOREGROUND, READY, NORMAL);
 	} else if(buffer[0]!='\0') {
 		tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
 		printf("\n\tUnknown command\n");

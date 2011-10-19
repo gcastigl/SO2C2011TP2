@@ -5,15 +5,16 @@
 #include <lib/kheap.h>
 #include <util/logger.h>
 #include <tty.h>
-#include <shell.h>
 #define MAX_PROCESS_NAME 	32
 #define MAX_PROCESSES		64
 #define MAX_ARG             32
-
+#define P_RATIO             2
 enum {READY, BLOCKED, CHILD_WAIT, SLEEPING, RUNNING};
 enum {BACKGROUND, FOREGROUND};
 enum {OCCUPIED = 0, FREE};
+enum {VERY_LOW, LOW, NORMAL, HIGH};
 
+#define MAX_PRIORITY HIGH
 typedef struct {
 	int pid;
 	char name [MAX_PROCESS_NAME];
@@ -38,14 +39,11 @@ typedef struct {
 #define DEFAULT_STACK_SIZE 0x200
 
 void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** argv, int stacklength, void (*cleaner)(void), int tty,
-    int groundness, int status);
+    int groundness, int status, int priority);
 int getPID(void);
 PROCESS* getProcessByPID(int pid);
 PROCESS* getNextTask(void);
 void initScheduler(void);
 
-// Processes
-int idle(int argc, char **argv);
-int tty_p(int argc, char **argv);
 void clean(void);
 #endif

@@ -14,6 +14,7 @@
 #include <paging/paging.h>
 #include <process/task.h>
 #include <process/process.h>
+#include <command.h>
 #include <permission/user.h>
 
 int getNextPID();

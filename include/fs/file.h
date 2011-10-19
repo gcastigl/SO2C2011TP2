@@ -11,15 +11,15 @@ typedef struct {
 	u32int index;
 } FILE;
 
-int cd(int argc, char *argv[]);
+int cd(int argc, char **argv);
 
-int ls(int argc, char *argv[]);
+int ls(int argc, char **argv);
 
-int mkdir(int argc, char *argv[]);
+int mkdir(int argc, char **argv);
 
-int pwd(int argc, char *argv[]);
+int pwd(int argc, char **argv);
 
-int touch(int argc, char *argv[]);
+int touch(int argc, char **argv);
 
 /*
 void createFilesystem();

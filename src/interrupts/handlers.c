@@ -2,6 +2,8 @@
 
 extern int schedulerActive;
 extern void switchProcess(void);
+int taskSwitch = true;
+
 char *exceptionString[32] = {
     "Division by zero exception",
     "Debug exception",
@@ -37,13 +39,21 @@ char *exceptionString[32] = {
     "Reserved"
 };
 
+void disableTaskSwitch() {
+    taskSwitch = false;
+}
+
+void enableTaskSwitch() {
+    taskSwitch = true;
+}
+
 //Timer Tick
 void timerTickHandler(registers_t regs) {
     _increaseTTCounter();
     if (schedulerActive == true) {
-        //if ((_getTTCounter() % 2)) {
+        if (taskSwitch == true) {
             switchProcess();
-        //}
+        }
     }
 }
 

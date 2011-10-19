@@ -21,9 +21,9 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 		//fs_init();
         initScheduler();
 		_initTTCounter();
-		createProcess("TTY 1", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, -1, BACKGROUND, READY);
+		createProcess("tty1", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, -1, BACKGROUND, READY, NORMAL);
 	_sti();
-	while (1) {}
+    while (1);
 	return 0;
 }
 

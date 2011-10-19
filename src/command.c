@@ -1,6 +1,6 @@
 #include <command.h>
 
-int echo_cmd(int argc, char *argv[]) {
+int echo_cmd(int argc, char **argv) {
 	int i;
 	if (argc > 0) {
 		for( i = 0; i < argc; i++) {
@@ -10,17 +10,17 @@ int echo_cmd(int argc, char *argv[]) {
 	return 0;
 }
 
-int restart_cmd(int argc, char *argv[]) {
+int restart_cmd(int argc, char **argv) {
 	_reset();		// Will neva get through this line!
 	return 0xCA11AB1E;
 }
 
-int clear_cmd(int argc, char *argv[]) {
+int clear_cmd(int argc, char **argv) {
 	shell_cleanScreen();
 	return 0;
 }
 
-int help_cmd(int argc, char *argv[]) {
+int help_cmd(int argc, char **argv) {
 	int cmdIndex;
 	if (argc == 1) {
 		cmdIndex = shell_getCmdIndex(argv[0]);
@@ -48,14 +48,17 @@ int calculateCpuSpeed(int (*method)()) {
 	int i = iterations;
 	int total = 0;
 	printf("Calculating CPU speed, please wait...\n");
+    disableTaskSwitch();
 	while (i-- > 0) {
 		cpuspeed = (*method)();
 		total += cpuspeed / iterations;
+        log(L_DEBUG, "Iteration %d...", iterations - i);
 	}
+    enableTaskSwitch();
 	return total;
 }
 
-int getCPUspeed_cmd(int argc, char *argv[]) {
+int getCPUspeed_cmd(int argc, char **argv) {
 	int speed;
 	if (_cpuIdTest() != 1) {
 		printf("error: cpuid instruction is not supported.\n");
@@ -79,13 +82,13 @@ int getCPUspeed_cmd(int argc, char *argv[]) {
 }
 
 
-int random_cmd(int argc, char *argv[]) {
+int random_cmd(int argc, char **argv) {
 	int rand = random();
 	printf("%d\n", rand);
 	return rand;
 }
 
-int setAppearance_cmd(int argc, char *argv[]) {
+int setAppearance_cmd(int argc, char **argv) {
 	if (argc != 2) {
 		printf("You need to call this function with 2 colors\n");
 	} else {
@@ -104,14 +107,14 @@ int setAppearance_cmd(int argc, char *argv[]) {
 	return 0;
 }
 
-int getchar_cmd(int argc, char *argv[]) {
+int getchar_cmd(int argc, char **argv) {
 	printf("Please type in a character\n");
 	char c = getchar();
 	printf("You pressed: %c\n", c);
 	return 0;
 }
 
-int printf_cmd(int argc, char *argv[]) {
+int printf_cmd(int argc, char **argv) {
 	printf("testing printf...\n\n");
 	printf("Printing a double: %f\n", 123.456789);
 	printf("Printing an integer: %d\n", 99);
@@ -123,7 +126,7 @@ int printf_cmd(int argc, char *argv[]) {
 	return 0;
 }
 
-int scanf_cmd(int argc, char *argv[]) {
+int scanf_cmd(int argc, char **argv) {
 	int n;
 	char vec[50];
 	float f;
@@ -145,12 +148,27 @@ int scanf_cmd(int argc, char *argv[]) {
 	return 0;
 }
 
-int logout(int argc, char *argv[]) {
+int logout(int argc, char **argv) {
 	session_logout();
 	return 0;
 }
+
+//Processes
+
+int idle_p(int argc, char **argv) {
+    while(1) {}
+    return 0;
+}
+
+int tty_p(int argc, char **argv) {
+    int index = initTTY();
+    while(1) {
+        shell_update(index);
+    }
+}
+
 /*
-int format(int argc, char *argv[]) {
+int format(int argc, char **argv) {
 	printf("Formatting drive ATA0...\n");
 	fs_format();
 	return 0;

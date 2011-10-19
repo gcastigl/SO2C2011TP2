@@ -3,7 +3,6 @@
 
 #include <defs.h>
 #include <io.h>
-#include <command.h>
 #include <process/task.h>
 #include <asm/interrupts.h>
 #include <util/logger.h>
@@ -16,7 +15,9 @@ void init_descriptor_tables();
 void timerTickHandler(registers_t regs);
 void keyboardHandler(registers_t regs);
 void systemCallHandler(int sysCallNumber, void ** args);
-
+//Used only by getCPUspeed
+void disableTaskSwitch();
+void enableTaskSwitch();
 isr_t interruptHandlers[256];
 
 #endif
