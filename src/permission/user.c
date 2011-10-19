@@ -41,13 +41,13 @@ PRIVATE void _logUser(int uid) {
 }
 
 PUBLIC void user_init() {
-	log(L_INFO, "user init");
+	//log(L_INFO, "user init");
 	_resetUsers();
 	user_add(_parseUser("root:x:0:0:root:/root:/bin/bash"));
 	user_add(_parseUser("qcho:x:10:10:Qcho:/home/qcho:/bin/bash"));
 
 	for (int i = 0; i < USER_MAX; ++i) {
-		_logUser(i);
+		//_logUser(i);
 	}
 }
 
@@ -62,7 +62,7 @@ PUBLIC char *user_getName(int uid) {
 PRIVATE user_t *_parseUser(char* line) {
     user_t *user;
     user = kmalloc(sizeof(user_t));
-    sscanf(line, "%s:%s:%d:%d:%s:s:s",
+    sscanf(line, "%s:%s:%d:%d:%s:%s:%s",
         user->userName,
         user->password,
         user->uid,

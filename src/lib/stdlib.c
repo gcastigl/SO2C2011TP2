@@ -40,9 +40,9 @@ void* realloc(void* ptr, int newsize) {
 
 void panic(char* str, int line ,int lock) {
     _cli();
-//    char format = video_getFormattedColor(WHITE, BLACK);
+//  char format = video_getFormattedColor(WHITE, BLACK);
     char *video = (char*) VIDEO_ADDRESS + 160 * (line - 1);
-    //video_clearScreen(format);
+//  video_clearScreen(format);
     int i;
     int msgLength = strlen(str);
     for (i = 0; i < msgLength * 2; i+=2) {

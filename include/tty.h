@@ -7,7 +7,7 @@
 #include <lib/stdlib.h>
 #include <driver/video.h>
 
-#define MAX_TTYs		8
+#define MAX_TTYs		1
 
 #define TTY_BUFFER_SIZE	10
 
@@ -29,7 +29,7 @@ typedef struct {
 	char fgColor;
 } TTY;
 
-void tty_init();
+int initTTY();
 
 void tty_setCurrent(int tty);
 

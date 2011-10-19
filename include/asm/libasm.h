@@ -14,7 +14,7 @@ void _mascaraPIC1 (byte mascara);  /* Escribe mascara de PIC1 */
 void _mascaraPIC2 (byte mascara);  /* Escribe mascara de PIC2 */
 
 void copy_page_physical(int,int);
-void loadStackFrame(PROCESS*,int, int, char**, int);
+int loadStackFrame(int (*func)(int argc, char** argv),int stackStart, int argc, char** argv, void (*cleaner)(void));
 void switchProcess(void);
 void _cli(void);        /* Deshabilita interrupciones  */
 void _sti(void);	 /* Habilita interrupciones  */

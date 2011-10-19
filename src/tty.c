@@ -1,20 +1,11 @@
 #include <tty.h>
 
-void initTTY(int index);
+PRIVATE TTY tty[MAX_TTYs];
+PRIVATE int currentTTY = 0;
+PRIVATE int activeTTYs = 0;
 
-static TTY tty[MAX_TTYs];
-static int currentTTY = 0;
-
-void tty_init() {
-	int i;
-	for (i = 0; i < MAX_TTYs; i++) {
-		initTTY(i);
-	}
-	char format = video_getFormattedColor(tty[currentTTY].fgColor, tty[currentTTY].bgColor);
-	video_clearScreen(format);
-}
-
-void initTTY(int index) {
+int initTTY() {
+    int index = activeTTYs++;
 	tty[index].terminal = (char*) kmalloc(TOTAL_VIDEO_SIZE);
 	tty[index].offset = 0;
 	tty[index].buffer.head = 0;
@@ -26,6 +17,8 @@ void initTTY(int index) {
 	tty[index].currDirectory = root.inode;
 	strcpy(tty[index].currPath, root.name);
 	tty[index].currPathOffset = strlen(root.name);
+	
+    return index;
 }
 
 void tty_setCurrent(int tty) {

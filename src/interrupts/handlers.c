@@ -41,9 +41,9 @@ char *exceptionString[32] = {
 void timerTickHandler(registers_t regs) {
     _increaseTTCounter();
     if (schedulerActive == true) {
-        if ((_getTTCounter() % 2)) {
+        //if ((_getTTCounter() % 2)) {
             switchProcess();
-        }
+        //}
     }
 }
 
@@ -62,11 +62,25 @@ void systemCallHandler(int sysCallNumber, void ** args) {
 			break;
 	}
 }
-
 // This gets called from our ASM interrupt handler stub.
 void isr_handler(registers_t regs) {
     
     if (regs.int_no < 32) {
+        log(L_ERROR, "%s (%d): \n\
+ ds: %d\n\
+ edi: %d\n\
+ esi: %d\n\
+ ebp: %d\n\
+ esp: %d\n\
+ ebx: %d\n\
+ edx: %d\n\
+ ecx: %d\n\
+ eax: %d\n\
+ eip: %d\n\
+ cs: %d\n\
+ ss: %d", exceptionString[regs.int_no], regs.err_code, regs.ds, \
+regs.edi, regs.esi, regs.ebp, regs.esp, regs.ebx, regs.edx, regs.ecx,\
+regs.eax, regs.eip, regs.cs, regs.ss);
         panic(exceptionString[regs.int_no], 1, true);
     }
     /*

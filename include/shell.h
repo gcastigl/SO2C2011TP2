@@ -31,7 +31,7 @@ void shell_init();
  *	no vacio) y en cuyo caso, se guaradra en el buffer de la shell y si es
  *	necesario, manda la ejecucion de un programa.
  */
-void shell_update();
+void shell_update(int index);
 
 void shell_cleanScreen();
 

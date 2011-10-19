@@ -6,6 +6,7 @@
 #include <command.h>
 #include <process/task.h>
 #include <asm/interrupts.h>
+#include <util/logger.h>
 #include <interrupts/defs.h>
 
 void initBasicHandlers();

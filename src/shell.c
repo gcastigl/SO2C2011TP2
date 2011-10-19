@@ -50,9 +50,11 @@ void shell_init() {
 	newTTY = -1;
 }
 
-void shell_update() {
+void shell_update(int index) {
 	checkReset();
 	checkTTY();
+//	if (index != newTTY)
+ //       return;
 	if (!session_isLoggedIn()) {
 		session_login();
 		printShellLabel();

@@ -3,27 +3,29 @@
 
 #include <defs.h>
 #include <lib/kheap.h>
-
+#include <util/logger.h>
+#include <tty.h>
+#include <shell.h>
 #define MAX_PROCESS_NAME 	32
 #define MAX_PROCESSES		64
 #define MAX_ARG             32
-#define FREE 1
 
 enum {READY, BLOCKED, CHILD_WAIT, SLEEPING, RUNNING};
 enum {BACKGROUND, FOREGROUND};
+enum {OCCUPIED = 0, FREE};
 
 typedef struct {
 	int pid;
 	char name [MAX_PROCESS_NAME];
 	int priority;
 	int tty;
-	int foreground; 
+	int groundness; 
 	int lastCalled;
 	int sleep;
 	int status;
 	int parent;
 	int ESP;
-	int freeSlot;
+	int slotStatus;
 	int stackstart;
 	int stacksize;
 	int cpu;
@@ -33,16 +35,10 @@ typedef struct {
 	void *info;
 } PROCESS;
 
-typedef struct {
-	int EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX,  EIP, CS, EFLAGS;
-	void*retaddr;
-	int argc;
-	char** argv;
-} STACK_FRAME;
+#define DEFAULT_STACK_SIZE 0x200
 
-void createProcessAt(char* name, int (*processFunc)(int,char**),int tty, int argc,
-    char** argv, int stacklength, int priority, int isFront, int status);
-
+void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** argv, int stacklength, void (*cleaner)(void), int tty,
+    int groundness, int status);
 int getPID(void);
 PROCESS* getProcessByPID(int pid);
 PROCESS* getNextTask(void);
@@ -50,5 +46,6 @@ void initScheduler(void);
 
 // Processes
 int idle(int argc, char **argv);
-
+int tty_p(int argc, char **argv);
+void clean(void);
 #endif
