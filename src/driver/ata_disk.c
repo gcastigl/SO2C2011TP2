@@ -47,6 +47,7 @@ void _read(int ata, char * ans, unsigned short sector, int offset, int count) {
 	char tmp[512];
 	sendComm(ata, LBA_READ, sector);
 	// Now read sector
+	//printf("reading [%d, %d]%d...\n", sector, offset, count);
 	int b;
 	unsigned short data;
 	for (b = 0;b < 512; b+=2) {
@@ -60,8 +61,8 @@ void _read(int ata, char * ans, unsigned short sector, int offset, int count) {
 }
 
 void translateBytes(char * ans, unsigned short databyte) {
-	ans[0] = databyte & 0xFF;
-	ans[1] = databyte >> 8;
+	ans[0] = databyte & 0xff;
+	ans[1] = (databyte >> 8) & 0xFF;
 }
 
 void ata_write(int ata, void * msg, int bytes, unsigned short sector, int offset) {
@@ -100,7 +101,7 @@ void _write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
 	}
 	sendComm(ata, LBA_WRITE, sector);
 	// Write updated sector
-	for(i = 0; i <= 512; i += 2) {
+	for(i = 0; i < 512; i += 2) {
 		writeDataToRegister(ata, tmp[i + 1], tmp[i]);
 	}
 }
@@ -112,8 +113,7 @@ void writeDataToRegister(int ata, char upper, char lower){
 	// Wait for driver's ready signal.
 	while (!(_portw_in(ata + WIN_REG7) & BIT(3)))
 		;
-
-	out = (upper << 8) | lower;
+	out = upper << 8 | (lower & 0xff);
 	_portw_out(ata + WIN_REG0, out);
 
 	_sti();
