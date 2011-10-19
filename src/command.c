@@ -52,7 +52,6 @@ int calculateCpuSpeed(int (*method)()) {
 	while (i-- > 0) {
 		cpuspeed = (*method)();
 		total += cpuspeed / iterations;
-        log(L_DEBUG, "Iteration %d...", iterations - i);
 	}
     enableTaskSwitch();
 	return total;

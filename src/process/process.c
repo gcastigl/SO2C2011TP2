@@ -64,7 +64,6 @@ void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** 
         PROCESS *p;
         p = getProcessByPID(currentPID);
         if (p != NULL) {
-            log(L_DEBUG, "Locking %s", p->name);
             p->status = CHILD_WAIT;
             p->lastCalled = 0;
             switchProcess();
@@ -82,8 +81,6 @@ PROCESS* getNextTask(void) {
     
     for (i = 0; i < MAX_PROCESSES; i++) {
         proc=&process[i];
-        if (proc->slotStatus != FREE)
-            log(L_INFO, "Checking for %s", proc->name);
         if ((proc->slotStatus != FREE) && ((proc->status != BLOCKED) && (proc->status != CHILD_WAIT))) {
             proc->lastCalled++;
             temp = proc->priority * P_RATIO + proc->lastCalled;
@@ -104,7 +101,6 @@ int getNextProcess(int oldESP) {
     proc2 = getProcessByPID(currentPID);
     proc = getNextTask();
     proc->lastCalled = 0;
-    log(L_INFO, "Next task: %s", proc->name);
     if (firstTime == false) {
         saveESP(oldESP); // el oldESP esta el stack pointer del proceso
     } else {
@@ -128,12 +124,10 @@ void clean(void) {
     PROCESS *temp;
 	//int i;
     temp = getProcessByPID(currentPID);
-    log(L_INFO, "Cleaning process %s", temp->name);
 	temp->slotStatus = FREE;
     temp = getProcessByPID(temp->parent);
 	if (temp != NULL) {
 	    if (temp->status == CHILD_WAIT) {
-            log(L_DEBUG, "Unlocking %s", temp->name);
             temp->status = READY;
 	    }
 	}
