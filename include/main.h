@@ -19,25 +19,5 @@
 
 int getNextPID();
 
-/* __write
-*
-* Recibe como parametros:
-* - File Descriptor
-* - Buffer del source
-* - Cantidad
-*
-**/
-u32int __write(int fd, const void* buffer, u32int count);
-
-/* __read
-*
-* Recibe como parametros:
-* - File Descriptor
-* - Buffer a donde escribir
-* - Cantidad
-*
-**/
-u32int __read(int fd, void* buffer, u32int count);
-
 #endif
 

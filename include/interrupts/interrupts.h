@@ -3,10 +3,10 @@
 
 #include <defs.h>
 #include <io.h>
-#include <process/task.h>
 #include <asm/interrupts.h>
 #include <util/logger.h>
 #include <interrupts/defs.h>
+#include <process/process.h>
 
 void initBasicHandlers();
 extern void _gdt_flush(u32int);

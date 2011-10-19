@@ -63,3 +63,7 @@ u32int __write(int fd, const void * buffer, u32int count) {
 	return count;
 }
 
+u32int yield(void) {
+    _SysCall(SYSTEM_YIELD);
+    return 0;
+}

@@ -70,6 +70,9 @@ void systemCallHandler(int sysCallNumber, void ** args) {
 		case SYSTEM_READ:
 			sysRead((int) args[0], args[1],(int)args[2]);
 			break;
+		case SYSTEM_YIELD:
+            switchProcess();
+            break;
 	}
 }
 // This gets called from our ASM interrupt handler stub.

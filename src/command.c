@@ -47,6 +47,7 @@ int calculateCpuSpeed(int (*method)()) {
 	int iterations = 10;
 	int i = iterations;
 	int total = 0;
+    yield();
 	printf("Calculating CPU speed, please wait...\n");
     disableTaskSwitch();
 	while (i-- > 0) {
