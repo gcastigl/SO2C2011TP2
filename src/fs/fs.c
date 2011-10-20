@@ -7,7 +7,7 @@ PRIVATE void fs_load();
 
 PRIVATE void _loadDirectory(int inodeNumber);
 
-PRIVATE void _createFile(u32int inode, char* name, u32int dirInode);
+PRIVATE void _createFile(u32int inodeNumber, u32int fileInodeNumber, char* name);
 
 PRIVATE void _initInode(u32int inodeNumber, char* name, u32int flags);
 PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent);
@@ -83,8 +83,8 @@ PRIVATE void fs_create() {
 	_initInode_dir(usrInode, "usr", rootInode);
 
 	// add dev as sub-directory of root
-	_createFile(rootInode, "dev", devInode);
-	_createFile(rootInode, "usr", usrInode);
+	_createFile(rootInode, devInode, NULL);
+	_createFile(rootInode, usrInode, NULL);
 }
 
 PRIVATE void fs_load() {
@@ -99,7 +99,7 @@ int fs_createFile(u32int parentiNode, char* name) {
 	}
 	int inode = diskManager_nextInode();
 	_initInode(inode, name, FS_FILE);
-	_createFile(parentiNode, name, inode);
+	_createFile(parentiNode, inode, name);
 	return 0;
 }
 
@@ -118,13 +118,21 @@ PRIVATE void _initInode(u32int inodeNumber, char* name, u32int flags) {
 
 PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent) {
 	_initInode(inodeNumber, name, FS_DIRECTORY);
-	_createFile(inodeNumber, ".", inodeNumber);	// link to self
-	_createFile(inodeNumber, "..", parent);		// link to parent
+	_createFile(inodeNumber, inodeNumber, ".");	// link to self
+	_createFile(inodeNumber, parent, "..");		// link to parent
 }
 
-// FIXME: name parameter should not be a parameter...
+/*
+ * If name == NULL, then the new file is created with the name specified by fileInodeNumber
+ */
 // FIXME: There should be a call to realloc! (need to be implemented)
-PRIVATE void _createFile(u32int inodeNumber, char* name, u32int dirInode) {
+PRIVATE void _createFile(u32int inodeNumber, u32int fileInodeNumber, char* name) {
+	char fileName[MAX_NAME_LENGTH];
+	if (name == NULL) {
+		diskManager_getFileName(fileInodeNumber, fileName);
+	} else {
+		strcpy(fileName, name);
+	}
 	int currLength;
 	char* contents = diskManager_readContents(inodeNumber, &currLength);
 	iNode* inode = &inodes[inodeNumber];
@@ -133,7 +141,7 @@ PRIVATE void _createFile(u32int inodeNumber, char* name, u32int dirInode) {
 		errno = E_INVALID_ARG;
 		return;
 	}
-	int nameLen = strlen(name) + 1;
+	int nameLen = strlen(fileName) + 1;
 	int newLength = currLength + 2 * sizeof(u32int) + nameLen;
 	char* newContents = kmalloc(newLength);
 	if (contents != NULL) {
@@ -144,9 +152,9 @@ PRIVATE void _createFile(u32int inodeNumber, char* name, u32int dirInode) {
 	inode->length = newLength;
 	int offset = currLength;
 
-	memcpy(newContents + offset, &dirInode, sizeof(u32int));	offset += sizeof(u32int);
-	memcpy(newContents + offset, &nameLen, sizeof(u32int));		offset += sizeof(u32int);
-	memcpy(newContents + offset, name, nameLen); 				offset += nameLen;
+	memcpy(newContents + offset, &fileInodeNumber, sizeof(u32int));	offset += sizeof(u32int);
+	memcpy(newContents + offset, &nameLen, sizeof(u32int));			offset += sizeof(u32int);
+	memcpy(newContents + offset, fileName, nameLen); 				offset += nameLen;
 	diskManager_writeContents(inode, newContents, newLength);
 	//kfree(contents);
 }
