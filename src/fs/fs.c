@@ -5,6 +5,8 @@ PRIVATE iNode *inodes;				// List of file nodes.
 PRIVATE void fs_create();
 PRIVATE void fs_load();
 
+PRIVATE void _loadDirectory(int inodeNumber);
+
 PRIVATE void _createFile(u32int inode, char* name, u32int dirInode);
 
 PRIVATE void _initInode(u32int inodeNumber, char* name, u32int flags);
@@ -24,12 +26,17 @@ PRIVATE void fs_close(fs_node_t *node);
 
 void fs_init() {
 	diskManager_init();
-	if (false && diskManager_validateHeader()) {
+	int i;
+	inodes = kmalloc(INODES * sizeof(iNode));
+	for (i = 0; i < INODES; i++) {
+		inodes[i].inodeId = -1;
+		inodes[i].length = 0;
+	}
+	if (diskManager_validateHeader()) {
 		fs_load();
 	} else {
 		fs_create();
 	}
-	//while(1);
 }
 
 void fs_getRoot(fs_node_t* fsNode) {
@@ -37,10 +44,12 @@ void fs_getRoot(fs_node_t* fsNode) {
 }
 
 void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
-	diskManager_getFileName(inodeNumber, fsNode->name);
-	//printf("name: %s\n", fsNode->name);
-	diskManager_readiNode(&inodes[inodeNumber], inodeNumber);
+	if (inodes[inodeNumber].inodeId == -1) {				// the inode is not loaded on memory
+		diskManager_readiNode(&inodes[inodeNumber], inodeNumber);
+	}
+
 	iNode* inode = &inodes[inodeNumber];
+	diskManager_getFileName(inodeNumber, fsNode->name);
 	fsNode->flags = inode->flags;
 	fsNode->gid = inode->gid;
 	fsNode->uid = inode->uid;
@@ -63,11 +72,6 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 
 PRIVATE void fs_create() {
 	diskManager_writeHeader(INODES);				// Save header for the next time the system starts...
-	int i;
-	inodes = kmalloc(INODES * sizeof(iNode));
-	for (i = 0; i < INODES; i++) {
-		inodes[i].length = 0;
-	}
 	// Initialize root directory
 	int rootInode = diskManager_nextInode();
 	_initInode_dir(rootInode, "/", rootInode);
@@ -84,7 +88,7 @@ PRIVATE void fs_create() {
 }
 
 PRIVATE void fs_load() {
-	// TODO: hacer!
+	_loadDirectory(0);			// Initialize root
 }
 
 int fs_createFile(u32int parentiNode, char* name) {
@@ -147,7 +151,13 @@ PRIVATE void _createFile(u32int inodeNumber, char* name, u32int dirInode) {
 	//kfree(contents);
 }
 
-
+PRIVATE void _loadDirectory(int inodeNumber) {
+	int i = 0;
+	fs_node_t curr;
+	fs_getFsNode(&curr, inodeNumber);
+	while(fs_readdir(&curr, i++) != NULL)
+		;
+}
 
 
 

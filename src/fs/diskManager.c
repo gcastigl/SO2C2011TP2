@@ -101,7 +101,6 @@ void diskManager_readiNode(iNode *inode, int inodeNumber) {
 char *diskManager_readContents(u32int inodeNumber, int *length) {
 	FilePage page;
 	_getiNode(inodeNumber, &page);
-	//printf("%d) reading contents from page: %d, %d - total %d/ used: %d\n", inodeNumber, page.nextSector, page.nextOffset, page.totalLength, page.usedBytes);
 	char* contents = kmalloc(page.usedBytes);
 	*length = page.usedBytes;
 	if (page.usedBytes == 0) {
