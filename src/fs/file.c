@@ -27,7 +27,7 @@ int ls(int argc, char *argv[]) {
 		if ((node->flags&0x7) == FS_DIRECTORY) {
 			printf("\t(directory)\n");
 		} else {
-			printf("\tcontents:\n");
+			printf("\(file):\n");
 			/*char buf[256];
 			u32int sz = read_fs(fsnode, 0, 256, buf);
 			int j;

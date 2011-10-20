@@ -11,22 +11,17 @@
 
 #define MAGIC_NUMBER			123456
 
-#define MODE_ALL_CONTENTS	-1
-#define MODE_NO_CONTENTS	0
-
 typedef struct {
 	// fields required by posix, this is still missing some fields
-	// u32int sector;
-	// u32int offset;
-	char name[MAX_NAME_LENGTH];
-    u32int deviceId;        		// This identifies the device containing the file
+	u32int sector;
+	u32int offset;
+    u32int inodeId;        			// Identifies the structure
     u32int uid;        				// The owning user.
     u32int gid;         			// The owning group.
     u32int flags;       			// Includes the node type.
     u32int length;      			// Size of the file, in bytes.
     u32int impl;        			// An implementation-defined number.
     u32int mask;        			// The permissions mask.
-	char* contents;
 } iNode;
 
 typedef struct {
@@ -36,11 +31,11 @@ typedef struct {
 } FSHeader;
 
 typedef struct {
+	u32int totalLength;
 	u32int magic;
 	u32int nextSector;
 	u32int nextOffset;
 	u32int usedBytes;
-	u32int totalLength;
 	boolean hasNextPage;
 } FilePage;
 
@@ -62,8 +57,14 @@ void diskManager_writeHeader();
 
 int diskManager_nextInode();
 
-void diskManager_updateiNodeContents(iNode* inode, u32int inodeNumber);
+void diskManager_writeContents(iNode* inode, char* contents, u32int length);
 
-int diskManager_readiNode(iNode* inode, int inodeNumber, int mode);
+void diskManager_readiNode(iNode *inode, int inodeNumber);
+
+void diskManager_getFileName(u32int inode, char* name);
+
+void diskManager_setFileName(u32int inode, char* name);
+
+char *diskManager_readContents(u32int inodeNumber, int* length);
 
 #endif

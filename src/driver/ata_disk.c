@@ -9,6 +9,8 @@
 #define LBA_SUP(D) 			printf("LBA is %ssupported\n", (D & BIT(9)) ? "" : "not")
 #define DMA_QUEUED_SUP(D) 	printf("DMA QUEUED supported\n", (D & BIT(1)) ? "" : "not ")
 
+static char DISK[20][512];
+
 void sendComm(int ata, int rdwr, unsigned short sector);
 void _read(int ata, char * ans, unsigned short sector, int offset, int count);
 void _write(int ata, char * msg, int bytes, unsigned short sector, int offset);
@@ -44,7 +46,9 @@ void ata_read(int ata, void* msg, int bytes, unsigned short sector, int offset) 
 }
 
 void _read(int ata, char * ans, unsigned short sector, int offset, int count) {
-	char tmp[512];
+	//printf("_read: [%d, %d]%d\n", sector, offset, count);
+	memcpy(ans, &DISK[sector][offset], count);
+	/*char tmp[512];
 	sendComm(ata, LBA_READ, sector);
 	// Now read sector
 	//printf("reading [%d, %d]%d...\n", sector, offset, count);
@@ -57,7 +61,7 @@ void _read(int ata, char * ans, unsigned short sector, int offset, int count) {
 	int i;
 	for (i = 0;i < count; i++) {
 		ans[i] = tmp[offset + i];
-	}
+	}*/
 }
 
 void translateBytes(char * ans, unsigned short databyte) {
@@ -91,7 +95,9 @@ void ata_write(int ata, void * msg, int bytes, unsigned short sector, int offset
 }
 
 void _write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
-	int i = 0;
+	//printf("_write: [%d, %d]%d\n", sector, offset, bytes);
+	memcpy(&DISK[sector][offset], msg, bytes);
+	/*int i = 0;
 	char tmp[512];
 	// Read actual sector because ATA always writes a complete sector!
 	// Don't step previour values!
@@ -103,7 +109,7 @@ void _write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
 	// Write updated sector
 	for(i = 0; i < 512; i += 2) {
 		writeDataToRegister(ata, tmp[i + 1], tmp[i]);
-	}
+	}*/
 }
 
 void writeDataToRegister(int ata, char upper, char lower){
