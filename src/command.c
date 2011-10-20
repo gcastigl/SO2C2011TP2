@@ -162,6 +162,7 @@ int idle_p(int argc, char **argv) {
 
 int tty_p(int argc, char **argv) {
     int index = initTTY();
+    log(L_DEBUG, "Created tty %d", index);
     while(1) {
         shell_update(index);
     }

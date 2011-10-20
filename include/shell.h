@@ -12,8 +12,6 @@
 #define WELCOME_MSG	"\t\t\t\t\tWelcome to GAT O.S.\n\tFor a list of availables commands \
 please type in help\n"
 
-#define BUFFER_SIZE	1024
-
 #define CMD_FAIL	0
 #define CMD_OK		1
 
@@ -24,8 +22,6 @@ typedef struct {
 	char* help;
 	int (*func)(int argc, char **argv);
 } cmd_table_entry;
-
-void shell_init();
 
 /*
  *	Al ser invoacada se fija si se presiono una tecla (buffer del teclado

@@ -9,18 +9,14 @@
 
 #define MAX_TTYs		1
 
-#define TTY_BUFFER_SIZE	10
+#define BUFFER_SIZE	1024
 
 typedef struct {
-	int buffer[TTY_BUFFER_SIZE];
-	int head;
-	int tail;
-} BUFFERTYPE;
-
-typedef struct {
+    int id;
 	char* terminal;
 	int offset;
-	BUFFERTYPE buffer;
+	char buffer[BUFFER_SIZE];
+    int bufferOffset;
 	u32int currDirectory;
 	char currPath[64];
 	int currPathOffset;

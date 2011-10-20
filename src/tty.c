@@ -1,15 +1,15 @@
 #include <tty.h>
 
 PRIVATE TTY tty[MAX_TTYs];
-PRIVATE int currentTTY = 0;
-PRIVATE int activeTTYs = 0;
+int currentTTY = 0;
+PUBLIC int activeTTYs = 0;
 
 int initTTY() {
     int index = activeTTYs++;
+    tty[index].id = index;
 	tty[index].terminal = (char*) kmalloc(TOTAL_VIDEO_SIZE);
 	tty[index].offset = 0;
-	tty[index].buffer.head = 0;
-	tty[index].buffer.tail = 0;
+    tty[index].bufferOffset = 0;
 	tty[index].bgColor = BLACK;
 	tty[index].fgColor = WHITE;
 	fs_node_t root;

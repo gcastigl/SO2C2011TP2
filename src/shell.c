@@ -8,7 +8,7 @@
 void excecuteCmd(char* buffer);
 int parse_cmd(char* buffer);
 char** getArguments(char* buffer, int* argc, int *background);
-void cleanBuffer();
+void cleanBuffer(TTY* tty);
 void printShellLabel();
 //FIXME: checkReset & checkTTY could be in a separated keyboard manager file
 void checkReset();
@@ -16,9 +16,9 @@ void checkTTY();
 
 static char shell_text[15];
 static char* argv[MAX_ARG_DIM];
-static int currPos;
 static char shellBuffer[BUFFER_SIZE];
-static int newTTY;
+static int newTTY = -1;
+extern PUBLIC int activeTTYs;
 
 /*
  *	Tabla de comandos disponibles al usuario en esta shell
@@ -44,15 +44,13 @@ cmd_table_entry cmd_table[] = {
 	{"", "", NULL}
 };
 
-
-void shell_init() {
-	cleanBuffer();
-	newTTY = -1;
-}
-
 void shell_update(int index) {
 	checkReset();
 	checkTTY();
+	TTY* tty = tty_getCurrentTTY();
+	if (tty->id != index) {
+        return;
+	}
 	if (!session_isLoggedIn()) {
 		session_login();
 		printShellLabel();
@@ -61,25 +59,23 @@ void shell_update(int index) {
 		return;
 	}
 	char c = getKeyFromBuffer();
-	if (currPos >= BUFFER_SIZE) {
+	if (tty->bufferOffset >= BUFFER_SIZE) {
 		return;
 	}
 	if (c == '\n') {
 		printf("\n");
-		excecuteCmd(shellBuffer);
+		excecuteCmd(tty->buffer);
 		printShellLabel();
-		cleanBuffer();
+		cleanBuffer(tty);
 	} else if (c == '\b') {
-		if (currPos > 0) {
+		if (tty->bufferOffset > 0) {
 			printf("%c", c);
-			currPos--;
-			shellBuffer[currPos] = '\0';
+			tty->buffer[--tty->bufferOffset] = '\0';
 		}
 	} else {
 		printf("%c", c);
-		shellBuffer[currPos] = c;
-		shellBuffer[currPos + 1] = '\0';
-		currPos++;
+		tty->buffer[tty->bufferOffset] = c;
+		tty->buffer[++tty->bufferOffset] = '\0';
 	}
 }
 
@@ -161,9 +157,9 @@ char** getArguments(char* buffer, int* argc, int *background) {
 	return argv;
 }
 
-void cleanBuffer() {
-	currPos = 0;
-	shellBuffer[0] = '\0';
+void cleanBuffer(TTY *tty) {
+    tty->bufferOffset = 0;
+	tty->buffer[0] = '\0';
 }
 
 cmd_table_entry* shell_getCmdsTable() {
@@ -189,9 +185,8 @@ void checkReset() {
 void checkTTY() {
 	if (IS_CTRL() && newTTY == -1) {
 		int i;
-		for (i = 0; i < MAX_TTYs; ++i) {
+		for (i = 0; i < activeTTYs; ++i) {
 			if (F_PRESSED(i)) {
-				// printf("Se presiono: ctrl + %d\n", fKeys);
 				newTTY = i;
 				break;
 			}
