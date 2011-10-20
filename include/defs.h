@@ -53,6 +53,7 @@ typedef void*           type_t;
 
 #define SYSTEM_READ		3
 #define SYSTEM_WRITE	4
+#define SYSTEM_YIELD    5
 
 #define STD_IN		0
 #define STD_OUT		1

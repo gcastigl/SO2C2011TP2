@@ -3,9 +3,11 @@
 
 #include <defs.h>
 #include <shell.h>
+#include <tty.h>
 #include <asm/libasm.h>
 #include <driver/video.h>
 #include <lib/math.h>
+#include <interrupts/interrupts.h>
 
 #define HELP_HELP			"Shows this help function"
 
@@ -25,21 +27,21 @@ foreground and background to the given colors.\nBoth arguments must be a number\
  between 0 and F.\n\nWarning: Using a background with highest bit in 1 will \
  make text blink"
 
-int echo_cmd(int argc, char *argv[]);
-int restart_cmd(int argc, char *argv[]);
-int clear_cmd(int argc, char *argv[]);
-int help_cmd(int argc, char *argv[]);
-int setPit_cmd(int argc, char *argv[]);
-int resetPit_cmd(int argc, char *argv[]);
-int countDown_cmd(int argc, char *argv[]);
-int getCPUspeed_cmd(int argc, char *argv[]);
-int random_cmd(int argc, char *argv[]);
-int setAppearance_cmd(int argc, char *argv[]);
-int format(int argc, char *argv[]);
-int logout(int argc, char *argv[]);
-
-int getchar_cmd(int argc, char *argv[]);
-int scanf_cmd(int argc, char *argv[]);
-int printf_cmd(int argc, char *argv[]);
-
+int echo_cmd(int argc, char **argv);
+int restart_cmd(int argc, char **argv);
+int clear_cmd(int argc, char **argv);
+int help_cmd(int argc, char **argv);
+int setPit_cmd(int argc, char **argv);
+int resetPit_cmd(int argc, char **argv);
+int countDown_cmd(int argc, char **argv);
+int getCPUspeed_cmd(int argc, char **argv);
+int random_cmd(int argc, char **argv);
+int setAppearance_cmd(int argc, char **argv);
+int getchar_cmd(int argc, char **argv);
+int scanf_cmd(int argc, char **argv);
+int printf_cmd(int argc, char **argv);
+int format(int argc, char **argv);
+int logout(int argc, char **argv);
+int idle_p(int argc, char **argv);
+int tty_p(int argc, char **argv);
 #endif

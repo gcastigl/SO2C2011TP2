@@ -7,8 +7,8 @@
 
 void excecuteCmd(char* buffer);
 int parse_cmd(char* buffer);
-char** getArguments(char* buffer, int* argc);
-void cleanBuffer();
+char** getArguments(char* buffer, int* argc, int *background);
+void cleanBuffer(TTY* tty);
 void printShellLabel();
 //FIXME: checkReset & checkTTY could be in a separated keyboard manager file
 void checkReset();
@@ -16,9 +16,9 @@ void checkTTY();
 
 static char shell_text[15];
 static char* argv[MAX_ARG_DIM];
-static int currPos;
 static char shellBuffer[BUFFER_SIZE];
-static int newTTY;
+static int newTTY = -1;
+extern PUBLIC int activeTTYs;
 
 /*
  *	Tabla de comandos disponibles al usuario en esta shell
@@ -44,15 +44,13 @@ cmd_table_entry cmd_table[] = {
 	{"", "", NULL}
 };
 
-
-void shell_init() {
-	cleanBuffer();
-	newTTY = -1;
-}
-
-void shell_update() {
+void shell_update(int index) {
 	checkReset();
 	checkTTY();
+	TTY* tty = tty_getCurrentTTY();
+	if (tty->id != index) {
+        return;
+	}
 	if (!session_isLoggedIn()) {
 		session_login();
 		printShellLabel();
@@ -61,25 +59,23 @@ void shell_update() {
 		return;
 	}
 	char c = getKeyFromBuffer();
-	if (currPos >= BUFFER_SIZE) {
+	if (tty->bufferOffset >= BUFFER_SIZE) {
 		return;
 	}
 	if (c == '\n') {
 		printf("\n");
-		excecuteCmd(shellBuffer);
+		excecuteCmd(tty->buffer);
 		printShellLabel();
-		cleanBuffer();
+		cleanBuffer(tty);
 	} else if (c == '\b') {
-		if (currPos > 0) {
+		if (tty->bufferOffset > 0) {
 			printf("%c", c);
-			currPos--;
-			shellBuffer[currPos] = '\0';
+			tty->buffer[--tty->bufferOffset] = '\0';
 		}
 	} else {
 		printf("%c", c);
-		shellBuffer[currPos] = c;
-		shellBuffer[currPos + 1] = '\0';
-		currPos++;
+		tty->buffer[tty->bufferOffset] = c;
+		tty->buffer[++tty->bufferOffset] = '\0';
 	}
 }
 
@@ -98,7 +94,7 @@ void shell_cleanScreen() {
  */
 void excecuteCmd(char* buffer) {
 	int cmdLen, argc;
-	char ** arguments;
+	char **argv;
 
 	char oldFormat = tty_getCurrTTYFormat();
 	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
@@ -106,8 +102,11 @@ void excecuteCmd(char* buffer) {
 	int cmdIndex = parse_cmd(buffer);
 	if (cmdIndex != -1) {
 		cmdLen = strlen(cmd_table[cmdIndex].name);
-		arguments = getArguments(buffer + cmdLen, &argc);
-		cmd_table[cmdIndex].func(argc, arguments);
+        int background;
+		argv = getArguments(buffer + cmdLen, &argc, &background);
+        log(L_DEBUG, "Running %s in %s", cmd_table[cmdIndex].name, (background == true ? "background" : "foreground"));
+		createProcess(cmd_table[cmdIndex].name, cmd_table[cmdIndex].func, argc, argv, DEFAULT_STACK_SIZE, &clean, 0,
+            (background == true ? BACKGROUND : FOREGROUND), READY, NORMAL);
 	} else if(buffer[0]!='\0') {
 		tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
 		printf("\n\tUnknown command\n");
@@ -119,7 +118,6 @@ void excecuteCmd(char* buffer) {
 int parse_cmd(char* buffer) {
 	int i, cmdLength = -1, aux;
 	int match = -1;
-
 	for(i = 0; cmd_table[i].func != NULL; i++) {
 		if (substr(cmd_table[i].name, buffer)) {
 			aux = strlen(cmd_table[i].name);
@@ -134,29 +132,34 @@ int parse_cmd(char* buffer) {
 		return -1;
 	}
 	char next = shellBuffer[strlen(cmd_table[match].name)];
-	return  (next == ' ' || next == '\0') ? match : -1;
+	return  (next == ' ' || next == '\0' || next == '&') ? match : -1;
 }
 
 /*
 	Coloca '\0' en cada espacio para poder usar el buffer como parametros de una 
 	llamada a comando
 */
-char** getArguments(char* buffer, int* argc) {
+char** getArguments(char* buffer, int* argc, int *background) {
 	int i = 0, arg = 0;
-	while(buffer[i] != '\0' && arg < MAX_ARG_DIM) {
+    int bg = false;
+	while((buffer[i] != '\0') && (arg < MAX_ARG_DIM)) {
 		if (buffer[i] == ' ') {
 			argv[arg++] = buffer + i + 1;
 			buffer[i] = '\0';
+		} else if (buffer[i] == '&') {
+            buffer[i] = '\0';
+            bg = true;
 		}
 		i++;
 	}
+    *background = bg;
 	*argc = arg;
 	return argv;
 }
 
-void cleanBuffer() {
-	currPos = 0;
-	shellBuffer[0] = '\0';
+void cleanBuffer(TTY *tty) {
+    tty->bufferOffset = 0;
+	tty->buffer[0] = '\0';
 }
 
 cmd_table_entry* shell_getCmdsTable() {
@@ -182,9 +185,8 @@ void checkReset() {
 void checkTTY() {
 	if (IS_CTRL() && newTTY == -1) {
 		int i;
-		for (i = 0; i < MAX_TTYs; ++i) {
+		for (i = 0; i < activeTTYs; ++i) {
 			if (F_PRESSED(i)) {
-				// printf("Se presiono: ctrl + %d\n", fKeys);
 				newTTY = i;
 				break;
 			}

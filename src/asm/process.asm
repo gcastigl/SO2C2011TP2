@@ -2,7 +2,7 @@ GLOBAL copy_page_physical
 GLOBAL read_eip
 GLOBAL loadStackFrame
 GLOBAL switchProcess
-EXTERN getNextTask
+EXTERN getNextProcess
 
 read_eip:
 	mov eax, [esp]
@@ -40,61 +40,35 @@ copy_page_physical:
 switchProcess:
 	cli
 	pusha
+	pushf
     push esp
-    call getNextTask
-    pop esp
+    call getNextProcess
+	pop esp
     mov esp, eax		; cambia el stack pointer
+	popf
 	popa
 	sti
 	ret
 	
 
 loadStackFrame:	
-	; flags
-
-	pushfd
-	push ebp
+	mov ebx, ebp
 	mov ebp, esp
-	; sp por parametros
-	mov eax, [ebp+16]
-	; usar ese stack
-	mov esp, eax
-	; funcion a ejecutar
-	mov eax, [ebp+12]
-	; funcion cementerio
 
-	mov edx, [ebp+24]
-	; push de argv
-	push edx
+	mov eax, [esp + 8] ; Stack start
+	mov esp, eax ; new stack
 
-	mov edx, [ebp+20]
-	; push de argc
-	push edx
-
-	mov edx, [ebp+28]
-	; push de 'la nueva ret'
-	push edx
-
-	; seteo el bit de habilitar interrupciones
-	mov ecx, 512
-	; push flags (solo me interesa habilitar int)
-	push ecx
-	; para iret
-	push cs
+	mov eax, [ebp + 16] ; argv
 	push eax
-	; resto de los registros
-
-	mov eax, ebp
-	mov ebp, 0
+	mov eax, [ebp + 12] ; argc
+	push eax
+	mov eax, [ebp + 20] ; return func
+	push eax	
+	mov eax, [ebp + 4] ; main func, will return here
+	push eax
 	pusha
-	mov ebp, eax
-
-	; devolver el nuevo esp
+	pushf
 	mov eax, esp
-	; y restaurar el original
 	mov esp, ebp
-	; restaurar flags y ebp
-	pop ebp
-	popfd
-
-	retn
+	mov ebp, ebx
+	ret

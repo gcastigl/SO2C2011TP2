@@ -70,7 +70,7 @@ _tscGetCpuSpeed:
 	mov [low], eax
 	mov	[high], edx
 	pop ebx
-	add	ebx, INTERVAL_IN_TICKS + 1             ; Set time delay value ticks.
+	add	ebx, INTERVAL_IN_TICKS + 3             ; Set time delay value ticks.
 
 .wait_for_elapsed_ticks:
 	cmp	ebx, [ttcounter] ; Have we hit the delay?
@@ -86,7 +86,7 @@ _tscGetCpuSpeed:
 	; This adjusts for MHz.
 	; so for this: f(100) = (1/100) * 1,000,000 = 10000
 	; we use 18.2, so 1/18.2 * 1000000 = 54945
-	mov ebx, 54945 * INTERVAL_IN_TICKS
+	mov ebx, 54945 * (INTERVAL_IN_TICKS + 2)
     div ebx
 	; ax contains measured speed in MHz
 .end:

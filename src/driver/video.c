@@ -4,6 +4,7 @@ void video_init() {
 	video.address = (char*) VIDEO_ADDRESS;
 	terminal_clearAll(video.address, -1);
 	video.offset = 0;
+	video_clearScreen(video_getFormattedColor(WHITE, BLACK));
 	video_setCursor(0);
 }
 

@@ -84,4 +84,30 @@ typedef struct registers
 // For IRQs, to ease confusion, use the #defines above as the
 // first parameter.
 typedef void (*isr_t)(registers_t);
+
+
+// SYSTEM CALLS
+
+
+/* __write
+*
+* Recibe como parametros:
+* - File Descriptor
+* - Buffer del source
+* - Cantidad
+*
+**/
+u32int __write(int fd, const void* buffer, u32int count);
+
+/* __read
+*
+* Recibe como parametros:
+* - File Descriptor
+* - Buffer a donde escribir
+* - Cantidad
+*
+**/
+u32int __read(int fd, void* buffer, u32int count);
+
+u32int yield(void);
 #endif

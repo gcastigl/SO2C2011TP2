@@ -1,8 +1,9 @@
 #include <main.h>
 
-int currentPID = 0;
-static int nextPID = 1;
+int currentPID = -1;
+static int nextPID = 0;
 PROCESS process[MAX_PROCESSES];
+extern int nf_address;
 u32int initial_esp; // New global variable.
 
 int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
@@ -14,19 +15,15 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 		//initialize_paging();
 		keyboard_init();
 		video_init();
-		user_init();
+		//user_init();
 		setFD(STD_OUT);
-		shell_init();
 		fs_init();
-		tty_init();
-        /*initScheduler();
-        createProcessAt("idle", idle, 0, 0, (char **)0, 0x4000, 0, BACKGROUND, READY); //Crea el proceso Init, su pid va a ser el 1
-        */
+        initScheduler();
 		_initTTCounter();
+		createProcess("tty1", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 0, BACKGROUND, READY, NORMAL);
+		createProcess("tty2", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 1, BACKGROUND, READY, NORMAL);
 	_sti();
-	while (1) {
-		shell_update();
-	}
+    while (1);
 	return 0;
 }
 
@@ -37,7 +34,7 @@ int getNextPID() {
 PROCESS *getProcessByPID(int pid) {
     int i;
     for (i = 0; i < MAX_PROCESSES; i++) {
-        if (process[i].freeSlot != 0) {
+        if (process[i].slotStatus != FREE) {
             if (process[i].pid == pid) {
                 return &process[i];
             }
@@ -66,3 +63,7 @@ u32int __write(int fd, const void * buffer, u32int count) {
 	return count;
 }
 
+u32int yield(void) {
+    _SysCall(SYSTEM_YIELD);
+    return 0;
+}
