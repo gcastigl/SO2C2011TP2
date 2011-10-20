@@ -15,7 +15,7 @@ void init_descriptor_tables();
 void timerTickHandler(registers_t regs);
 void keyboardHandler(registers_t regs);
 void systemCallHandler(int sysCallNumber, void ** args);
-//Used only by getCPUspeed
+//Used only by getCPUspeed. makes it atomic
 void disableTaskSwitch();
 void enableTaskSwitch();
 isr_t interruptHandlers[256];
