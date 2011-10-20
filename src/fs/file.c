@@ -1,6 +1,9 @@
 #include <fs/file.h>
 
-//FIXME: this cmds should't be here....
+//BIG FIXME: this cmds should't be here....
+
+
+// FIXME: idk how to keep track of the current path on the tty
 int cd(int argc, char **argv) {
 	if (argc == 1) {
 		TTY* tty = tty_getCurrentTTY();
@@ -9,8 +12,11 @@ int cd(int argc, char **argv) {
 		fs_getFsNode(&current, currentiNode);
 		fs_node_t *node = finddir_fs(&current, argv[0]);
 		if (node != NULL) {
-			// FIXME: idk how to manage the printing of the current path on the tty
-			tty->currDirectory = node->inode;
+			if (node->flags == FS_DIRECTORY) {
+				tty->currDirectory = node->inode;
+			} else {
+				printf("cd: %s is not a directory\n", argv[0]);
+			}
 		}
 	}
 	return 0;
@@ -40,6 +46,24 @@ int ls(int argc, char **argv) {
 }
 
 int mkdir(int argc, char **argv) {
+	if(argc == 0 ) {
+		printf("mkdir: missing operand\n");
+	} else {
+		int created = fs_createDirectory(tty_getCurrentTTY()->currDirectory, argv[0]);
+		char* err = NULL;
+		switch(created) {
+			case 0:		// Directory was created OK
+				break;
+			case E_FILE_EXISTS:
+				err = "Directory exists";
+				break;
+			default:
+				err = "Unknown error";
+		}
+		if (err != NULL) {
+			printf("mkdir: cannot create file %s: %s\n", argv[0], err);
+		}
+	}
 	return 0;
 }
 
@@ -52,12 +76,10 @@ int touch(int argc, char **argv) {
 	if(argc == 0 ) {
 		printf("touch: missing operand\n");
 	} else {
-		fs_node_t current;
-		tty_getCurrentNode(&current);
 		int created = fs_createFile(tty_getCurrentTTY()->currDirectory, argv[0]);
 		char* err = NULL;
 		switch(created) {
-			case 0:		// Directory was created OK
+			case 0:		// File was created OK
 				break;
 			case E_FILE_EXISTS:
 				err = "File exists";
@@ -73,6 +95,11 @@ int touch(int argc, char **argv) {
 }
 
 int cat(int argc, char **argv) {
+	TTY* tty = tty_getCurrentTTY();
+	u32int currentiNode = tty->currDirectory;
+	fs_node_t current;
+	fs_getFsNode(&current, currentiNode);
+
 	return 0;
 }
 
