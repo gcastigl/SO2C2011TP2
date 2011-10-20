@@ -1,6 +1,6 @@
-bin/*
 bochsrc.txt
 img/tpe.img
 .project
 .cproject
 nbproject/
+log.txt
