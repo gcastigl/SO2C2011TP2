@@ -150,14 +150,18 @@ PRIVATE int _readBlock(FilePage *page, FileHeader *header, char *contents, u32in
 	//	printf("reading File contents: [%d, %d] %d\n", page->nextSector, page->nextOffset + offset, page->usedBytes);
 	ata_read(disk, contents, page->usedBytes, page->nextSector, page->nextOffset + offset);
 	contents += page->usedBytes;
-	/*while(currPage.hasNextPage) {
-		// For each FilePage, read it's contents
+	lenght -= page->usedBytes;
+	while(lenght != 0) {
 		ata_read(disk, &currPage, sizeof(FilePage), currPage.nextSector, currPage.nextOffset);
-		ata_read(disk, contents, currPage.usedBytes, sector, sizeof(FilePage) + currPage.nextOffset);
-		sector = currPage.nextSector;
-		offset = currPage.nextOffset;
-		contents += currPage.usedBytes;
-	}*/
+		if (currPage.magic == MAGIC_NUMBER) {
+			ata_write(disk, contents, currPage.usedBytes, page->nextSector, page->nextOffset + sizeof(FilePage));
+			contents += currPage.usedBytes;
+			lenght -= currPage.usedBytes;
+		} else {
+			errno = E_CORRUPTED_FILE;
+			return -1;
+		}
+	}
 	return 0;
 }
 
@@ -210,31 +214,6 @@ PRIVATE int _writeBlock(FilePage *page, FileHeader *header, char* contents, u32i
 		}
 	}
 	return 0;
-	/*FilePage currPage;
-	currPage.magic = MAGIC_NUMBER;
-	currPage.hasNextPage = false;
-	printf("writing filepage [%d,%d]s: %d\n", page->nextSector, page->nextOffset, sizeof(FilePage));
-	ata_write(disk, &currPage, sizeof(FilePage), page->nextSector, page->nextOffset);
-	u32int offset = sizeof(FilePage);
-	printf("writing header [%d,%d]s: %d\n", page->nextSector, page->nextOffset + offset, sizeof(FileHeader));
-	printf("flags: %d\n", header->flags);
-	ata_write(disk, header, sizeof(FileHeader), page->nextSector, page->nextOffset + offset);
-	offset += sizeof(FileHeader);
-	u32int written = MIN(page->totalLength, length);
-	ata_write(disk, contents, written, page->nextSector, page->nextOffset + offset);	// Fill page with contents
-	printf("writing contents [%d, %d]s: %d / %s\n", page->nextSector, page->nextOffset + offset, written, contents);
-	contents += written;
-	FilePage nextPage;
-	while (currPage.hasNextPage && written < length) {
-		ata_read(disk, &nextPage, sizeof(FilePage), currPage.nextSector, currPage.nextOffset);
-		int write = MIN(currPage.totalLength, length);
-		ata_write(disk, contents, write, currPage.nextSector, currPage.nextOffset + sizeof(FilePage));
-		printf("writing contents [%d, %d]s: %d / %s\n", currPage.nextSector, currPage.nextOffset + sizeof(FilePage), write, contents);
-		contents += write;
-		written += write;
-		memcpy(&currPage, &nextPage, sizeof(FilePage));	// Set next page as current page
-	}
-	return written;*/
 }
 
 PRIVATE void _reserveMemory(FilePage *page, int size, u32int initialSector, u32int initialOffset) {
