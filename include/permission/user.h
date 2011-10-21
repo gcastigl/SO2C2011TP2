@@ -5,6 +5,8 @@
 #include <util/logger.h>
 
 #define USER_MAX 20
+#define E_USER_INVALID_USERNAME -1;
+#define E_USER_INVALID_PASSWORD -2;
 
 typedef struct {
     char *userName;
@@ -17,8 +19,9 @@ typedef struct {
 } user_t;
 
 PUBLIC void user_init();
-PUBLIC user_t *user_find(int uid);
-PUBLIC char *user_getName(int uid);
+PUBLIC user_t *user_get(int uid);
+PUBLIC boolean user_exists(char *userName);
+PUBLIC user_t *user_login(char* userName, char* password);
 
 #endif	/* USER_H */
 

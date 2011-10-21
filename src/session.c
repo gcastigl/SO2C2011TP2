@@ -1,28 +1,48 @@
 #include <session.h>
 
+PRIVATE user_t *currentUser = NULL;
 void prntWelcomeMsg();
 int isValidUser(char* userName);
 
-static char user[NAME_MAX_LENGTH] = {"\0"};
 static int isLoggedIn = false;
+
+PRIVATE boolean tryLogin(char * userName, char *password);
 
 void session_login() {
 	TTY* tty = tty_getCurrentTTY();
 	tty_clean(tty);
 	prntWelcomeMsg();
-	/*int validUser;
+	int validUser;
+	static char user[NAME_MAX_LENGTH] = {"\0"};
 	do {
-		printf("\nUsername: ");
+		printf("\nUsername (try qcho): ");
 		gets(user);
 		validUser = isValidUser(user);
         if (!validUser) {
         	printf("\tInvalid username!\n");
         }
 	} while(!validUser);
-	printf("Password: ********\n");
-	printf("\nLogged in as: %s\n", user);*/
-	isLoggedIn = true;
-	strcpy(user, "admin");
+	int validPassword;
+	int retry = 3;
+	static char password[PASS_MAX_LENGTH] = {"\0"};
+	do {
+		printf("\nPassword (try x): ");
+		gets(password);
+		isLoggedIn = tryLogin(user, password);
+		if (!isLoggedIn) {
+			printf("\tInvalid password!\n");
+		}
+	} while(!isLoggedIn && --retry);
+	if (retry == 0) {
+		printf("\tInvalid password! Please try again.\n");
+	} else {
+		printf("\nLogged in as: %s\n", session_getName());
+	}
+}
+
+PRIVATE boolean tryLogin(char * userName, char *password) {
+	currentUser = user_login(userName, password);
+	return currentUser != NULL;
 }
 
 int session_isLoggedIn() {
@@ -31,7 +51,7 @@ int session_isLoggedIn() {
 
 const char* session_getName() {
 	if (session_isLoggedIn()) {
-		return (const char*) user;
+		return currentUser->userName;
 	}
 	return NULL;
 }
@@ -41,7 +61,7 @@ void session_logout() {
 }
 
 int isValidUser(char* userName) {
-	return strcmp(userName, "admin") == 0 || strcmp(userName, "guest") == 0;
+	return user_exists(userName);
 }
 
 void prntWelcomeMsg() {

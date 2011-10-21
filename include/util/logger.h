@@ -14,7 +14,7 @@ enum LogLevel {L_FATAL, L_ERROR, L_INFO, L_DEBUG, L_TRACE};
  * @param ... the format list of items.
  * @return 0 if logged, -1 if level is above the defined LOG_LEVEL.
  */
-int log(enum LogLevel level, char *fmt, ...);
+int log(enum LogLevel level, char *formatString, ...);
 
 #endif	/* LOGGER_H */
 

@@ -4,7 +4,7 @@ void permission_set(iNode *inode, int mask) {
     inode->mask = mask;
 }
 
-boolean permission_hasAccess(iNode *inode, uid_t uid) {
+boolean permission_hasAccess(iNode *inode, int uid) {
 	if (uid == 0) {
 		return true;
 	}

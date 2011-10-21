@@ -54,9 +54,8 @@ void *memset(void *s, int c, u32int n) {
 }
 
 void strncpy(char *to, const char *from, int size) {
-	while(size < 0) {
+	while(size--) {
 		*to++ = *from++;
-		size--;
 	}
 	*to = '\0';
 }
