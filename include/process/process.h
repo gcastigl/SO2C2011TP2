@@ -17,7 +17,7 @@ enum {VERY_LOW, LOW, NORMAL, HIGH};
 #define MAX_PRIORITY HIGH
 typedef struct {
 	int pid;
-	char name [MAX_PROCESS_NAME];
+	char name[MAX_PROCESS_NAME];
 	int priority;
 	int tty;
 	int groundness; 
@@ -29,12 +29,11 @@ typedef struct {
 	int slotStatus;
 	int stackstart;
 	int stacksize;
-	int cpu;
-	int countExec; //Acumulador de ejecuciones utilizado para calcular el porcentaje de cpu
 	int argc;
-	char * argv[MAX_ARG];
-	void *info;
+	char *argv[MAX_ARG];
 } PROCESS;
+
+int last100[100];
 
 #define DEFAULT_STACK_SIZE 0x200
 
@@ -44,6 +43,7 @@ int getPID(void);
 PROCESS* getProcessByPID(int pid);
 PROCESS* getNextTask(void);
 void initScheduler(void);
-
+int getActiveProcesses(void);
 void clean(void);
+void kill(int pid);
 #endif

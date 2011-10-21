@@ -38,6 +38,15 @@ void* realloc(void* ptr, int newsize) {
 	return NULL;
 }
 
+int atoi(const char *str) {
+    int i = 0;
+    while (*str) {
+        i = (i << 3) + (i << 1) + (*str - '0');
+        str++;
+    }
+    return i;
+}
+
 void panic(char* str, int line ,int lock) {
     _cli();
 //  char format = video_getFormattedColor(WHITE, BLACK);

@@ -41,6 +41,9 @@ cmd_table_entry cmd_table[] = {
 	//{"printf", "Funcion para la catedra para testeo de printf\n", printf_cmd},
 	//{"scanf", "Funcion para la catedra para testeo de scanf\n", scanf_cmd},
 	{"logout", "Logout current user\n", logout},
+	{"top", "Shows the current running processes", top_p},
+	{"kill", "Kills process with given PID", kill_p},
+	{"infWhile", "Process that loops till the end of time!", eternumWhile_p},
 	{"", "", NULL}
 };
 
