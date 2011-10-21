@@ -47,7 +47,6 @@ void _read(int ata, char * ans, unsigned short sector, int offset, int count) {
 	char tmp[512];
 	sendComm(ata, LBA_READ, sector);
 	// Now read sector
-	//printf("reading [%d, %d]%d...\n", sector, offset, count);
 	int b;
 	unsigned short data;
 	for (b = 0;b < 512; b+=2) {
