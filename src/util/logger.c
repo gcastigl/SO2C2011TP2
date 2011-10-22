@@ -16,7 +16,7 @@ PRIVATE void printLevel(enum LogLevel level) {
     prints("]\t");
 }
 
-int log(enum LogLevel level, char *formatString, ...) {
+int _log(char* file, int line, enum LogLevel level, char *formatString, ...) {
     if (level > LOG_LEVEL) {
         return -1;
     }
@@ -72,6 +72,12 @@ int log(enum LogLevel level, char *formatString, ...) {
         formatString++;
     }
     va_end(args);
+
+    char end[100];
+    logc('\t');
+    prints(file);
+    logc(':');
+    prints(numberBaseNtoString(line, 10, end));
     logc('\n');
     return 0;
 }
