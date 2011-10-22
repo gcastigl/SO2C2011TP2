@@ -1,3 +1,4 @@
+#!/bin/sh
 ./compila
 qemu \
 	-kernel bin/kernel.bin\
