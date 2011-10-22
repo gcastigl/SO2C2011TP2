@@ -98,8 +98,6 @@ typedef struct page_dir
 
 int errno;
 
-int ON_SERIAL = 0;
-
 #pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */
 
 #endif
