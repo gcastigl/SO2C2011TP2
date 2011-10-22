@@ -32,7 +32,7 @@ void fs_init() {
 		inodes[i].inodeId = -1;
 		inodes[i].length = 0;
 	}
-	if (false && diskManager_validateHeader()) {
+	if (diskManager_validateHeader()) {
 		fs_load();
 	} else {
 		fs_create();
@@ -48,6 +48,7 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 		diskManager_readInode(&inodes[inodeNumber], inodeNumber, fsNode->name);
 	}
 	iNode* inode = &inodes[inodeNumber];
+	diskManager_getFileName(inodeNumber, fsNode->name);
 	fsNode->flags = inode->flags;
 	fsNode->gid = inode->gid;
 	fsNode->uid = inode->uid;
@@ -77,12 +78,12 @@ PRIVATE void fs_create() {
 	int devInode = diskManager_nextInode();
 	_initInode_dir(devInode, "dev", rootInode);
 
-	/*int usrInode = diskManager_nextInode();
-	_initInode_dir(usrInode, "usr", rootInode);*/
+	int usrInode = diskManager_nextInode();
+	_initInode_dir(usrInode, "usr", rootInode);
 
-	// add dev as sub-directory of root
+	// Add dev as sub-directory of root
 	_appendFile(rootInode, devInode, NULL);
-	//_appendFile(rootInode, usrInode, NULL);
+	_appendFile(rootInode, usrInode, NULL);
 }
 
 PRIVATE void fs_load() {
@@ -169,7 +170,6 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 	inodes[dirInodeNumber].length = offset;
 	log(L_DEBUG, "_appendFile: final contLen = %d, appending %s", offset, name);
 	diskManager_writeContents(dirInodeNumber, content, offset, 0);
-	//kfree(contents);
 }
 
 
@@ -201,7 +201,6 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 		fsNode = kmalloc(sizeof(fs_node_t));
 		fs_getFsNode(fsNode, inodeNumber);
 	}
-	//kfree(contents);
 	return fsNode;
 }
 
