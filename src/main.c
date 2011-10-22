@@ -12,10 +12,11 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 		init_descriptor_tables();
 		_mascaraPIC1(0xFC);
 		_mascaraPIC2(0xFF);
+		port_serial_init();
 		//initialize_paging();
 		keyboard_init();
 		video_init();
-		//user_init();
+		user_init();
 		setFD(STD_OUT);
 		fs_init();
         initScheduler();

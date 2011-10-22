@@ -5,10 +5,8 @@ PRIVATE char * numberBaseNtoString(unsigned int number, int base, char * out);
 PRIVATE void printLevel(enum LogLevel level);
 
 PRIVATE void logc(char c) {
-    // LOG TO PARALLEL PORT!
-    _port_out(0x37a, 0x04|0x08);
-    _port_out(0x378, (unsigned char)c);
-    _port_out(0x37a, 0x01);
+	port_serial_write(c);
+	port_parallel_write(c);
 }
 
 PRIVATE void printLevel(enum LogLevel level) {
@@ -18,7 +16,7 @@ PRIVATE void printLevel(enum LogLevel level) {
     prints("]\t");
 }
 
-int log(enum LogLevel level, char *formatString, ...) {
+int _log(char* file, int line, enum LogLevel level, char *formatString, ...) {
     if (level > LOG_LEVEL) {
         return -1;
     }
@@ -74,6 +72,12 @@ int log(enum LogLevel level, char *formatString, ...) {
         formatString++;
     }
     va_end(args);
+
+    char end[100];
+    logc('\t');
+    prints(file);
+    logc(':');
+    prints(numberBaseNtoString(line, 10, end));
     logc('\n');
     return 0;
 }

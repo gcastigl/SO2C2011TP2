@@ -16,6 +16,7 @@
 #include <process/process.h>
 #include <command.h>
 #include <permission/user.h>
+#include <driver/port.h>
 
 int getNextPID();
 
