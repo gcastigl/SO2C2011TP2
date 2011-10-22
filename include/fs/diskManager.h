@@ -3,13 +3,16 @@
 
 #include <driver/ata_disk.h>
 
-#define FILES_INITIAL_SECTOR	1024
+#define FILES_INITIAL_SECTOR			1024
 
-#define MAX_NAME_LENGTH			32
-#define N_FILE_PAGES			250
-#define FILE_BLOCK_SIZE_BYTES	200
+#define MAX_NAME_LENGTH					32
+#define MAGIC_NUMBER					123456
+#define FILE_BLOCK_OVERHEAD_SIZE_BYTES	(sizeof(DiskPage) + sizeof(FileHeader))
 
-#define MAGIC_NUMBER			123456
+#define FILE_INITIAL_SIZE_BYTES			(FILE_BLOCK_OVERHEAD_SIZE_BYTES + 100)
+
+#define DISK_BLOCK_SIZE_BYTES			200
+
 
 typedef struct {
 	// fields required by posix, this is still missing some fields
@@ -31,13 +34,22 @@ typedef struct {
 } FSHeader;
 
 typedef struct {
-	u32int totalLength;
 	u32int magic;
+	u32int disk;
 	u32int nextSector;
 	u32int nextOffset;
+	u32int totalLength;
 	u32int usedBytes;
 	boolean hasNextPage;
-} FilePage;
+} DiskPage;
+
+typedef struct {
+	DiskPage data;
+	u32int contentUsedBytes;
+	u32int contentMaxBytes;
+	u32int totalReservedMem;			// Suma del tamaño total de cada pagina
+	u32int usedMem;						// Suma del tamaño usando por cada pagina
+} iNodeDisk;
 
 typedef struct {
 	u32int magic;
@@ -52,19 +64,21 @@ typedef struct {
 void diskManager_init();
 
 boolean diskManager_validateHeader();
-
 void diskManager_writeHeader();
 
 int diskManager_nextInode();
 
-void diskManager_writeContents(iNode* inode, char* contents, u32int length);
+void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name);
+void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name);
 
-void diskManager_readiNode(iNode *inode, int inodeNumber);
+int diskManager_writeContents(u32int inodeNumber, char* contents, u32int length, u32int offset);
+int diskManager_readContents(u32int inodeNumber, char* contents, u32int length, u32int offset);
+
 
 void diskManager_getFileName(u32int inode, char* name);
 
 void diskManager_setFileName(u32int inode, char* name);
 
-char *diskManager_readContents(u32int inodeNumber, int* length);
+u32int diskManager_size(u32int inodeNumber);
 
 #endif

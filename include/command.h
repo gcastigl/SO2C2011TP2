@@ -44,4 +44,9 @@ int format(int argc, char **argv);
 int logout(int argc, char **argv);
 int idle_p(int argc, char **argv);
 int tty_p(int argc, char **argv);
+
+
+
+int diskManagerTest(int argc, char **argv);
+
 #endif

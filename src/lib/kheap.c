@@ -43,6 +43,7 @@ void* our_malloc ( int size, int align, u32int *phys )
 
 void kfree(void* p)
 {
+	return;
     free((void*)p, kheap);
 }
 

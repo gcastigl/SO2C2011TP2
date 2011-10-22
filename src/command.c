@@ -168,6 +168,18 @@ int tty_p(int argc, char **argv) {
     }
 }
 
+// TODO: finish this funcion!
+int diskManagerTest(int argc, char **argv) {
+	/*char *asd;
+	char *contents = "The File interface represents file data typically obtained from the underlying file system, and the Blob interface (\"Binary Large Object\" -- a name originally introduced to web APIs in Google Gears) represents immutable raw data. File or Blob reads should happen asynchronously on the main thread, with an optional synchronous API used within threaded web applications. An asynchronous API for reading files prevents blocking and UI \"freezing\" on a user agent's main thread. This specification defines an asynchronous API based on an event model to read and access a File or Blob's data. A FileReader object provides asynchronous read methods to access that file's data through event handler attributes and the firing of events. The use of events and event handlers allows separate code blocks the ability to monitor the progress of the read (which is particularly useful for remote drives or mounted drives, where file access performance may vary from local drives) and error conditions that may arise during reading of a file. An example will be illustrative.";
+	u32int len = strlen(contents) + 1;
+	int readLen;
+	asd = diskManager_readContents(0, &readLen);
+	printf("Original len= %d, readLen= %d\n", len, readLen);
+	printf(asd);*/
+	return 0;
+}
+
 /*
 int format(int argc, char **argv) {
 	printf("Formatting drive ATA0...\n");

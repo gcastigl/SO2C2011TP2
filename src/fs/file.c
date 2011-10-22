@@ -17,6 +17,8 @@ int cd(int argc, char **argv) {
 			} else {
 				printf("cd: %s is not a directory\n", argv[0]);
 			}
+		} else {
+			printf("cd: The directory \"%s\" does not exist", argv[0]);
 		}
 	}
 	return 0;

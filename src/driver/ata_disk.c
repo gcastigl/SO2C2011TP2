@@ -19,6 +19,11 @@ void writeDataToRegister(int ata, char upper, char lower);
 void translateBytes(char ans[], unsigned short sector);
 
 void ata_read(int ata, void* msg, int bytes, unsigned short sector, int offset) {
+	if (ata != ATA0 && ata != ATA1) {
+		log(L_ERROR, "Trying to read from an inexistent disk!! %d - [%d, %d]", ata, sector, offset);
+		errno = E_INVALID_ARG;
+		return;
+	}
 	char* ans = (char*) msg;
 	while (bytes != 0) {
 		if (offset >= 512) {
@@ -65,6 +70,11 @@ void translateBytes(char * ans, unsigned short databyte) {
 }
 
 void ata_write(int ata, void * msg, int bytes, unsigned short sector, int offset) {
+	if (ata != ATA0 && ata != ATA1) {
+		log(L_ERROR, "Trying to write to an inexistent disk!! %d - [%d, %d]", ata, sector, offset);
+		errno = E_INVALID_ARG;
+		return;
+	}
 	char* ans = (char*) msg;
 	while (bytes != 0) {
 		if (offset >= 512) {
