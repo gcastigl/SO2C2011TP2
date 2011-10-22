@@ -1,4 +1,5 @@
 #include <command.h>
+extern PROCESS process[];
 
 int echo_cmd(int argc, char **argv) {
 	int i;
@@ -166,6 +167,42 @@ int tty_p(int argc, char **argv) {
     while(1) {
         shell_update(index);
     }
+    return 0;
+}
+
+int top_p(int argc, char**argv) {
+    int i;
+    int slot;
+    int execCount[MAX_PROCESSES] = { 0 };
+    
+    printf("Last 100:\n");
+    for (i = 0; i < 100; i++) {
+        slot = last100[i];
+        if (process[slot].slotStatus == OCCUPIED)
+            execCount[slot]++;
+    }
+    printf("Name\tPID\tExecutions over 100\n");
+    for (i = 0; i < MAX_PROCESSES; i++) {
+        if ((execCount[i] > 0) && (process[i].slotStatus == OCCUPIED)) {
+            
+            printf("%s\t%d\t%d\n", process[i].name, process[i].pid, execCount[i]);
+        }
+    }
+    
+    return 0;
+}
+
+int kill_p(int argc, char**argv) {
+    if (argc == 1) {
+        kill(atoi(argv[0]));
+    } else {
+        printf("Usage:\nkill PID");
+    }
+    return 0;
+}
+
+int eternumWhile_p(int argc, char** argv) {
+    while(1);
 }
 
 // TODO: finish this funcion!

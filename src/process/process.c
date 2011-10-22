@@ -3,10 +3,11 @@
 extern PROCESS process[];
 extern int nextPID; 
 extern int currentPID;
-int count100 = 1;
+int count100;
+int last100[100];
 int firstTime = true;
 int schedulerActive = false;
-
+static int activeProcesses;
 void clean(void);
 extern int loadStackFrame();
 void saveESP(int oldESP);
@@ -19,6 +20,8 @@ void initScheduler(void) {
     for (i = 0; i < MAX_PROCESSES; i++) {
         process[i].slotStatus = FREE;
     }
+    count100 = 0;
+    activeProcesses = 0;
     createProcess("Idle", &idle_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, -1, BACKGROUND, READY, VERY_LOW);
     schedulerActive = true;
 }
@@ -69,7 +72,7 @@ void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** 
             switchProcess();
         }
     }
-    
+    activeProcesses++;
     return;
 }
 
@@ -90,6 +93,7 @@ PROCESS* getNextTask(void) {
             }
         }
     }
+    last100[(count100 = count100++ % 100)] = nextReady;
     return &process[nextReady];
 
     //notar que si no hay procesos disponibles, retornara &processes[0], o sea idle
@@ -120,6 +124,52 @@ void saveESP (int oldESP) {
     return;
 }
 
+int getActiveProcesses(void) {
+    return activeProcesses;
+}
+
+void killChildren(int pid) {
+    int i;
+    for (i = 0; i < MAX_PROCESSES; i++) {
+        if (process[i].slotStatus == OCCUPIED) {
+            if (process[i].parent == pid) {
+                kill(process[i].pid);
+            }
+        }
+    }
+}
+
+void kill(int pid) {
+    int i;
+    PROCESS *p = NULL;
+    PROCESS *parent;
+    for (i = 0; i < MAX_PROCESSES; i++) {
+        if (process[i].slotStatus == OCCUPIED) {
+            if (process[i].pid == pid) {
+                p = &process[i];
+                break;
+            }
+        }
+    }
+    
+    if (p == NULL) {
+        printf("PID is not valid\n");
+        return;
+    }
+    
+    killChildren(pid);
+    
+    p->slotStatus = FREE;
+    parent = getProcessByPID(p->parent);
+    if (parent) {
+        if (parent->status == CHILD_WAIT) {
+            parent->status = READY;
+        }
+    }
+    activeProcesses--;
+    //Free process memory
+}
+
 void clean(void) {   
     PROCESS *temp;
 	//int i;
@@ -131,7 +181,7 @@ void clean(void) {
             temp->status = READY;
 	    }
 	}
-	
+    activeProcesses--;
     switchProcess();
 	//kfree((void*)temp->stackstart-temp->stacksize+1);
 	

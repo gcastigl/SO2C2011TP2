@@ -5,9 +5,11 @@
 #include <shell.h>
 #include <tty.h>
 #include <asm/libasm.h>
+#include <lib/stdlib.h>
 #include <driver/video.h>
 #include <lib/math.h>
 #include <interrupts/interrupts.h>
+#include <process/process.h>
 
 #define HELP_HELP			"Shows this help function"
 
@@ -44,6 +46,9 @@ int format(int argc, char **argv);
 int logout(int argc, char **argv);
 int idle_p(int argc, char **argv);
 int tty_p(int argc, char **argv);
+int top_p(int argc, char**argv);
+int kill_p(int argc, char**argv);
+int eternumWhile_p(int argc, char** argv);
 
 
 
