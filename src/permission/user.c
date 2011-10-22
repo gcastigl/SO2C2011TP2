@@ -49,9 +49,9 @@ PUBLIC void user_init() {
 	user_add(_parseUser("root:x:0:0:root:/root:/bin/bash"));
 	user_add(_parseUser("qcho:x:10:10:Qcho:/home/qcho:/bin/bash"));
 	user_add(_parseUser("qcho2:x:11:10:Qcho:/home/qcho:/bin/bash"));
-	for (int i = 0; i < USER_MAX; ++i) {
-		_logUser(i, "init");
-	}
+//	for (int i = 0; i < USER_MAX; ++i) {
+//		_logUser(i, "init");
+//	}
 }
 
 PRIVATE user_t *_parseUser(char* line) {
