@@ -2,9 +2,9 @@
 #define	LOGGER_H
 
 #include <defs.h>
-#include <asm/libasm.h>
 #include <varargs.h>
 #include <stdarg.h>
+#include <driver/port.h>
 
 enum LogLevel {L_FATAL, L_ERROR, L_INFO, L_DEBUG, L_TRACE};
 #define LOG_LEVEL L_DEBUG
