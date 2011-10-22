@@ -28,7 +28,6 @@ int _log(char* file, int line, enum LogLevel level, char *formatString, ...) {
     char out[40];
     char c;
     char end[100];
-        logc('\t');
         prints(file);
         logc(':');
         prints(numberBaseNtoString(line, 10, end));
