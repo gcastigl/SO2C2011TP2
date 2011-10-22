@@ -5,10 +5,14 @@ PRIVATE char * numberBaseNtoString(unsigned int number, int base, char * out);
 PRIVATE void printLevel(enum LogLevel level);
 
 PRIVATE void logc(char c) {
-    // LOG TO PARALLEL PORT!
-    _port_out(0x37a, 0x04|0x08);
-    _port_out(0x378, (unsigned char)c);
-    _port_out(0x37a, 0x01);
+	if (ON_SERIAL) {
+		serial_write(c);
+	} else {
+		// LOG TO PARALLEL PORT!
+		_port_out(0x37a, 0x04|0x08);
+		_port_out(0x378, (unsigned char)c);
+		_port_out(0x37a, 0x01);
+	}
 }
 
 PRIVATE void printLevel(enum LogLevel level) {
