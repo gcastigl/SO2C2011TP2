@@ -1,0 +1,2 @@
+./compila
+qemu -kernel bin/kernel.bin -serial file:log.txt -hda img/disk0.img -hdb img/disk1.img
