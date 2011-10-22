@@ -27,6 +27,12 @@ int _log(char* file, int line, enum LogLevel level, char *formatString, ...) {
     char * string;
     char out[40];
     char c;
+    char end[100];
+        logc('\t');
+        prints(file);
+        logc(':');
+        prints(numberBaseNtoString(line, 10, end));
+        logc(' ');
     printLevel(level);
     while (*formatString != '\0') {
         if (*formatString == '%') {
@@ -72,12 +78,6 @@ int _log(char* file, int line, enum LogLevel level, char *formatString, ...) {
         formatString++;
     }
     va_end(args);
-
-    char end[100];
-    logc('\t');
-    prints(file);
-    logc(':');
-    prints(numberBaseNtoString(line, 10, end));
     logc('\n');
     return 0;
 }
