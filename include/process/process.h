@@ -41,8 +41,8 @@ void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** 
     int groundness, int status, int priority);
 int getPID(void);
 PROCESS* getProcessByPID(int pid);
-PROCESS* getNextTask(void);
-void initScheduler(void);
+PROCESS* getNextTask(int withPriority);
+void initScheduler(int withPriority);
 int getActiveProcesses(void);
 void clean(void);
 void kill(int pid);
