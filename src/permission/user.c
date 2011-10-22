@@ -54,18 +54,6 @@ PUBLIC void user_init() {
 	}
 }
 
-PRIVATE int atoi(char* buffer) {
-	char *ptr;
-	long result=0;
-	int i=0;
-	ptr = buffer;
-	while(*ptr!='\0') {
-		result = (result * 10) + (*ptr - '0');
-		ptr++;i++;
-	}
-	return result;
-}
-
 PRIVATE user_t *_parseUser(char* line) {
 	user_t *user = (user_t *)kmalloc(sizeof(user_t));
 	enum { USERNAME = 0, PASSWORD, UID, GID, USERINFO, HOMEPATH, SHELLPATH} item;
