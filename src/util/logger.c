@@ -5,7 +5,7 @@ PRIVATE char * numberBaseNtoString(unsigned int number, int base, char * out);
 PRIVATE void printLevel(enum LogLevel level);
 
 PRIVATE void logc(char c) {
-	port_serial_write(c);
+	//port_serial_write(c);
 	port_parallel_write(c);
 }
 

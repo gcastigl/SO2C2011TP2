@@ -123,7 +123,7 @@ PUBLIC boolean user_exists(char *userName) {
 	log(L_DEBUG, "{user_exists} test: %s", userName);
 	for (int i = 0; i < USER_MAX; ++i) {
 		_logUser(i, "login");
-		log(L_DEBUG, "{user_exists} %d like: %s", i, user_get(i)->userName);
+		//log(L_DEBUG, "{user_exists} %d like: %s", i, user_get(i)->userName);
 		if (!strcmp(user_get(i)->userName, userName)) {
 			return true;
 		}
