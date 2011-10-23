@@ -18,6 +18,13 @@ void writeDataToRegister(int ata, char upper, char lower);
 
 void translateBytes(char ans[], unsigned short sector);
 
+void ata_normalize(unsigned short* sector, int* offset) {
+	if (*offset >= 512) {
+		*sector += (*offset / 512);
+		*offset %= 512;
+	}
+}
+
 void ata_read(int ata, void* msg, int bytes, unsigned short sector, int offset) {
 	if (ata != ATA0 && ata != ATA1) {
 		log(L_ERROR, "Trying to read from an inexistent disk!! %d - [%d, %d]", ata, sector, offset);
@@ -215,3 +222,4 @@ void ata_checkDrive(int ata) {
 		}
     }
 }
+
