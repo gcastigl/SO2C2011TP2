@@ -54,4 +54,9 @@ int eternumWhile_p(int argc, char** argv);
 
 int diskManagerTest(int argc, char **argv);
 
+int shell_useradd(int argc, char **argv);
+int shell_userdel(int argc, char **argv);
+int shell_userlist(int argc, char **argv);
+int shell_usersetgid(int argc, char **argv);
+
 #endif

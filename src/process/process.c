@@ -4,7 +4,6 @@ extern PROCESS process[];
 extern int nextPID; 
 extern int currentPID;
 int count100;
-int last100[100];
 int firstTime = true;
 int schedulerActive = false;
 static int usePriority;
@@ -109,7 +108,11 @@ PROCESS* getNextTask(int withPriority) {
 int getNextProcess(int oldESP) {
     PROCESS *proc, *proc2;
     proc2 = getProcessByPID(currentPID);
+    if (proc2->status == RUNNING) {
+        proc2->status = READY;
+    }
     proc = getNextTask(usePriority);
+    proc->status = RUNNING;
     proc->lastCalled = 0;
     if (firstTime == false) {
         saveESP(oldESP); // el oldESP esta el stack pointer del proceso

@@ -55,6 +55,11 @@ typedef void*           type_t;
 #define SYSTEM_WRITE	4
 #define SYSTEM_YIELD    5
 
+#define SYSTEM_USERLIST 	9
+#define SYSTEM_USERADD 		10
+#define SYSTEM_USERDEL 		11
+#define SYSTEM_USERSETGID	12
+
 #define STD_IN		0
 #define STD_OUT		1
 #define STD_ERROR	2

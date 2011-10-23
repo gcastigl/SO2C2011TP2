@@ -61,7 +61,7 @@ void session_logout() {
 }
 
 int isValidUser(char* userName) {
-	return user_exists(userName);
+	return user_find(userName);
 }
 
 void prntWelcomeMsg() {

@@ -62,8 +62,22 @@ void keyboardHandler(registers_t regs) {
 	handleScanCode(_port_in(0x60));
 }
 
-void systemCallHandler(int sysCallNumber, void ** args) {
+
+void *systemCallHandler(int sysCallNumber, void ** args) {
+    void *ret = NULL;
 	switch(sysCallNumber) {
+		case SYSTEM_USERLIST:
+			do_userlist((calluser_t **)args[0]);
+			break;
+		case SYSTEM_USERADD:
+			do_useradd(args[0], args[1]);
+			break;
+		case SYSTEM_USERDEL:
+			do_userdel(args[0]);
+			break;
+		case SYSTEM_USERSETGID:
+			do_usersetgid(args[0], (int) args[1]);
+			break;
 		case SYSTEM_WRITE:
 			sysWrite((int) args[0], args[1], (int)args[2]);
 			break;
@@ -74,6 +88,8 @@ void systemCallHandler(int sysCallNumber, void ** args) {
             switchProcess();
             break;
 	}
+	
+    return ret;
 }
 // This gets called from our ASM interrupt handler stub.
 void isr_handler(registers_t regs) {

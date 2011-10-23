@@ -15,14 +15,23 @@ typedef struct {
     int gid;
     char *userInfo;
     char *homePath;
-    char *shellPath;
 } user_t;
+
+typedef struct {
+    int uid;
+    int gid;
+    char *userName;
+} calluser_t;
 
 PUBLIC void user_init();
 PUBLIC user_t *user_get(int uid);
-PUBLIC boolean user_exists(char *userName);
+PUBLIC int user_find(char *userName);
 PUBLIC user_t *user_login(char* userName, char* password);
 PUBLIC char *user_toString(user_t *user);
+PUBLIC boolean do_useradd(char *userName, char *password);
+PUBLIC boolean do_userdel(char *userName);
+PUBLIC boolean do_usersetgid(char *userName, int gid);
+PUBLIC boolean do_userlist(calluser_t **callusers);
 
 #endif	/* USER_H */
 

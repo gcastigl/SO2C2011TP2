@@ -166,8 +166,9 @@ _SysCall:
 	mov edx, [ebp + 20]; param 3
 	
 	int 80h
-
+	mov [ebp + 8], eax
 	popa
+	mov eax, [ebp+8]
 	mov esp, ebp
 	pop ebp
 	ret

@@ -1,7 +1,7 @@
 #ifndef ASM_INTERRUPTS_H
 #define ASM_INTERRUPTS_H
 
-void _systemCallHandler();
+void *_systemCallHandler();
 void _increaseTTCounter();
 void isr_0();
 void isr_1();

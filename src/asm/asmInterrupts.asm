@@ -41,9 +41,11 @@ _systemCallHandler:				; Handler de INT 80h
 	mov		ds, ax
 	mov		es, ax
 	call systemCallHandler
+	push eax
 	mov	al,20h			; Envio de EOI generico al PIC
 	out	20h,al
 	pop eax
+	pop ebx
 	pop esp
 
 	pop ebx
