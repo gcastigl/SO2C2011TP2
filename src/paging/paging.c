@@ -188,14 +188,14 @@ static int first_fframe( void )
 
 void flushPages	(int pid, int action)
 {
-	int pages, mem_dir;
+	int pages, mem_dir, proc_idx;
 	page_t *page;
 	PROCESS * temp, *proc_parent;
 	
 	if(pid == 0)
 	  return;
 	
-	for(int proc_idx = 0; proc_idx < MAX_PROCESSES && process[proc_idx].pid != pid; proc_idx++); 
+	for(proc_idx = 0; proc_idx < MAX_PROCESSES && process[proc_idx].pid != pid; proc_idx++); 
 	
 	if(proc_idx == MAX_PROCESSES ) {
 	  printf("No se encontro proceso!");
