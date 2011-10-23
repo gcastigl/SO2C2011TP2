@@ -259,7 +259,7 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 PRIVATE int _reserveMemoryBitMap(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {
 	_cli();
 	DiskPage currPage;
-	int previousSector, previousOffset, i, j, currSector, currOffset;
+	int previousSector, previousOffset, currSector, currOffset;
 	int disk = ATA0;
 	int numberOfblocks = 512 - sizeof(FSHeader);
 
@@ -270,8 +270,8 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int size, u32int initialSector,
 		log(L_DEBUG, "\nReserving %d bytes => total blocks %d\n", size, neededBlocks);
 
 	// Iterates for each byte to find a bit turned off (empty slot)
-	for(i = 0; i < numberOfblocks && reservedBlocks < neededBlocks; i++) {
-		for (j = 0; j < 8 && reservedBlocks < neededBlocks; j++) {					// each char has 8 bits!
+	for(int i = 0; i < numberOfblocks && reservedBlocks < neededBlocks; i++) {
+		for (int j = 0; j < 8 && reservedBlocks < neededBlocks; j++) {					// each char has 8 bits!
 			currSector = initialSector;
 			currOffset = initialOffset + ((i * 8) + j) * DISK_BLOCK_SIZE_BYTES;
 				log(L_DEBUG, "[%d, %d] -> %s", currSector, currOffset, (BIT(block[i], j) == 0) ? "Free" : "Used");

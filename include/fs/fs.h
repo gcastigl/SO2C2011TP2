@@ -6,14 +6,14 @@
 #include <fs/diskManager.h>
 
 #define INODES					50
-
+#define MAX_OPEN_FILES          50
 void fs_init();
 
 void fs_getRoot(fs_node_t* fsNode);
 
 void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber);
 
-int fs_createFile(u32int parentiNode, char* name);
+u32int fs_createFile(u32int parentiNode, char* name);
 
 u32int fs_createDirectory(u32int parentInode, char* name);
 

@@ -67,8 +67,7 @@ void tty_write(TTY* tty, char* buffer, u32int size) {
 
 void tty_clean(TTY* tty) {
 	char format = video_getFormattedColor(tty->fgColor, tty->bgColor);
-	int i;
-	for(i = 0; i < TOTAL_VIDEO_SIZE; i+=2) {
+	for(int i = 0; i < TOTAL_VIDEO_SIZE; i+=2) {
 		tty->terminal[i] = ' ';
 		tty->terminal[i + 1] = format;
 	};

@@ -58,7 +58,7 @@ void panic(char* str, int line ,int lock) {
         *(video + i) = str[i/2];
     }
     if (lock) {
-        asm volatile("hlt");
+        __asm volatile("hlt");
     }
     _sti();
 }

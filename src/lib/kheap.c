@@ -3,17 +3,15 @@
 #define ALIGN 		1
 #define NOT_ALIGN	!ALIGN
 #define NO_PHYS		0
-
-// proviene de link.ld
+#define SUPER_MAGIC_NUMBER 300
 extern int end;
 extern page_directory_t* kernel_directory;
 
-int nf_address = (int) &end; // ( Next Free Address )
+int nf_address = (int) &end;
 heap_t *kheap=0;
 
 
-// funcion principal de alocacion de memoria 
-void* our_malloc ( int size, int align, u32int *phys )
+void* _malloc (int size, int align, u32int *phys)
 {
     page_t *page;
     if (kheap != 0) {
@@ -21,13 +19,10 @@ void* our_malloc ( int size, int align, u32int *phys )
         if (phys != 0) {
             page = (page_t*)get_page((int)addr, (int)0, kernel_directory);
             *phys = page->frame*0x1000 + (((int)addr) & 0xFFF);
-	    // la direccion fisic esta pensada para guardar las direcciones fisicas de las tablas de paginas
-	    // registro CR3
         }
         return addr;
     } else {
-        if (align == 1 && (nf_address & 0xFFFFF000) ) {
-            // Align the placement address;
+        if (align == 1 && (nf_address & 0xFFFFF000)) {
             nf_address &= 0xFFFFF000;
             nf_address += 0x1000;
         }
@@ -35,7 +30,7 @@ void* our_malloc ( int size, int align, u32int *phys )
             *phys = nf_address;
 
 	void* tmp = (void*)nf_address;
-        nf_address += size * 5;
+        nf_address += size + SUPER_MAGIC_NUMBER;
         return (void*)tmp;
     }
 
@@ -48,20 +43,20 @@ void kfree(void* p)
 }
 
 
-void* kmalloc( int size ) {
-  return our_malloc( size, NOT_ALIGN, NO_PHYS );
+void* kmalloc(int size) {
+  return _malloc(size, NOT_ALIGN, NO_PHYS);
 }
 
-void* kmalloc_a( int size ) {
-  return our_malloc( size, PAGE_ALIGN, NO_PHYS );
+void* kmalloc_a(int size) {
+  return _malloc(size, PAGE_ALIGN, NO_PHYS);
 }
 
-void* kmalloc_p( int size, u32int* phys ) {
-  return our_malloc( size, NOT_ALIGN, phys );
+void* kmalloc_p(int size, u32int* phys) {
+  return _malloc(size, NOT_ALIGN, phys);
 }
 
-void* kmalloc_ap( int size, u32int* phys ) {
-  return our_malloc( size, PAGE_ALIGN, phys );
+void* kmalloc_ap(int size, u32int* phys) {
+  return _malloc(size, PAGE_ALIGN, phys);
 }
 
 static void expand(int new_size, heap_t *heap) {

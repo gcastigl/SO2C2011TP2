@@ -22,7 +22,6 @@ void session_login() {
         	printf("\tInvalid username!\n");
         }
 	} while(!validUser);
-	int validPassword;
 	int retry = 3;
 	static char password[PASS_MAX_LENGTH] = {"\0"};
 	do {

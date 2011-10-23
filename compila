@@ -6,44 +6,43 @@ nasm -f aout ../src/asm/cpuSpeed.asm -o cpuSpeed.o
 nasm -f aout ../src/asm/asmInterrupts.asm -o asmInterrupts.o
 nasm -f aout ../src/asm/process.asm -o processAsm.o
 nasm -f aout ../src/asm/boot.asm -o boot.o
-gcc -m32 -g -c ../src/main.c -o main.o 						    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/main.c -o main.o 						-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
-gcc -m32 -g -c ../src/interrupts/init.c  -o initInterupts.o     -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/interrupts/handlers.c -o handlers.o    	-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/interrupts/init.c  -o initInterupts.o    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/interrupts/handlers.c -o handlers.o    	-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
-gcc -m32 -g -c ../src/driver/video.c -o video.o 			    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/driver/keyboard.c -o keyboard.o 		    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/driver/videoUtils.c -o videoUtils.o 	    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/driver/ata_disk.c -o ata_disk.o		 	-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/driver/video.c -o video.o 			    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/driver/keyboard.c -o keyboard.o 		    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/driver/videoUtils.c -o videoUtils.o 	    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/driver/ata_disk.c -o ata_disk.o		 	-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
-gcc -m32 -g -c ../src/lib/string.c -o string.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/lib/stdlib.c -o stdlib.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/lib/math.c -o math.o 					    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/lib/printf.c -o printf.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/lib/scanf.c -o scanf.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/lib/kheap.c -o kheap.o		 			-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/lib/ordered_map.c -o ordered_map.o		-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/lib/string.c -o string.o 				-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/lib/stdlib.c -o stdlib.o 				-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/lib/math.c -o math.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/lib/printf.c -o printf.o 			    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/lib/scanf.c -o scanf.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/lib/kheap.c -o kheap.o		 			-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/lib/ordered_map.c -o ordered_map.o		-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
-gcc -m32 -g -c ../src/paging/paging.c -o paging.o		 		-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/paging/paging.c -o paging.o		 		-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
-gcc -m32 -g -c ../src/fs/fs.c -o fs.o		 					-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/fs/file.c -o file.o						-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/fs/fs_API.c -o fs_API.o					-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/fs/diskManager.c -o diskManager.o			-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/fs/diskCache.c -o diskCache.o             -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/fs/fs.c -o fs.o		 					-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/fs/file.c -o file.o						-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/fs/fs_API.c -o fs_API.o					-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/fs/diskManager.c -o diskManager.o		-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
-gcc -m32 -g -c ../src/process/process.c -o process.o            -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/process/process.c -o process.o            -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
-gcc -m32 -g -c ../src/io.c -o io.o 							    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/shell.c -o shell.o 					    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/command.c -o command.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/tty.c -o tty.o 						    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/session.c -o session.o		 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/io.c -o io.o 						    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/shell.c -o shell.o 					    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/command.c -o command.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/tty.c -o tty.o 						    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/session.c -o session.o		 			-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
-gcc -m32 -g -c ../src/util/logger.c -o logger.o                 -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -g -c ../src/driver/port.c -o port.o                 -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/util/logger.c -o logger.o                -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/driver/port.c -o port.o                  -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
-gcc -m32 -std=c99 -g -c ../src/permission/user.c -o user.o               -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/permission/user.c -o user.o              -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
 
 ld -melf_i386 -T ../src/link.ld -o kernel.bin *.o
