@@ -61,7 +61,7 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	fsNode->write = fs_write;
 	fsNode->open = fs_open;
 	fsNode->close = fs_close;
-	if ((inode->flags&0x07) == FS_DIRECTORY) {
+	if ((inode->flags & 0x07) == FS_DIRECTORY) {
 		fsNode->finddir = fs_finddir;
 		fsNode->readdir = fs_readdir;
 	} else {
@@ -99,7 +99,7 @@ PRIVATE void fs_load() {
 	_loadDirectory(0);			// Initialize root
 }
 
-int fs_createFile(u32int parentiNode, char* name) {
+u32int fs_createFile(u32int parentiNode, char* name) {
 	fs_node_t node;
 	fs_getFsNode(&node, parentiNode);
 	if (fs_finddir(&node, name) != NULL) {
@@ -108,7 +108,7 @@ int fs_createFile(u32int parentiNode, char* name) {
 	int inode = diskManager_nextInode();
 	_initInode(inode, name, FS_FILE);
 	_appendFile(parentiNode, inode, NULL);
-	return 0;
+	return inode;
 }
 
 u32int fs_createDirectory(u32int parentInode, char* name) {
@@ -161,7 +161,7 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 	} else {
 		strcpy(fileName, name);
 	}
-	if ((inodes[dirInodeNumber].flags&0x07) != FS_DIRECTORY) {
+	if ((inodes[dirInodeNumber].flags & 0x07) != FS_DIRECTORY) {
 		log(L_ERROR, "Trying to add file %s to a non dir!\n\n", name);
 		errno = E_INVALID_ARG;
 		return;

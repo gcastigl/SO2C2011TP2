@@ -22,7 +22,9 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
         initScheduler(true);
 		_initTTCounter();
 		createProcess("tty1", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 0, BACKGROUND, READY, NORMAL);
-		//createProcess("tty2", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 1, BACKGROUND, READY, NORMAL);
+		createProcess("tty2", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 1, BACKGROUND, READY, NORMAL);
+		createProcess("tty3", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 2, BACKGROUND, READY, NORMAL);
+		createProcess("tty4", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 3, BACKGROUND, READY, NORMAL);
 	_sti();
     while (1);
 	return 0;
@@ -66,5 +68,16 @@ u32int __write(int fd, const void * buffer, u32int count) {
 
 u32int yield(void) {
     _SysCall(SYSTEM_YIELD);
+    return 0;
+}
+
+u32int open(char* path, int oflags, ...) {
+    int create_flags = 0;
+    if (oflags & O_CREAT) {
+        va_list ap;
+        va_start(ap, oflags);
+        create_flags = va_arg(ap, int);
+    }
+    _SysCall(SYSTEM_OPEN, path, oflags, create_flags);
     return 0;
 }

@@ -8,6 +8,7 @@
 #include <interrupts/defs.h>
 #include <process/process.h>
 #include <permission/user.h>
+#include <fs/file.h>
 
 void initBasicHandlers();
 extern void _gdt_flush(u32int);
