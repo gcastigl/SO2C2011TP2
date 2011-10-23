@@ -3,7 +3,7 @@
 #define ALIGN 		1
 #define NOT_ALIGN	!ALIGN
 #define NO_PHYS		0
-
+#define SUPER_MAGIC_NUMBER 300
 // proviene de link.ld
 extern int end;
 extern page_directory_t* kernel_directory;
@@ -35,7 +35,7 @@ void* our_malloc ( int size, int align, u32int *phys )
             *phys = nf_address;
 
 	void* tmp = (void*)nf_address;
-        nf_address += size * 5;
+        nf_address += size + SUPER_MAGIC_NUMBER;
         return (void*)tmp;
     }
 

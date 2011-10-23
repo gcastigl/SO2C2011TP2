@@ -35,7 +35,7 @@ typedef struct {
 
 int last100[100];
 
-#define DEFAULT_STACK_SIZE 0x1000
+#define DEFAULT_STACK_SIZE 0x300
 
 void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** argv, int stacklength, void (*cleaner)(void), int tty,
     int groundness, int status, int priority);

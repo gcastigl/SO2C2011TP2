@@ -22,7 +22,9 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
         initScheduler(true);
 		_initTTCounter();
 		createProcess("tty1", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 0, BACKGROUND, READY, NORMAL);
-		//createProcess("tty2", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 1, BACKGROUND, READY, NORMAL);
+		createProcess("tty2", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 1, BACKGROUND, READY, NORMAL);
+		createProcess("tty3", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 2, BACKGROUND, READY, NORMAL);
+		createProcess("tty4", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 3, BACKGROUND, READY, NORMAL);
 	_sti();
     while (1);
 	return 0;
