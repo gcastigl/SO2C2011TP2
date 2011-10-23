@@ -21,7 +21,9 @@ void _setFileheader(u32int inodeNumber, FileHeader *header);
 void _getFileheader(u32int inodeNumber, FileHeader *header);
 
 void diskManager_init(u32int maxNodes) {
-	log(L_DEBUG, "using block size: %d", DISK_BLOCK_SIZE_BYTES);
+	log(L_DEBUG, "Using block size: %d", DISK_BLOCK_SIZE_BYTES);
+	log(L_DEBUG, "DiskPage size: %d", sizeof(DiskPage));
+	log(L_DEBUG, "FileHeader size: %d", sizeof(FileHeader));
 }
 
 boolean diskManager_validateHeader() {
@@ -30,7 +32,7 @@ boolean diskManager_validateHeader() {
 	if (header.magic == MAGIC_NUMBER) {
 		maxIndes = header.maxNodes;
 	}
-	log(L_DEBUG, "Header for the OS is %svalid", header.magic == MAGIC_NUMBER ? "" : " NOT");
+		log(L_DEBUG, "Header for the OS is %svalid", header.magic == MAGIC_NUMBER ? "" : "NOT ");
 	return header.magic == MAGIC_NUMBER;
 }
 
@@ -40,7 +42,7 @@ void diskManager_writeHeader(u32int maxNodes) {
 	header.totalNodes = 0;
 	header.maxNodes = maxNodes;
 	maxIndes = maxNodes;
-	log(L_DEBUG, "Writing OS header");
+		log(L_DEBUG, "Writing OS header");
 	ata_write(ATA0, &header, sizeof(FSHeader), 0, 0);
 }
 
@@ -48,7 +50,7 @@ int diskManager_nextInode() {
 	FSHeader header;
 	ata_read(ATA0, &header, sizeof(FSHeader), 0, 0);
 	int nextiNode = header.totalNodes++;
-	log(L_DEBUG, "next inodeNumber to save in disk => %d", nextiNode);
+		log(L_DEBUG, "next inodeNumber to save in disk => %d", nextiNode);
 	ata_write(ATA0, &header, sizeof(FSHeader), 0, 0);			// Update totalNodes value
 	return nextiNode;
 }
@@ -61,34 +63,33 @@ void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 	newiNode.usedMem  = reservedBlocks * sizeof(DiskPage) + sizeof(FileHeader);
 	newiNode.contentMaxBytes = newiNode.totalReservedMem - newiNode.usedMem;
 	newiNode.contentUsedBytes = 0;
-	ata_write(ATA0, &newiNode, sizeof(iNodeDisk), 1, inodeNumber * sizeof(iNodeDisk));
-		log(L_DEBUG, "Created inode at [%d, %d], Contents[MAX: %d, used: %d], Total[MAX: %d, used: %d]", 1, inodeNumber * sizeof(iNodeDisk), newiNode.contentMaxBytes, newiNode.contentUsedBytes, newiNode.totalReservedMem, newiNode.usedMem);
+	_setiNode(inodeNumber, &newiNode);
+		log(L_DEBUG, "Create inode %d, %s at [%d, %d], Contents[MAX: %d, used: %d], Total[MAX: %d, used: %d]\n", inodeNumber, name, 1, inodeNumber * sizeof(iNodeDisk), newiNode.contentMaxBytes, newiNode.contentUsedBytes, newiNode.totalReservedMem, newiNode.usedMem);
 	FileHeader header;
 	header.magic = MAGIC_NUMBER;
 	strcpy(header.name, name);
-	log(L_DEBUG, "%d -> header name: %s\n", inodeNumber, header.name);
 	header.gid = inode->gid;
 	header.uid  =inode->uid;
 	header.flags = inode->flags;
 	header.impl = inode->impl;
 	header.mask = inode->mask;
 	ata_write(newiNode.data.disk, &header, sizeof(FileHeader), newiNode.data.nextSector, newiNode.data.nextOffset + sizeof(DiskPage));
-		log(L_DEBUG, "written inode header to: [%d, %d + %d]", newiNode.data.nextSector, newiNode.data.nextOffset, sizeof(DiskPage));
+		// log(L_DEBUG, "written inode header to: [%d, %d + %d]", newiNode.data.nextSector, newiNode.data.nextOffset, sizeof(DiskPage));
 }
 
 void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name) {
 	iNodeDisk inodeOnDisk;
 	_getiNode(inodeNumber, &inodeOnDisk);
-		log(L_DEBUG, "reading from inode: %d -> [%d, %d]", inodeNumber, inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset);
+		// log(L_DEBUG, "reading from inode: %d -> [%d, %d]", inodeNumber, inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset);
 	if (inodeOnDisk.data.magic != MAGIC_NUMBER) {
-		log(L_ERROR, "Can't read iNode %d - Corrupted file!", inodeNumber);
+			log(L_ERROR, "Can't read iNode %d - Corrupted file!", inodeNumber);
 		errno = E_CORRUPTED_FILE;
 		return;
 	}
 	FileHeader header;
 	ata_read(inodeOnDisk.data.disk, &header, sizeof(FileHeader), inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset + sizeof(DiskPage));
 	if (header.magic != MAGIC_NUMBER) {
-		log(L_ERROR, "Can't read file header (%d) - Corrupted->[%d, %d]", inodeNumber, inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset);
+			// log(L_ERROR, "Can't read file header (%d) - Corrupted->[%d, %d]", inodeNumber, inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset);
 		errno = E_CORRUPTED_FILE;
 		return;
 	}
@@ -109,23 +110,25 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name) {
 int diskManager_writeContents(u32int inodeNumber, char *contents, u32int length, u32int offset) {
 	iNodeDisk inode;
 	_getiNode(inodeNumber, &inode);
-	log(L_DEBUG, "updating contents, %d bytes to inode: %d -> [%d, %d]", length, inodeNumber, inode.data.nextSector, inode.data.nextOffset);
+		// log(L_DEBUG, "updating contents, %d bytes to inode: %d -> [%d, %d]", length, inodeNumber, inode.data.nextSector, inode.data.nextOffset);
+		// log(L_DEBUG,"Contents[MAX: %d, used: %d], Total[MAX: %d, used: %d]", inode.contentMaxBytes, inode.contentUsedBytes, inode.totalReservedMem, inode.usedMem);
 	if (inode.data.magic != MAGIC_NUMBER) {
 		log(L_ERROR, "Trying to write to a corrupted page!");
 		errno = E_CORRUPTED_FILE;
 		return -1;
 	}
-	if (inode.usedMem + length > inode.totalReservedMem) {
-			log(L_DEBUG, "Size is not enough, have: %d, used %d... and need to save %d total bytes", inode.totalReservedMem, inode.usedMem, length);
+	inode.usedMem = inode.usedMem - inode.contentUsedBytes + length;
+	if (inode.usedMem > inode.totalReservedMem) {
+			log(L_DEBUG, "Size is not enough, have: %d, used %d... and need to save %d total bytes - extending memory", inode.totalReservedMem, inode.usedMem, length);
 		_extendMemory(&inode.data, length, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
 		//inode.totalReservedMem += 0;
-			log(L_DEBUG, "after ext: %d [%d, %d]", inodeNumber, inode.data.nextSector, inode.data.nextOffset);
 	}
 	int status = _writeBlock(&inode.data, contents, length, offset);
-	if (status == -1)
+	if (status == -1) {
+		log(L_ERROR, "\n_writeBlock has failed writing contents...\n");
 		return -1;
+	}
 	// FIXME: this is only true when over writting all existing contents...
-	inode.usedMem -= inode.contentUsedBytes + length;
 	inode.contentUsedBytes = length;
 	_setiNode(inodeNumber, &inode);
 	return 0;
@@ -139,7 +142,7 @@ int diskManager_readContents(u32int inodeNumber, char* contents, u32int length, 
 		errno = E_CORRUPTED_FILE;
 		return -1;
 	}
-		log(L_DEBUG, "READING %d bytes from inode %d with %d bytes / %d", length, inodeNumber, inode.data.totalLength, inode.data.usedBytes);
+		// log(L_DEBUG, "READING %d bytes from inode %d with %d bytes / %d", length, inodeNumber, inode.data.totalLength, inode.data.usedBytes);
 	return _readBlock(&inode.data, contents, length, offset);
 }
 
@@ -147,7 +150,7 @@ int diskManager_readContents(u32int inodeNumber, char* contents, u32int length, 
 PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int offset) {
 	// Read FilePage
 	DiskPage currPage;
-		log(L_DEBUG,"reding file page: [%d, %d]\n", page->nextSector, page->nextOffset);
+		// log(L_DEBUG,"reding file page: [%d, %d]\n", page->nextSector, page->nextOffset);
 	ata_read(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
 	if (currPage.magic != MAGIC_NUMBER) {
 		log(L_ERROR,"CORRUPTED FILE PAGE! [%d, %d]\n",  page->nextSector, page->nextOffset);
@@ -160,25 +163,24 @@ PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int off
 		// Start reading from current page
 		bytesFromContent = MIN(currPage.usedBytes - FILE_BLOCK_OVERHEAD_SIZE_BYTES - offset, length);
 		length -= bytesFromContent;
-		log(L_DEBUG, "reading contents, %d bytes from [%d, %d]", bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
+			// log(L_DEBUG, "reading contents, %d bytes from [%d, %d]", bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
 		ata_read(page->disk, contents, bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
 		contents += bytesFromContent;
 		offset = 0;
 	} else
 		offset -= (currPage.usedBytes - FILE_BLOCK_OVERHEAD_SIZE_BYTES);
 
-		log(L_DEBUG, "reading %d bytesFromContent", bytesFromContent);
 	if (bytesFromContent == 0) {
 		return 0;
 	}
 	while(length != 0) {
 		int currPageSector = currPage.nextSector;
 		int currPageOffset = currPage.nextOffset;
-		log(L_DEBUG, "reading next page [%d, %d]", currPage.nextSector, currPage.nextOffset);
+			// log(L_DEBUG, "reading next page [%d, %d]", currPage.nextSector, currPage.nextOffset);
 		ata_read(currPage.disk, &currPage, sizeof(DiskPage), currPage.nextSector, currPage.nextOffset);
 		if (offset < currPage.usedBytes - sizeof(DiskPage)) {			// Read from beginning
 			bytesFromContent = MIN(currPage.usedBytes - sizeof(DiskPage) - offset, length);
-			log(L_DEBUG, "reding %d bytes from [%d, %d]", bytesFromContent, currPageSector, currPageOffset + sizeof(DiskPage) + offset);
+				// log(L_DEBUG, "reding %d bytes from [%d, %d]", bytesFromContent, currPageSector, currPageOffset + sizeof(DiskPage) + offset);
 			ata_read(page->disk, contents, bytesFromContent, currPageSector, currPageOffset + sizeof(DiskPage) + offset);
 			contents += bytesFromContent;
 			length -= bytesFromContent;
@@ -193,7 +195,7 @@ PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int off
 PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int offset) {
 	DiskPage currPage;
 	int total = length;
-		log(L_DEBUG,"validating file page: [%d, %d]", page->nextSector, page->nextOffset);
+		// log(L_DEBUG,"validating file page: [%d, %d]", page->nextSector, page->nextOffset);
 	ata_read(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
 	if (currPage.magic != MAGIC_NUMBER) {
 		log(L_ERROR,"CORRUPTED FILE PAGE! [%d, %d]",  page->nextSector, page->nextOffset);
@@ -206,14 +208,14 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 		return -1;
 	}
 	int bytesFromContent = MIN(currPage.totalLength - FILE_BLOCK_OVERHEAD_SIZE_BYTES, length);
-		log(L_DEBUG,"TOTAL %d, OVERHEAD = %d / Available: %d,  length = %d", currPage.totalLength, FILE_BLOCK_OVERHEAD_SIZE_BYTES, currPage.totalLength - FILE_BLOCK_OVERHEAD_SIZE_BYTES, length);
-		log(L_DEBUG,"writing contents to: [%d, %d]len:%d", page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES, bytesFromContent);
+		// log(L_DEBUG,"TOTAL %d, OVERHEAD = %d / Available: %d,  length = %d", currPage.totalLength, FILE_BLOCK_OVERHEAD_SIZE_BYTES, currPage.totalLength - FILE_BLOCK_OVERHEAD_SIZE_BYTES, length);
+		// log(L_DEBUG,"writing contents to: [%d, %d]len:%d", page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES, bytesFromContent);
 	ata_write(page->disk, contents, bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES);
 	length -= bytesFromContent;
 	contents += bytesFromContent;
 
 	currPage.usedBytes = FILE_BLOCK_OVERHEAD_SIZE_BYTES + bytesFromContent;
-	log(L_DEBUG, "Updating DiskPage... [%d, %d], used %d, total %d", page->nextSector, page->nextOffset, currPage.usedBytes, currPage.totalLength);
+		// log(L_DEBUG, "Updating DiskPage... [%d, %d], used %d, total %d", page->nextSector, page->nextOffset, currPage.usedBytes, currPage.totalLength);
 	ata_write(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
 
 	int pageSector, pageOffset;
@@ -229,7 +231,7 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 		ata_read(currPage.disk, &currPage, sizeof(DiskPage), currPage.nextSector, currPage.nextOffset);
 		if (currPage.magic == MAGIC_NUMBER) {
 			bytesFromContent = MIN(currPage.totalLength - sizeof(DiskPage), length);
-			log(L_DEBUG, "writing %s (%d) to [%d, %d]", contents, bytesFromContent, pageSector, pageOffset + sizeof(DiskPage));
+				// log(L_DEBUG, "writing %s (%d) to [%d, %d]", contents, bytesFromContent, pageSector, pageOffset + sizeof(DiskPage));
 			ata_write(currPage.disk, contents, bytesFromContent, pageSector, pageOffset + sizeof(DiskPage));
 			length -= bytesFromContent;
 			contents += bytesFromContent;
@@ -241,7 +243,7 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 		}
 	}
 	page->usedBytes = total;
-	log(L_DEBUG, "Total used bytes after writing: %d", page->usedBytes);
+		// log(L_DEBUG, "Total used bytes after writing: %d", page->usedBytes);
 	return 0;
 }
 
@@ -257,7 +259,7 @@ PRIVATE int _reserveMemory(DiskPage *page, int size, u32int initialSector, u32in
 	u32int maxOffset = 4098;	// FIXME: implement driveCapacity() in the ata_driver
 
 	int blocks = (size / (DISK_BLOCK_SIZE_BYTES + 1)) + 1;
-	log(L_DEBUG, "\nReserving %d bytes => total blocks %d\n", size, blocks);
+		// log(L_DEBUG, "\nReserving %d bytes => total blocks %d\n", size, blocks);
 	while (reserved < blocks && offset < maxOffset) {
 		ata_read(ATA0, &currPage, sizeof(DiskPage), sector, offset);
 		log(L_DEBUG, "[%d, %d] -> %s", sector, offset, currPage.magic == MAGIC_NUMBER ? "Used" : "free");
@@ -267,10 +269,10 @@ PRIVATE int _reserveMemory(DiskPage *page, int size, u32int initialSector, u32in
 			currPage.usedBytes = 0;
 			currPage.totalLength = DISK_BLOCK_SIZE_BYTES;
 			currPage.disk = disk;
-			log(L_DEBUG, "using [%d, %d] - %d\n", sector, offset, currPage);
+			log(L_DEBUG, "using [%d, %d] - %d", sector, offset, currPage);
 			ata_write(disk, &currPage, sizeof(DiskPage), sector, offset);			// write header to disk
 			if (reserved > 0) {														// Update previous header to point to this one
-				log(L_DEBUG, "reading prevoius header [%d, %d]", previousSector, previousOffset);
+					// log(L_DEBUG, "reading prevoius header [%d, %d]", previousSector, previousOffset);
 				ata_read(disk, &currPage, sizeof(DiskPage), previousSector, previousOffset);
 				currPage.nextSector = sector;
 				currPage.nextOffset = offset;
@@ -297,7 +299,7 @@ PRIVATE int _reserveMemory(DiskPage *page, int size, u32int initialSector, u32in
 		_freeMemory(page);
 		errno = E_OUT_OF_MEMORY;
 	}
-	log(L_DEBUG, "finished reserving memory");
+		// log(L_DEBUG, "finished reserving memory\n");
 	return blocks;
 }
 
@@ -319,15 +321,14 @@ PRIVATE void _extendMemory(DiskPage *page, int size, u32int initialSector, u32in
 	DiskPage lastPage;
 	u32int lastPageSector = page->nextSector,
 			lastPageOffset = page->nextOffset;
-	log(L_DEBUG, "last: sector: %d, offset: %d", lastPageSector, lastPageOffset);
+		// log(L_DEBUG, "last: sector: %d, offset: %d", lastPageSector, lastPageOffset);
 	memcpy(&lastPage, page, sizeof(DiskPage));
 	// Get the end of this memory segment...
 	while(lastPage.hasNextPage) {
 		lastPageSector = lastPage.nextSector;
 		lastPageOffset = lastPage.nextOffset;
-		log(L_DEBUG, "reading from [%d, %d]", lastPage.nextSector, lastPage.nextOffset);
+			// log(L_DEBUG, "reading from [%d, %d]", lastPage.nextSector, lastPage.nextOffset);
 		ata_read(disk, &lastPage, sizeof(DiskPage), lastPage.nextSector, lastPage.nextOffset);
-		log(L_DEBUG, "OK!");
 	}
 
 	// Reserve extra memory
@@ -337,7 +338,7 @@ PRIVATE void _extendMemory(DiskPage *page, int size, u32int initialSector, u32in
 	lastPage.hasNextPage = true;
 	lastPage.nextSector = cont.nextSector;
 	lastPage.nextOffset = cont.nextOffset;
-	log(L_DEBUG, "saving to: [%d, %d, %d]", disk, lastPageSector, lastPageOffset);
+		// log(L_DEBUG, "saving to: [%d, %d, %d]", disk, lastPageSector, lastPageOffset);
 	ata_write(disk, &lastPage, sizeof(DiskPage), lastPageSector, lastPageOffset);
 }
 
@@ -349,7 +350,6 @@ PRIVATE void _setiNode(u32int inodeNumber, iNodeDisk *inode) {
 
 PRIVATE void _getiNode(u32int inodeNumber, iNodeDisk *inode) {
 	ata_read(ATA0, inode, sizeof(iNodeDisk), 1, inodeNumber * sizeof(iNodeDisk));
-	// log(L_DEBUG,"_getiNode %d node: [%d, %d], size: %d\n", inode, page->nextSector, page->nextOffset, page->totalLength);
 }
 
 
@@ -381,7 +381,7 @@ void _getFileheader(u32int inodeNumber, FileHeader *header) {
 		errno = E_CORRUPTED_FILE;
 		return;
 	}
-	log(L_DEBUG, "Reading header from: [%d, %d]", inode.data.nextSector, inode.data.nextOffset + sizeof(DiskPage));
+		// log(L_DEBUG, "Reading header from: [%d, %d]", inode.data.nextSector, inode.data.nextOffset + sizeof(DiskPage));
 	ata_read(inode.data.disk, header, sizeof(FileHeader), inode.data.nextSector, inode.data.nextOffset + sizeof(DiskPage));
 }
 
