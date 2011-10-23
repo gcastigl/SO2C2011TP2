@@ -63,7 +63,8 @@ void keyboardHandler(registers_t regs) {
 }
 
 
-void systemCallHandler(int sysCallNumber, void ** args) {
+void *systemCallHandler(int sysCallNumber, void ** args) {
+    void *ret = NULL;
 	switch(sysCallNumber) {
 		case SYSTEM_USERLIST:
 			do_userlist((calluser_t **)args[0]);
@@ -87,6 +88,8 @@ void systemCallHandler(int sysCallNumber, void ** args) {
             switchProcess();
             break;
 	}
+	
+    return ret;
 }
 // This gets called from our ASM interrupt handler stub.
 void isr_handler(registers_t regs) {

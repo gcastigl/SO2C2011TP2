@@ -24,7 +24,7 @@ int _cpuIdTest();
 int _rdtscTest();
 int _rdmsrTest();
 
-void _SysCall();
+void *_SysCall();
 
 void _initTTCounter();
 int _getTTCounter();

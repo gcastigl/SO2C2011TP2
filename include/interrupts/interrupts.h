@@ -15,7 +15,7 @@ extern void _idt_flush(u32int);
 void init_descriptor_tables();
 void timerTickHandler(registers_t regs);
 void keyboardHandler(registers_t regs);
-void systemCallHandler(int sysCallNumber, void ** args);
+void *systemCallHandler(int sysCallNumber, void ** args);
 //Used only by getCPUspeed. makes it atomic
 void disableTaskSwitch();
 void enableTaskSwitch();
