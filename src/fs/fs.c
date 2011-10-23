@@ -45,6 +45,7 @@ void fs_getRoot(fs_node_t* fsNode) {
 
 void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	if (inodes[inodeNumber].inodeId == -1) {				// the inode is not loaded on memory
+		// log(L_DEBUG, "loading %d node from memory", inodeNumber);
 		diskManager_readInode(&inodes[inodeNumber], inodeNumber, fsNode->name);
 	}
 	iNode* inode = &inodes[inodeNumber];
@@ -108,6 +109,7 @@ u32int fs_createDirectory(u32int parentInode, char* name) {
 	if (fs_finddir(&node, name) != NULL) {
 		return E_FILE_EXISTS;
 	}
+	// log(L_DEBUG, "initializing dierctory %d, name %s", newInode, name);
 	int newInode = diskManager_nextInode();
 	_initInode_dir(newInode, name, parentInode);
 	_appendFile(parentInode, newInode, NULL);
@@ -157,7 +159,7 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 		return;
 	}
 	int contentsLength = diskManager_size(dirInodeNumber);
-	log(L_DEBUG, "_appendFile: int contLen = %d, appending %s", contentsLength, name);
+		// log(L_DEBUG, "_appendFile: int contLen = %d, appending %s", contentsLength, name);
 	int nameLen = strlen(fileName) + 1;
 	char content[contentsLength + 2 * sizeof(u32int) + nameLen];
 	diskManager_readContents(dirInodeNumber, content, contentsLength, 0);
@@ -168,7 +170,7 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 	memcpy(content + offset, &nameLen, sizeof(u32int));			offset += sizeof(u32int);
 	memcpy(content + offset, fileName, nameLen); 				offset += nameLen;
 	inodes[dirInodeNumber].length = offset;
-	log(L_DEBUG, "_appendFile: final contLen = %d, appending %s", offset, name);
+		// log(L_DEBUG, "_appendFile: final contLen = %d, appending %s", offset, name);
 	diskManager_writeContents(dirInodeNumber, content, offset, 0);
 }
 
@@ -189,7 +191,7 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 		offset += sizeof(u32int);					// skip inodeNumber
 		memcpy(&len, contents + offset, sizeof(u32int));
 		offset += sizeof(u32int);					// skip strlen
-		// printf("file: %s\n", contents + offset);
+			// log(L_DEBUG, "file: %s - %d\n", contents + offset, len);
 		offset += len;								// skip fileName
 		i++;
 	}
@@ -197,7 +199,7 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 	if (offset < length) {
 		int inodeNumber;
 		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
-		// printf("directory %d... inode: %d\n", i, inodeNumber);
+		// log(L_DEBUG, "directory %d... inode: %d\n", i, inodeNumber);
 		fsNode = kmalloc(sizeof(fs_node_t));
 		fs_getFsNode(fsNode, inodeNumber);
 	}
@@ -210,7 +212,6 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 	diskManager_readContents(node->inode, contents, length, 0);
 	u32int offset = 0, len, inodeNumber;
 	while (offset < inodes[node->inode].length) {
-		log(L_DEBUG, "loopimg in fs_finddir");
 		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
 		offset += sizeof(u32int);					// skip inodeNumber
 		memcpy(&len, contents + offset, sizeof(u32int));
