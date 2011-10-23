@@ -53,7 +53,8 @@ typedef void*           type_t;
 
 #define SYSTEM_READ		3
 #define SYSTEM_WRITE	4
-#define SYSTEM_YIELD    5
+#define SYSTEM_OPEN     5
+#define SYSTEM_YIELD    6
 
 #define SYSTEM_USERLIST 	9
 #define SYSTEM_USERADD 		10

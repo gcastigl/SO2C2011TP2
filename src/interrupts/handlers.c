@@ -87,6 +87,8 @@ void *systemCallHandler(int sysCallNumber, void ** args) {
 		case SYSTEM_YIELD:
             switchProcess();
             break;
+        case SYSTEM_OPEN:
+            break;
 	}
 	
     return ret;

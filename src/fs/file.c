@@ -100,3 +100,6 @@ int cat(int argc, char **argv) {
 	return 0;
 }
 
+int open(char* path, int oflags, ...) {
+    return 0;
+}

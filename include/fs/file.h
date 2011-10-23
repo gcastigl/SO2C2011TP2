@@ -11,6 +11,16 @@ typedef struct {
 	u32int index;
 } FILE;
 
+#define O_RDONLY    1
+#define O_WRONLY    2
+#define O_RDWR      4
+
+#define O_APPEND    (1 << 0)
+#define O_CREAT     (1 << 1)
+#define O_EXCL      (1 << 2)
+#define O_NOFOLLOW  (1 << 3)
+#define O_TRUNC     (1 << 4)
+
 int cd(int argc, char **argv);
 
 int ls(int argc, char **argv);
@@ -28,17 +38,7 @@ int loadFileSystem();
 
 int fileIO(char * a);
 
-int pwd(char * arg);
-
 int cat(char * arg);
-
-int cd(char * arg);
-
-int touch( char * arg );
-
-int mkdir(char * arg);
-
-int ls(char * a);
 
 int edit(char * arg);
 
