@@ -30,6 +30,7 @@ gcc -m32 -std=c99 -g -c ../src/fs/fs.c -o fs.o		 					-I../include -fno-builtin 
 gcc -m32 -std=c99 -g -c ../src/fs/file.c -o file.o						-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/fs/fs_API.c -o fs_API.o					-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/fs/diskManager.c -o diskManager.o		-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/fs/diskCache.c -o diskCache.o            -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
 gcc -m32 -std=c99 -g -c ../src/process/process.c -o process.o            -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
