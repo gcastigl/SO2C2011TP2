@@ -236,7 +236,7 @@ PUBLIC user_t *user_get(int uid) {
 	if (user == NULL) {
 		log(L_TRACE, "invalid user uid: %d", uid);
 	}
-	log(L_DEBUG, "uid %d: %d", uid, (int)user);
+	//	log(L_DEBUG, "uid %d: %d", uid, (int)user);
 	return user;
 }
 
