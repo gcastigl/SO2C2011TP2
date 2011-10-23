@@ -31,7 +31,6 @@ int pwd(int argc, char **argv);
 
 int touch(int argc, char **argv);
 
-int sysOpen(char* fileName, int oflags, int cflags);
 /*
 void createFilesystem();
 

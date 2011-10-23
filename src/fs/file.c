@@ -99,19 +99,3 @@ int cat(int argc, char **argv) {
 
 	return 0;
 }
-
-int sysOpen(char* fileName, int oflags, int cflags) {
-    int inode;
-    if (oflags & O_CREAT) {
-        // FIXME: SHOULD CONSIDER CFLAGS
-        inode = fs_createFile(tty_getCurrentTTY()->currDirectory, fileName);
-        if ((oflags & O_EXCL) && (inode == E_FILE_EXISTS)) {
-            return ERROR;
-        }
-    }
-    TTY* tty = tty_getCurrentTTY();
-	u32int currentiNode = tty->currDirectory;
-	fs_node_t current;
-	fs_getFsNode(&current, currentiNode);
-    return 0;
-}

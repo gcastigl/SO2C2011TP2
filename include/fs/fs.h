@@ -6,7 +6,7 @@
 #include <fs/diskManager.h>
 
 #define INODES					50
-
+#define MAX_OPEN_FILES          50
 void fs_init();
 
 void fs_getRoot(fs_node_t* fsNode);

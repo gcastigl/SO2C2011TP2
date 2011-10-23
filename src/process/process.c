@@ -98,7 +98,7 @@ PROCESS* getNextTask(int withPriority) {
             }
         }
     }
-    last100[(count100 = count100++ % 100)] = nextReady;
+    last100[(count100 = (count100 + 1) % 100)] = nextReady;
     return &process[nextReady];
 
     //notar que si no hay procesos disponibles, retornara &processes[0], o sea idle
