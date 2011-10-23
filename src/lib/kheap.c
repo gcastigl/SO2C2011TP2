@@ -48,8 +48,11 @@ void kfree(void* p)
 }
 
 
-void* kmalloc( int size ) {
-  return our_malloc( size, NOT_ALIGN, NO_PHYS );
+
+void*  _kmalloc	(char* file, int line, int size) {
+	void *ret = our_malloc( size, NOT_ALIGN, NO_PHYS );
+	_log(file, line, L_TRACE, "***KMALLOC*** %d", (int)ret);
+	return ret;
 }
 
 void* kmalloc_a( int size ) {
