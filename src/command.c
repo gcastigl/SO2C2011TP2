@@ -223,3 +223,49 @@ int format(int argc, char **argv) {
 	fs_format();
 	return 0;
 }*/
+
+int shell_useradd(int argc, char **argv) {
+	if (argc != 2) {
+		printf("usage: useradd USERNAME PASSWORD\n");
+		return -1;
+	}
+	_SysCall(SYSTEM_USERADD, argv[0], argv[1]);
+	return 0;
+}
+
+int shell_userdel(int argc, char **argv) {
+	if (argc != 1) {
+		printf("usage: userdel USERNAME\n");
+		return -1;
+	}
+	_SysCall(SYSTEM_USERDEL, argv[0]);
+	return 0;
+}
+
+int shell_userlist(int argc, char **argv) {
+	if (argc != 0) {
+		printf("usage: userlist\n");
+		return -1;
+	}
+	calluser_t *userlist[USER_MAX];
+	_SysCall(SYSTEM_USERLIST, userlist);
+	printf("\tusername\tuid\tgid\n");
+	printf("\t--------\t---\t---\n");
+	int i;
+	for (i = 0; i < USER_MAX; ++i) {
+		calluser_t *user = userlist[i];
+		if (user != NULL) {
+			printf("\t%s\t%d\t%d\n", user->userName, user->uid, user->gid);
+		}
+	}
+	return 0;
+}
+
+int shell_usersetgid(int argc, char **argv) {
+	if (argc != 2) {
+		printf("usage: usersetgid USERNAME GID\n");
+		return -1;
+	}
+	_SysCall(SYSTEM_USERSETGID, argv[0], atoi(argv[1]));
+	return 0;
+}

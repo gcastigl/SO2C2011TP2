@@ -62,8 +62,21 @@ void keyboardHandler(registers_t regs) {
 	handleScanCode(_port_in(0x60));
 }
 
+
 void systemCallHandler(int sysCallNumber, void ** args) {
 	switch(sysCallNumber) {
+		case SYSTEM_USERLIST:
+			do_userlist((calluser_t **)args[0]);
+			break;
+		case SYSTEM_USERADD:
+			do_useradd(args[0], args[1]);
+			break;
+		case SYSTEM_USERDEL:
+			do_userdel(args[0]);
+			break;
+		case SYSTEM_USERSETGID:
+			do_usersetgid(args[0], (int) args[1]);
+			break;
 		case SYSTEM_WRITE:
 			sysWrite((int) args[0], args[1], (int)args[2]);
 			break;
