@@ -27,8 +27,62 @@ PRIVATE boolean user_add(user_t *user) {
 }
 
 PRIVATE boolean user_remove(user_t *user) {
+	if (user == NULL) {
+		log(L_ERROR, "invalid user to remove");
+		return false;
+	}
 	users[user->uid] = NULL;
 	return true;
+}
+
+PRIVATE calluser_t *_userToCallUser(user_t *user) {
+	if (user == NULL) {
+		return NULL;
+	}
+	log(L_DEBUG, "1");
+	calluser_t *calluser = kmalloc(sizeof(calluser_t));
+	log(L_DEBUG, "2");
+	calluser->uid = user->uid;
+	log(L_DEBUG, "3");
+	calluser->gid = user->gid;
+	log(L_DEBUG, "4 %d-%d-%s", user->uid, user->gid, user->userName);
+	calluser->userName = kmalloc(strlen(user->userName)*sizeof(char));
+	log(L_DEBUG, "5");
+	strcpy(calluser->userName, user->userName);
+	log(L_DEBUG, "6");
+	return calluser;
+}
+
+PUBLIC boolean do_userlist(calluser_t **callusers) {
+	log(L_DEBUG, "douserlist");
+	for (int i = 0; i < USER_MAX; ++i) {
+		callusers[i] = _userToCallUser(user_get(i));
+		if (callusers[i] != NULL) {
+			log(L_DEBUG, "callu: %d, %d, %s",
+				callusers[i]->uid,
+				callusers[i]->gid,
+				callusers[i]->userName
+			);
+		}
+	}
+	return true;
+}
+
+PUBLIC boolean do_usersetgid(char *userName, int gid) {
+	int uid = user_find(userName);
+	user_t *user = user_get(uid);
+	if (user == NULL) {
+		log(L_ERROR, "invalid user uid, %d: %s", uid, userName);
+		return false;
+	} else {
+		if (gid < 0 || gid >= USER_MAX) {
+			log(L_ERROR, "invalid gid: %d", gid);
+			return false;
+		}
+		log(L_INFO, "old: %d. new: %d", user->gid, gid);
+		user->gid = gid;
+		return true;
+	}
 }
 
 PUBLIC boolean do_useradd(char *userName, char *password) {
@@ -69,7 +123,7 @@ PUBLIC boolean do_userdel(char *userName) {
 
 PRIVATE int _findOpenUid() {
 	for (int i = 0; i < USER_MAX; ++i) {
-		if (users[i] == NULL) {
+		if (user_get(i) == NULL) {
 			return i;
 		}
 	}
@@ -182,6 +236,7 @@ PUBLIC user_t *user_get(int uid) {
 	if (user == NULL) {
 		log(L_TRACE, "invalid user uid: %d", uid);
 	}
+	log(L_DEBUG, "uid %d: %d", uid, (int)user);
 	return user;
 }
 
