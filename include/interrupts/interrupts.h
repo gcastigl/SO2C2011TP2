@@ -7,6 +7,7 @@
 #include <util/logger.h>
 #include <interrupts/defs.h>
 #include <process/process.h>
+#include <permission/user.h>
 
 void initBasicHandlers();
 extern void _gdt_flush(u32int);

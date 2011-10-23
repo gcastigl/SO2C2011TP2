@@ -223,3 +223,13 @@ int format(int argc, char **argv) {
 	fs_format();
 	return 0;
 }*/
+
+int shell_useradd(int argc, char **argv) {
+	_SysCall(SYSTEM_USERADD, argv[0], argv[1]);
+	return 0;
+}
+
+int shell_userdel(int argc, char **argv) {
+	_SysCall(SYSTEM_USERDEL, argv[0]);
+	return 0;
+}

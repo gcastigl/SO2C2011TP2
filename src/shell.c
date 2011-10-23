@@ -45,6 +45,8 @@ cmd_table_entry cmd_table[] = {
 	{"top", "Shows the current running processes", top_p},
 	{"kill", "Kills process with given PID", kill_p},
 	{"infWhile", "Process that loops till the end of time!", eternumWhile_p},
+	{"useradd", "usage: useradd USERNAME PASSWORD", shell_useradd},
+	{"userdel", "usage: userdel USERNAME", shell_userdel},
 	{"", "", NULL}
 };
 
