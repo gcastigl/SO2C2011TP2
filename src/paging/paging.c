@@ -26,13 +26,13 @@ void initialize_paging(void)
     int mem_end_page = 0x1000000;   // TEMPORALMENTE se asume que la memoria fisica total es de 32 MB
     
     nframes= mem_end_page / 0x1000; // Se inicializa nframes: se divide la memoria total en secciones de 4KB
-    frames= (int*)kmalloc( INDEX_FROM_BIT(nframes) ); // Se aloca el campo de bits que indica los frames ocupados o no
+    frames= (int*)kmalloc(INDEX_FROM_BIT(nframes)); // Se aloca el campo de bits que indica los frames ocupados o no
 
-    memset( frames, 0, INDEX_FROM_BIT(nframes) );     // Se inicializa frames en 0
+    memset(frames, 0, INDEX_FROM_BIT(nframes));     // Se inicializa frames en 0
 
    // Se aloca el directorio de paginas alineado
    kernel_directory = (page_directory_t*)kmalloc_a(sizeof(page_directory_t));
-   memset( kernel_directory, 0, sizeof(page_directory_t) ); // Se inicializa en 0 el directorio de paginas
+   memset(kernel_directory, 0, sizeof(page_directory_t)); // Se inicializa en 0 el directorio de paginas
 
    //    current_directory = kernel_directory;
    
@@ -49,18 +49,18 @@ void initialize_paging(void)
     // Allocate a liltle bit extra so the kernel heap can be initialized properly.
    
    i = 0;
-   while( i < nf_address+0X1000 ) // Hasta el final de la memoria usada hasta el momento
+   while(i < nf_address+0X1000) // Hasta el final de la memoria usada hasta el momento
    {
        // el codigo del kernel es legible pero no modificable por el espacio del usuario
-       alloc_frame( get_page(i, MAKE, kernel_directory), 0, 0 );
+       alloc_frame(get_page(i, MAKE, kernel_directory), 0, 0);
        i += 0x1000; // avanza 4KB
    }
    
     // Now allocate those pages we mapped earlier.
     for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000)
-        alloc_frame( get_page(i, MAKE, kernel_directory), 0, 0);
+        alloc_frame(get_page(i, MAKE, kernel_directory), 0, 0);
 
-  enablePaging( kernel_directory );
+  enablePaging(kernel_directory);
 
   // Initialise the kernel heap.
   kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, HEAP_MAX_SIZE, 0, 0);
@@ -68,29 +68,27 @@ void initialize_paging(void)
 }
  
 
-void enablePaging( page_directory_t* dir )
+void enablePaging(page_directory_t* dir)
 {
   int cr0; 
 
-  asm volatile("mov %0, %%cr3":: "r"(&dir->tablesPhysical)); // direccion fisica de la tabla de directorios
-  asm volatile("mov %%cr0, %0": "=r"(cr0));
+  __asm volatile("mov %0, %%cr3":: "r"(&dir->tablesPhysical)); // direccion fisica de la tabla de directorios
+  __asm volatile("mov %%cr0, %0": "=r"(cr0));
   cr0 |= 0x80000000;
-  asm volatile("mov %0, %%cr0":: "r"(cr0));		    // Se reescribe el registro CR0 con el bit PG encendido
+  __asm volatile("mov %0, %%cr0":: "r"(cr0));		    // Se reescribe el registro CR0 con el bit PG encendido
 }
 
 
-page_t *get_page( int address, int make, page_directory_t *dir )
+page_t *get_page(int address, int make, page_directory_t *dir)
 {
    address /= 0x1000; 		   // pasa la direccion a un indice
    int table_idx = address / 1024; // Find the page table containing this address.
    u32int tmp;
    
    if (dir->tables[table_idx]) // If this table is already assigned
-
      return &dir->tables[table_idx]->pages[address%1024];
    
-   else if( make )
-   {
+   else if(make) {
       // aloco una nueva tabla de paginas
        dir->tables[table_idx] = (page_table_t*)kmalloc_ap(sizeof(page_table_t), &tmp);
        memset(dir->tables[table_idx], 0, 0x1000);       // Se inicializa en 0
@@ -107,15 +105,12 @@ page_t *get_page( int address, int make, page_directory_t *dir )
 // Funcion para alocar un frame.
 // Quien llama a alloc_frame previamente hace uso de la funcion get_page para crear la pagina previamente
 
-void alloc_frame( page_t *page, int is_kernel, int is_writeable )
+void alloc_frame(page_t *page, int is_kernel, int is_writeable)
 {
    int bit_idx=0;
    if (page->frame != 0)
-     
       return; // El frame ya fue alocado
-      
-   else
-   {
+   else {
        bit_idx = first_fframe(); // indice del bit apagado, es decir el primer frame libre
        
        if( bit_idx == (unsigned int)-1 )
@@ -130,35 +125,35 @@ void alloc_frame( page_t *page, int is_kernel, int is_writeable )
 }
 
 // Funcion para desalojar un frame
-void free_frame( page_t *page )
+void free_frame(page_t *page)
 {
    int frame;
-   if( !(frame=page->frame) )
+   if(!(frame=page->frame))
        return; // La pagina no fue alocada previamente
        
    else
    {
-       clear_frame( frame ); // Se desmarca el frame
+       clear_frame(frame); // Se desmarca el frame
        page->frame = 0x0;    // se reinicializa el frame a 0 
    }
 } 
 
 // FUNCIONES DE CAMPOS DE BITS PARA LA ADMINISTRACION DE LOS FRAMES OCUPADOS O LIBRES
 
-static void set_frame(int frameAddress )
+static void set_frame(int frameAddress)
 {
   int frame=frameAddress / 0x1000;	// tomo el indice de la direccion de memoria
-  int idx= INDEX_FROM_BIT ( frame );	// en que indice en un arreglo de ints esta el bit que quiero encender
-  int off= OFFSET_FROM_BIT( frame );	// dentro de ese int en que posicion se encuentra el bit a encender
-  frames[idx] |= ( 0x1 << off );	// encienco el bit correspondiente
+  int idx= INDEX_FROM_BIT (frame);	// en que indice en un arreglo de ints esta el bit que quiero encender
+  int off= OFFSET_FROM_BIT(frame);	// dentro de ese int en que posicion se encuentra el bit a encender
+  frames[idx] |= (0x1 << off);	// encienco el bit correspondiente
 }
 
-static void clear_frame(int frameAddress )
+static void clear_frame(int frameAddress)
 {
-  int frame=frameAddress / 0x1000;	// tomo el indice de la direccion de memoria
-  int idx= INDEX_FROM_BIT ( frame );	// en que indice en un arreglo de ints esta el bit que quiero encender
-  int off= OFFSET_FROM_BIT( frame );	// dentro de ese int en que posicion se encuentra el bit a encender
-  frames[idx] &= ~( 0x1 << off );	// apago el bit correspondiente
+  int frame = frameAddress / 0x1000;	// tomo el indice de la direccion de memoria
+  int idx = INDEX_FROM_BIT (frame);	// en que indice en un arreglo de ints esta el bit que quiero encender
+  int off = OFFSET_FROM_BIT(frame);	// dentro de ese int en que posicion se encuentra el bit a encender
+  frames[idx] &= ~(0x1 << off);	// apago el bit correspondiente
 }
 /*
 // retorna 1 en caso que el indice que corresponde al frameAddress este asignado
@@ -176,13 +171,13 @@ static int test_frame(int frameAddress )
 
 static int first_fframe( void )
 {
-    int i,j,toTest;
-    for( i = 0; i < INDEX_FROM_BIT( nframes ); i++ ) {
+    int toTest;
+    for(int i = 0; i < INDEX_FROM_BIT( nframes ); i++ ) {
         if( frames[i] != 0xFFFFFFFF ) // Si hay algun lugar libre es decir algun bit apagado
-            for (j = 0; j < 32; j++) { // Me fijo el primer bit que este apagado de derecha a izquierda
+            for (int j = 0; j < 32; j++) { // Me fijo el primer bit que este apagado de derecha a izquierda
                 toTest = 0x1 << j;
                 if ( !(frames[i]&toTest) ) // si ese lugar esta libre, bit apagado
-                   return i*32+j;// retorno el indice del frame que puede mapearse
+                   return i * 32 + j;// retorno el indice del frame que puede mapearse
             }
     }
     return 0;
@@ -191,53 +186,53 @@ static int first_fframe( void )
 // a partir de un proceso dado setea como presentes o ausentes todas las paginas de un proceso ademas 
 // de las paginas de sus ancestros
 
-void flushPages	( int pid, int action )
+void flushPages	(int pid, int action)
 {
-	int pages, mem_dir, p, proc_idx;
+	int pages, mem_dir;
 	page_t *page;
 	PROCESS * temp, *proc_parent;
 	
-	if( pid == 0 )
+	if(pid == 0)
 	  return;
 	
-	for(proc_idx=0; proc_idx<MAX_PROCESSES && process[proc_idx].pid!=pid;proc_idx++ ); 
+	for(int proc_idx = 0; proc_idx < MAX_PROCESSES && process[proc_idx].pid != pid; proc_idx++); 
 	
-	if( proc_idx == MAX_PROCESSES ){
+	if(proc_idx == MAX_PROCESSES ) {
 	  printf("No se encontro proceso!");
 	  return;
 	}
 	
-	pages=process[proc_idx].stacksize/0x1000; // cuantas paginas tiene ese proceso
+	pages = process[proc_idx].stacksize / 0x1000; // cuantas paginas tiene ese proceso
 
 	//direccion de memoria donde comienza el stack ( operacion inversa de create process )
-	mem_dir=process[proc_idx].stackstart-process[proc_idx].stacksize+1;
+	mem_dir = process[proc_idx].stackstart-process[proc_idx].stacksize+1;
 	
-	for( p=0; p< pages ; ++p )
+	for(int p = 0; p < pages ; ++p)
 	{
-		page=get_page( mem_dir,0,kernel_directory );
-		page->present= action ; // DISABLE or ENABLE
-		mem_dir+=0x1000; 	// 4kb step!
+		page = get_page(mem_dir, 0, kernel_directory);
+		page->present = action; // DISABLE or ENABLE
+		mem_dir += 0x1000; 	// 4kb step!
 	}
 	
-	temp = getProcessByPID ( pid );
-	if( temp->parent > 1 )
+	temp = getProcessByPID(pid);
+	if(temp->parent > 1)
 	{
-		proc_parent=getProcessByPID( temp->parent );
-		flushPages( temp->parent, action );
+		proc_parent = getProcessByPID(temp->parent);
+		flushPages(temp->parent, action);
 	}
 
 	
 }
 
-void downPages( int old_pid )
+void downPages(int old_pid)
 {
-  flushPages( old_pid, DISABLE ); 
+  flushPages(old_pid, DISABLE); 
   // Bajo las paginas del proceso actual que pasa a ser antiguo
   
 }
 
-void upPages( int cur_pid )
+void upPages(int cur_pid)
 {
-  flushPages( cur_pid, ENABLE );
+  flushPages(cur_pid, ENABLE);
   // levanto las paginas del proceso actual
 }

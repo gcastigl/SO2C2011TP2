@@ -100,17 +100,16 @@ void ata_write(int ata, void * msg, int bytes, unsigned short sector, int offset
 }
 
 void _write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
-	int i = 0;
 	char tmp[512];
 	// Read actual sector because ATA always writes a complete sector!
 	// Don't step previour values!
 	_read(ata, tmp, sector, 0, 512);
-	for (i = 0; i < bytes; i++) {
+	for (int i = 0; i < bytes; i++) {
 		tmp[offset + i] = msg[i];
 	}
 	sendComm(ata, LBA_WRITE, sector);
 	// Write updated sector
-	for(i = 0; i < 512; i += 2) {
+	for(int i = 0; i < 512; i += 2) {
 		writeDataToRegister(ata, tmp[i + 1], tmp[i]);
 	}
 }
