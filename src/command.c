@@ -207,15 +207,24 @@ int eternumWhile_p(int argc, char** argv) {
 
 // TODO: finish this funcion!
 int diskManagerTest(int argc, char **argv) {
-	/*char *asd;
+	iNode node;
+	node.flags = FS_FILE;
+	int inodeNumber = diskManager_nextInode();
+	diskManager_createInode(&node, inodeNumber, "test.txt");
 	char *contents = "The File interface represents file data typically obtained from the underlying file system, and the Blob interface (\"Binary Large Object\" -- a name originally introduced to web APIs in Google Gears) represents immutable raw data. File or Blob reads should happen asynchronously on the main thread, with an optional synchronous API used within threaded web applications. An asynchronous API for reading files prevents blocking and UI \"freezing\" on a user agent's main thread. This specification defines an asynchronous API based on an event model to read and access a File or Blob's data. A FileReader object provides asynchronous read methods to access that file's data through event handler attributes and the firing of events. The use of events and event handlers allows separate code blocks the ability to monitor the progress of the read (which is particularly useful for remote drives or mounted drives, where file access performance may vary from local drives) and error conditions that may arise during reading of a file. An example will be illustrative.";
 	u32int len = strlen(contents) + 1;
-	int readLen;
-	asd = diskManager_readContents(0, &readLen);
-	printf("Original len= %d, readLen= %d\n", len, readLen);
-	printf(asd);*/
+	diskManager_writeContents(inodeNumber, contents, len, 0);
+	int calcSize = diskManager_size(inodeNumber);
+	char asd[calcSize];
+	diskManager_readContents(inodeNumber, asd, calcSize, 0);
+	printf("Recovered contents (%d, originalSize = %d):\n%s\n", calcSize, len, asd);
+	char part[40];
+	diskManager_readContents(inodeNumber, part, 40, 10);
+	printf("Reading from 10 to 50: %s\n", part);
 	return 0;
 }
+
+
 
 /*
 int format(int argc, char **argv) {
