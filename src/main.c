@@ -16,10 +16,10 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 		//initialize_paging();
 		keyboard_init();
 		video_init();
-		//user_init();
+		user_init();
 		setFD(STD_OUT);
 		fs_init();
-        initScheduler();
+        initScheduler(true);
 		_initTTCounter();
 		createProcess("tty1", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 0, BACKGROUND, READY, NORMAL);
 		createProcess("tty2", &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, 1, BACKGROUND, READY, NORMAL);

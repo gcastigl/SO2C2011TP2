@@ -4,10 +4,9 @@ PRIVATE user_t *users[USER_MAX];
 
 PRIVATE user_t *_parseUser(char* line);
 PRIVATE void _resetUsers();
-PRIVATE void _logUser(int uid, char* prefix);
 
 PUBLIC boolean user_add(user_t *user) {
-	if (user->uid >= 0 && user->uid >= USER_MAX) {
+	if (user->uid < 0 || user->uid >= USER_MAX) {
 		log(L_ERROR, "{user_add} invalid uid: %d (%s)", user->uid, user->userName);
 		return false;
 	}
@@ -25,33 +24,29 @@ PRIVATE void _resetUsers() {
 	}
 }
 
-PRIVATE void _logUser(int uid, char* prefix) {
-	user_t *user = user_get(uid);
-	if (user != NULL) {
-		log(L_DEBUG, "{%s uid %d} %s_%s_%d_%d_%s_%s",
-			prefix,
-			uid,
-			user->userName,
-			user->password,
-			user->uid,
-			user->gid,
-			user->userInfo,
-			user->homePath,
-			user->shellPath
-		);
+PUBLIC char *user_toString(user_t *user) {
+	if (user == NULL) {
+		return "no-user";
 	}
+	char *string = kmalloc(100*sizeof(char));
+	sprintf(string, "%s_%s_%d_%d_%s_%s",
+		user->userName,
+		user->password,
+		user->uid,
+		user->gid,
+		user->userInfo,
+		user->homePath,
+		user->shellPath
+	);
+	return string;
 }
 
 PUBLIC void user_init() {
-	//log(L_INFO, "user init");
 	_resetUsers();
 	user_add(_parseUser("qcho3:x:12:10:Qcho:/home/qcho:/bin/bash"));
 	user_add(_parseUser("root:x:0:0:root:/root:/bin/bash"));
 	user_add(_parseUser("qcho:x:10:10:Qcho:/home/qcho:/bin/bash"));
 	user_add(_parseUser("qcho2:x:11:10:Qcho:/home/qcho:/bin/bash"));
-//	for (int i = 0; i < USER_MAX; ++i) {
-//		_logUser(i, "init");
-//	}
 }
 
 PRIVATE user_t *_parseUser(char* line) {
@@ -116,14 +111,15 @@ PRIVATE user_t *_parseUser(char* line) {
  * returns the user or NULL if not exist.
  */
 PUBLIC user_t *user_get(int uid) {
-	return users[uid];
+	user_t *user = users[uid];
+	if (user == NULL) {
+		log(L_TRACE, "invalid user uid: %d", uid);
+	}
+	return user;
 }
 
 PUBLIC boolean user_exists(char *userName) {
-	log(L_DEBUG, "{user_exists} test: %s", userName);
 	for (int i = 0; i < USER_MAX; ++i) {
-		_logUser(i, "login");
-		//log(L_DEBUG, "{user_exists} %d like: %s", i, user_get(i)->userName);
 		if (!strcmp(user_get(i)->userName, userName)) {
 			return true;
 		}

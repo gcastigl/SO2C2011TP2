@@ -55,7 +55,7 @@ void shell_update(int index) {
 	if (tty->id != index) {
         return;
 	}
-	if (false && !session_isLoggedIn()) {
+	if (!session_isLoggedIn()) {
 		session_login();
 		printShellLabel();
 	}

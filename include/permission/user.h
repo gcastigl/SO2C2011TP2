@@ -22,6 +22,7 @@ PUBLIC void user_init();
 PUBLIC user_t *user_get(int uid);
 PUBLIC boolean user_exists(char *userName);
 PUBLIC user_t *user_login(char* userName, char* password);
+PUBLIC char *user_toString(user_t *user);
 
 #endif	/* USER_H */
 

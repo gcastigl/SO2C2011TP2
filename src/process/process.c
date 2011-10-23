@@ -7,6 +7,7 @@ int count100;
 int last100[100];
 int firstTime = true;
 int schedulerActive = false;
+static int usePriority;
 static int activeProcesses;
 void clean(void);
 extern int loadStackFrame();
@@ -15,13 +16,14 @@ extern int getNextPID();
 int idle_p(int argc, char **argv);
 int idle_p2(int argc, char **argv);
 
-void initScheduler(void) {
+void initScheduler(int withPriority) {
 	int i;
     for (i = 0; i < MAX_PROCESSES; i++) {
         process[i].slotStatus = FREE;
     }
     count100 = 0;
     activeProcesses = 0;
+    usePriority = withPriority;
     createProcess("Idle", &idle_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, -1, BACKGROUND, READY, VERY_LOW);
     schedulerActive = true;
 }
@@ -76,7 +78,7 @@ void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** 
     return;
 }
 
-PROCESS* getNextTask(void) {
+PROCESS* getNextTask(int withPriority) {
     int i;
     int nextReady = 0;
     int temp, bestScore = 0;
@@ -86,7 +88,11 @@ PROCESS* getNextTask(void) {
         proc=&process[i];
         if ((proc->slotStatus != FREE) && ((proc->status != BLOCKED) && (proc->status != CHILD_WAIT))) {
             proc->lastCalled++;
-            temp = proc->priority * P_RATIO + proc->lastCalled;
+            if (withPriority == true) {
+                temp = proc->priority * P_RATIO + proc->lastCalled;
+            } else {
+                temp = proc->lastCalled;
+            }
             if (temp > bestScore) {
                 bestScore = temp;
                 nextReady = i;
@@ -103,7 +109,7 @@ PROCESS* getNextTask(void) {
 int getNextProcess(int oldESP) {
     PROCESS *proc, *proc2;
     proc2 = getProcessByPID(currentPID);
-    proc = getNextTask();
+    proc = getNextTask(usePriority);
     proc->lastCalled = 0;
     if (firstTime == false) {
         saveESP(oldESP); // el oldESP esta el stack pointer del proceso
@@ -172,7 +178,7 @@ void kill(int pid) {
 
 void clean(void) {   
     PROCESS *temp;
-	//int i;
+	int i;
     temp = getProcessByPID(currentPID);
 	temp->slotStatus = FREE;
     temp = getProcessByPID(temp->parent);
@@ -182,9 +188,9 @@ void clean(void) {
 	    }
 	}
     activeProcesses--;
-    switchProcess();
-	//kfree((void*)temp->stackstart-temp->stacksize+1);
+	kfree((void*)temp->stackstart-temp->stacksize+1);
 	
-	//for (i=0;i<temp->argc;i++)
-        //kfree((void*)temp->argv[i]);
+	for (i=0;i<temp->argc;i++)
+        kfree((void*)temp->argv[i]);
+    switchProcess();
 }
