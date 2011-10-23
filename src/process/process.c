@@ -4,7 +4,6 @@ extern PROCESS process[];
 extern int nextPID; 
 extern int currentPID;
 int count100;
-int last100[100];
 int firstTime = true;
 int schedulerActive = false;
 static int usePriority;
