@@ -1,6 +1,7 @@
 #include <fs/diskManager.h>
 
 #define MIN(x,y)							(((x) < (y)) ? (x) : (y))
+#define BIT(n, i)							((n) & (1 << (i)))
 
 #define FILE_CONTENTS_INITAL_SECTOR			2
 #define FILE_CONTENTS_INITAL_OFFSET			maxIndes * sizeof(DiskPage)
@@ -10,8 +11,9 @@ PRIVATE u32int maxIndes;					// Once setted this value, it should never be chang
 PRIVATE void _getiNode(u32int inodeNumber, iNodeDisk *inode);
 PRIVATE void _setiNode(u32int inodeNumber, iNodeDisk *inode);
 
+PRIVATE int _reserveMemoryBitMap(DiskPage *page, int size, u32int initialSector, u32int initialOffset);
 PRIVATE int _reserveMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset);
-PRIVATE void _extendMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset);
+PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset);
 PRIVATE void _freeMemory(DiskPage *page);
 
 PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int offset);
@@ -44,6 +46,11 @@ void diskManager_writeHeader(u32int maxNodes) {
 	maxIndes = maxNodes;
 		log(L_DEBUG, "Writing OS header");
 	ata_write(ATA0, &header, sizeof(FSHeader), 0, 0);
+	// Mark all sector as free sectors
+	int numberOfBlocks = 512 + sizeof(FSHeader), i;
+	char block[numberOfBlocks];
+	for (i = 0; i < numberOfBlocks; i++) block[i] = 0;
+	ata_write(ATA0, block, numberOfBlocks, 0, sizeof(FSHeader));
 }
 
 int diskManager_nextInode() {
@@ -58,7 +65,7 @@ int diskManager_nextInode() {
 
 void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 	iNodeDisk newiNode;
-	int reservedBlocks = _reserveMemory(&newiNode.data, FILE_INITIAL_SIZE_BYTES, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
+	int reservedBlocks = _reserveMemoryBitMap(&newiNode.data, FILE_INITIAL_SIZE_BYTES, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
 	newiNode.totalReservedMem = newiNode.data.totalLength;
 	newiNode.usedMem  = reservedBlocks * sizeof(DiskPage) + sizeof(FileHeader);
 	newiNode.contentMaxBytes = newiNode.totalReservedMem - newiNode.usedMem;
@@ -89,7 +96,7 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name) {
 	FileHeader header;
 	ata_read(inodeOnDisk.data.disk, &header, sizeof(FileHeader), inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset + sizeof(DiskPage));
 	if (header.magic != MAGIC_NUMBER) {
-			// log(L_ERROR, "Can't read file header (%d) - Corrupted->[%d, %d]", inodeNumber, inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset);
+			log(L_ERROR, "Can't read file header (%d) - Corrupted->[%d, %d]", inodeNumber, inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset);
 		errno = E_CORRUPTED_FILE;
 		return;
 	}
@@ -110,18 +117,19 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name) {
 int diskManager_writeContents(u32int inodeNumber, char *contents, u32int length, u32int offset) {
 	iNodeDisk inode;
 	_getiNode(inodeNumber, &inode);
-		// log(L_DEBUG, "updating contents, %d bytes to inode: %d -> [%d, %d]", length, inodeNumber, inode.data.nextSector, inode.data.nextOffset);
-		// log(L_DEBUG,"Contents[MAX: %d, used: %d], Total[MAX: %d, used: %d]", inode.contentMaxBytes, inode.contentUsedBytes, inode.totalReservedMem, inode.usedMem);
+		log(L_DEBUG, "updating contents, %d bytes to inode: %d -> [%d, %d]", length, inodeNumber, inode.data.nextSector, inode.data.nextOffset);
+		log(L_DEBUG,"Contents[MAX: %d, used: %d], Total[MAX: %d, used: %d]", inode.contentMaxBytes, inode.contentUsedBytes, inode.totalReservedMem, inode.usedMem);
 	if (inode.data.magic != MAGIC_NUMBER) {
 		log(L_ERROR, "Trying to write to a corrupted page!");
 		errno = E_CORRUPTED_FILE;
 		return -1;
 	}
 	inode.usedMem = inode.usedMem - inode.contentUsedBytes + length;
-	if (inode.usedMem > inode.totalReservedMem) {
+	if (length > inode.totalReservedMem) {
 			log(L_DEBUG, "Size is not enough, have: %d, used %d... and need to save %d total bytes - extending memory", inode.totalReservedMem, inode.usedMem, length);
-		_extendMemory(&inode.data, length, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
-		//inode.totalReservedMem += 0;
+		int extrablocks = _extendMemory(&inode.data, length, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
+		inode.usedMem += extrablocks * sizeof(DiskPage);
+		inode.totalReservedMem += inode.data.totalLength;
 	}
 	int status = _writeBlock(&inode.data, contents, length, offset);
 	if (status == -1) {
@@ -176,11 +184,11 @@ PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int off
 	while(length != 0) {
 		int currPageSector = currPage.nextSector;
 		int currPageOffset = currPage.nextOffset;
-			// log(L_DEBUG, "reading next page [%d, %d]", currPage.nextSector, currPage.nextOffset);
+			//log(L_DEBUG, "reading next page [%d, %d]", currPage.nextSector, currPage.nextOffset);
 		ata_read(currPage.disk, &currPage, sizeof(DiskPage), currPage.nextSector, currPage.nextOffset);
 		if (offset < currPage.usedBytes - sizeof(DiskPage)) {			// Read from beginning
 			bytesFromContent = MIN(currPage.usedBytes - sizeof(DiskPage) - offset, length);
-				// log(L_DEBUG, "reding %d bytes from [%d, %d]", bytesFromContent, currPageSector, currPageOffset + sizeof(DiskPage) + offset);
+				// log(L_DEBUG, "reading %d bytes from [%d, %d]", bytesFromContent, currPageSector, currPageOffset + sizeof(DiskPage) + offset);
 			ata_read(page->disk, contents, bytesFromContent, currPageSector, currPageOffset + sizeof(DiskPage) + offset);
 			contents += bytesFromContent;
 			length -= bytesFromContent;
@@ -227,19 +235,20 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 			errno = E_OUT_OF_MEMORY;
 			return -1;
 		}
-			log(L_DEBUG, "Next page [%d, %d]- bytes left: %d", currPage.nextSector, currPage.nextOffset, length);
+			//log(L_DEBUG, "Next page [%d, %d]- bytes left: %d", currPage.nextSector, currPage.nextOffset, length);
 		ata_read(currPage.disk, &currPage, sizeof(DiskPage), currPage.nextSector, currPage.nextOffset);
 		if (currPage.magic == MAGIC_NUMBER) {
 			bytesFromContent = MIN(currPage.totalLength - sizeof(DiskPage), length);
-				// log(L_DEBUG, "writing %s (%d) to [%d, %d]", contents, bytesFromContent, pageSector, pageOffset + sizeof(DiskPage));
+				//log(L_DEBUG, "writing (%d) to [%d, %d]", bytesFromContent, pageSector, pageOffset + sizeof(DiskPage));
 			ata_write(currPage.disk, contents, bytesFromContent, pageSector, pageOffset + sizeof(DiskPage));
 			length -= bytesFromContent;
 			contents += bytesFromContent;
-			currPage.usedBytes = bytesFromContent;
+			currPage.usedBytes = bytesFromContent + sizeof(DiskPage);
 			ata_write(page->disk, &currPage, sizeof(DiskPage), pageSector, pageOffset);
 		} else {
 			log(L_ERROR, "CORRUPTED file at [%d, %d]", page->nextSector, page->nextOffset);
 			errno = E_CORRUPTED_FILE;
+			return -1;
 		}
 	}
 	page->usedBytes = total;
@@ -247,8 +256,68 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 	return 0;
 }
 
+PRIVATE int _reserveMemoryBitMap(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {
+	_cli();
+	DiskPage currPage;
+	int previousSector, previousOffset, i, j, currSector, currOffset;
+	int disk = ATA0;
+	int numberOfblocks = 512 - sizeof(FSHeader);
+
+	char block[numberOfblocks];
+	ata_read(disk, block, numberOfblocks, 0, sizeof(FSHeader));
+	int neededBlocks = (size / (DISK_BLOCK_SIZE_BYTES + 1)) + 1;
+	int reservedBlocks = 0;
+		log(L_DEBUG, "\nReserving %d bytes => total blocks %d\n", size, neededBlocks);
+
+	// Iterates for each byte to find a bit turned off (empty slot)
+	for(i = 0; i < numberOfblocks && reservedBlocks < neededBlocks; i++) {
+		for (j = 0; j < 8 && reservedBlocks < neededBlocks; j++) {					// each char has 8 bits!
+			currSector = initialSector;
+			currOffset = initialOffset + ((i * 8) + j) * DISK_BLOCK_SIZE_BYTES;
+				log(L_DEBUG, "[%d, %d] -> %s", currSector, currOffset, (BIT(block[i], j) == 0) ? "Free" : "Used");
+			if (BIT(block[i], j) == 0) {											// if block is not used
+				block[i] |= (1 << j);
+				reservedBlocks++;
+				currPage.magic = MAGIC_NUMBER;
+				currPage.disk = disk;
+				currPage.usedBytes = 0;
+				currPage.totalLength = DISK_BLOCK_SIZE_BYTES;
+				if (reservedBlocks == neededBlocks) {
+					currPage.hasNextPage = false;
+					log(L_DEBUG, "using [%d, %d] - %d", currSector, currOffset, currPage);
+					ata_write(currPage.disk, &currPage, sizeof(DiskPage), currSector, currOffset);
+				}
+				if (reservedBlocks > 1) {
+					currPage.hasNextPage = true;
+					currPage.nextSector = currSector;
+					currPage.nextOffset = currOffset;
+					log(L_DEBUG, "prev - using [%d, %d] - %d", previousSector, previousOffset, currPage);
+					ata_write(currPage.disk, &currPage, sizeof(DiskPage), previousSector, previousOffset);
+				}
+				if (reservedBlocks == 1) {		// set up first reserved page info to caller function
+					page->disk = ATA0;
+					page->nextSector = currSector;
+					page->nextOffset = currOffset;
+					page->totalLength = neededBlocks * DISK_BLOCK_SIZE_BYTES;
+					page->usedBytes = 0;
+					page->magic = MAGIC_NUMBER;
+					page->hasNextPage = neededBlocks > 1;
+					log(L_DEBUG, "Returning: [%d, %d, %d]. Mem: t:%d / u:%d - next page? %d", page->disk, page->nextSector, page->nextOffset, page->totalLength, page->usedBytes, page->hasNextPage);
+				}
+				previousSector = currSector;
+				previousOffset = currOffset;
+			}
+		}
+	}
+	// Update bit map information
+	log(L_DEBUG, "finished reserving mem: %d", block[0]);
+	ata_write(disk, block, numberOfblocks, 0, sizeof(FSHeader));
+	_sti();
+	return 0;
+}
 
 PRIVATE int _reserveMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {
+	_cli();
 	u32int disk = ATA0;
 	DiskPage currPage;
 	int sector = initialSector;
@@ -256,10 +325,10 @@ PRIVATE int _reserveMemory(DiskPage *page, int size, u32int initialSector, u32in
 	int reserved = 0;
 	int previousSector, previousOffset;
 
-	u32int maxOffset = 4098;	// FIXME: implement driveCapacity() in the ata_driver
+	u32int maxOffset = 16384;	// FIXME: implement driveCapacity() in the ata_driver
 
 	int blocks = (size / (DISK_BLOCK_SIZE_BYTES + 1)) + 1;
-		// log(L_DEBUG, "\nReserving %d bytes => total blocks %d\n", size, blocks);
+		log(L_DEBUG, "\nReserving %d bytes => total blocks %d\n", size, blocks);
 	while (reserved < blocks && offset < maxOffset) {
 		ata_read(ATA0, &currPage, sizeof(DiskPage), sector, offset);
 		log(L_DEBUG, "[%d, %d] -> %s", sector, offset, currPage.magic == MAGIC_NUMBER ? "Used" : "free");
@@ -299,6 +368,7 @@ PRIVATE int _reserveMemory(DiskPage *page, int size, u32int initialSector, u32in
 		_freeMemory(page);
 		errno = E_OUT_OF_MEMORY;
 	}
+	_sti();
 		// log(L_DEBUG, "finished reserving memory\n");
 	return blocks;
 }
@@ -316,30 +386,32 @@ PRIVATE void _freeMemory(DiskPage* page) {
 	} while(currPage.hasNextPage);
 }
 
-PRIVATE void _extendMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {
+PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {
 	u32int disk = ATA0;
 	DiskPage lastPage;
 	u32int lastPageSector = page->nextSector,
 			lastPageOffset = page->nextOffset;
-		// log(L_DEBUG, "last: sector: %d, offset: %d", lastPageSector, lastPageOffset);
+		log(L_DEBUG, "last: sector: %d, offset: %d", lastPageSector, lastPageOffset);
 	memcpy(&lastPage, page, sizeof(DiskPage));
 	// Get the end of this memory segment...
 	while(lastPage.hasNextPage) {
 		lastPageSector = lastPage.nextSector;
 		lastPageOffset = lastPage.nextOffset;
-			// log(L_DEBUG, "reading from [%d, %d]", lastPage.nextSector, lastPage.nextOffset);
+			log(L_DEBUG, "reading from [%d, %d]", lastPage.nextSector, lastPage.nextOffset);
 		ata_read(disk, &lastPage, sizeof(DiskPage), lastPage.nextSector, lastPage.nextOffset);
 	}
 
 	// Reserve extra memory
 	DiskPage cont;
-	int extraBlocks = _reserveMemory(&cont, size, initialSector, initialOffset);
+	int extraBlocks = _reserveMemoryBitMap(&cont, size, initialSector, initialOffset);
+	page->totalLength = cont.totalLength;
 	// Attach extra memory to the end of this segment
 	lastPage.hasNextPage = true;
 	lastPage.nextSector = cont.nextSector;
 	lastPage.nextOffset = cont.nextOffset;
 		// log(L_DEBUG, "saving to: [%d, %d, %d]", disk, lastPageSector, lastPageOffset);
 	ata_write(disk, &lastPage, sizeof(DiskPage), lastPageSector, lastPageOffset);
+	return extraBlocks;
 }
 
 

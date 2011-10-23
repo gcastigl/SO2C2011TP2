@@ -35,7 +35,7 @@ void* our_malloc ( int size, int align, u32int *phys )
             *phys = nf_address;
 
 	void* tmp = (void*)nf_address;
-        nf_address += size * 2;
+        nf_address += size * 5;
         return (void*)tmp;
     }
 
