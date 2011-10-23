@@ -226,16 +226,38 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 	return NULL;
 }
 
+u32int fs_size(fs_node_t *node) {
+	return diskManager_size(node->inode);
+}
+
 PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
-	return 0;
+    iNode header = inodes[node->inode];
+    if (offset > header.length) {
+        return 0;
+    }
+    if (offset + size > header.length) {
+        size = header.length - offset;
+    }
+    diskManager_readContents(node->inode, (char*) buffer, size, offset);
+    return size;
 }
 
 PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
-	return 0;
+    iNode header = inodes[node->inode];
+    if (offset > header.length) {
+        return 0;
+    }
+    if (offset + size > header.length) {
+        size = header.length - offset;
+    }
+    diskManager_writeContents(node->inode, (char*) buffer, size, offset);
+    return size;
 }
 
 PRIVATE void fs_open(fs_node_t *node) {
+
 }
+
 
 PRIVATE void fs_close(fs_node_t *node) {
 
