@@ -18,6 +18,8 @@ void diskCache_init() {
 }
 
 void diskCache_read(int disk, void* msg, int bytes, unsigned short sector, int offset) {
+	ata_read(disk, msg, bytes, sector, offset);
+	return;
 	ata_normalize(&sector, &offset);
 	int index = _cacheIndex(disk, sector);
 	if (index != -1) {										// sector is cached
@@ -40,6 +42,8 @@ void diskCache_read(int disk, void* msg, int bytes, unsigned short sector, int o
 }
 
 void diskCache_write(int disk, void* msg, int bytes, unsigned short sector, int offset) {
+	ata_write(disk, msg, bytes, sector, offset);
+	return;
 	/*	//log(L_DEBUG, "WRITE cache -> %d, %d", sector, offset);
 	ata_normalize(&sector, &offset);
 		//log(L_DEBUG, "\tnormalized-> %d, %d", sector, offset);
