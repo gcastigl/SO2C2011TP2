@@ -246,15 +246,15 @@ int shell_userlist(int argc, char **argv) {
 		printf("usage: userlist\n");
 		return -1;
 	}
-	calluser_t *userlist[USER_MAX];
+	calluser_t userlist[USER_MAX];
 	_SysCall(SYSTEM_USERLIST, userlist);
 	printf("\tusername\tuid\tgid\n");
 	printf("\t--------\t---\t---\n");
 	int i;
 	for (i = 0; i < USER_MAX; ++i) {
-		calluser_t *user = userlist[i];
-		if (user != NULL) {
-			printf("\t%s\t%d\t%d\n", user->userName, user->uid, user->gid);
+		calluser_t user = userlist[i];
+		if (user.uid != NO_USER) {
+			printf("\t%s\t%d\t%d\n", user.userName, user.uid, user.gid);
 		}
 	}
 	return 0;

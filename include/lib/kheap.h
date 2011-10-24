@@ -6,7 +6,7 @@
 #include <lib/ordered_map.h>
 #include <paging/paging.h>
 
-#define KHEAP_START         	0x40000000 // 32 Mb de memoria virtual - 16 Mb memoria fisica
+#define KHEAP_START         0x40000000 // 32 Mb de memoria virtual - 16 Mb memoria fisica
 #define HEAP_MAX_SIZE     	0x4FFFF000	
 #define KHEAP_INITIAL_SIZE	0x800000 	// 8 Mb iniciales de HEAP
 #define HEAP_INDEX_SIZE		0x20000		// 128 Kb
@@ -44,10 +44,14 @@ typedef struct
 } heap_t;
 
 
-void*  kmalloc	( int size );		//   General allocation function. 
 void kfree	( void* p );		//   General deallocation function.
 
 void free 	( void *p, heap_t *heap); 		// Releases a block allocated with 'alloc'.
+
+
+void*  _kmalloc	(char* file, int line, int size );		//   General allocation function.
+#define kmalloc(...) _kmalloc(__FILE__, __LINE__, __VA_ARGS__);
+
 void* kmalloc_a	( int size );			  	// malloc con alineacion a pagina de 4KB
 void* kmalloc_p	( int size, u32int *phys );		// malloc con retorno de direccion fisica
 void* kmalloc_ap	( int size, u32int *phys ); 		// malloc con alineacion a pagina & retorno de direccion fisica

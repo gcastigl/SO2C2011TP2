@@ -22,4 +22,8 @@ int strIndexOf(char* str, char c, int startIndex);
 
 int strContains(char* str, char c);
 
+int strspn(const char *string, const char *in);
+char *strpbrk(register const char *string, register const char *brk);
+char *strtok(register char *string, const char *separators);
+
 #endif

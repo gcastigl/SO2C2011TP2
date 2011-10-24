@@ -80,12 +80,20 @@ PRIVATE void fs_create() {
 	int devInode = diskManager_nextInode();
 	_initInode_dir(devInode, "dev", rootInode);
 
-	int usrInode = diskManager_nextInode();
-	_initInode_dir(usrInode, "usr", rootInode);
+	int homeInode = diskManager_nextInode();
+	_initInode_dir(homeInode, "home", rootInode);
+
+	int rootHomeInode = diskManager_nextInode();
+	_initInode_dir(rootHomeInode, "root", rootInode);
+
+	int etcInode = diskManager_nextInode();
+	_initInode_dir(etcInode, "etc", rootInode);
 
 	// Add dev as sub-directory of root
 	_appendFile(rootInode, devInode, NULL);
-	_appendFile(rootInode, usrInode, NULL);
+	_appendFile(rootInode, homeInode, NULL);
+	_appendFile(rootInode, rootHomeInode, NULL);
+	_appendFile(rootInode, etcInode, NULL);
 }
 
 PRIVATE void fs_load() {

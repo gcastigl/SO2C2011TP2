@@ -2,50 +2,42 @@
 
 PRIVATE user_t *currentUser = NULL;
 void prntWelcomeMsg();
-int isValidUser(char* userName);
-
-static int isLoggedIn = false;
-
-PRIVATE boolean tryLogin(char * userName, char *password);
 
 void session_login() {
 	TTY* tty = tty_getCurrentTTY();
 	tty_clean(tty);
 	prntWelcomeMsg();
-	int validUser;
 	static char user[NAME_MAX_LENGTH] = {"\0"};
-	do {
-		printf("\nUsername (try qcho): ");
-		gets(user);
-		validUser = isValidUser(user);
-        if (!validUser) {
-        	printf("\tInvalid username!\n");
-        }
-	} while(!validUser);
-	int retry = 3;
 	static char password[PASS_MAX_LENGTH] = {"\0"};
 	do {
-		printf("\nPassword (try x): ");
-		gets(password);
-		isLoggedIn = tryLogin(user, password);
-		if (!isLoggedIn) {
-			printf("\tInvalid password!\n");
+		int uid = NO_USER;
+		while (uid == NO_USER) {
+			printf("\nUsername (try qcho): ");
+			gets(user);
+			uid = user_find(user);
+			if (uid == NO_USER) {
+				printf("\tInvalid username!\n");
+			}
 		}
-	} while(!isLoggedIn && --retry);
-	if (retry == 0) {
-		printf("\tInvalid password! Please try again.\n");
-	} else {
-		printf("\nLogged in as: %s\n", session_getName());
-	}
-}
+		int retry = 3;
+		while (--retry && !session_isLoggedIn()) {
+			printf("\nPassword (try x): ");
+			gets(password);
+			currentUser = user_login(uid, password);
+			if (currentUser == NULL) {
+				printf("\tInvalid password!\n");
+			}
+		}
+		if (retry == 0) {
+			printf("\tInvalid password! Please try again.\n");
+		}
+	} while(!session_isLoggedIn());
 
-PRIVATE boolean tryLogin(char * userName, char *password) {
-	currentUser = user_login(userName, password);
-	return currentUser != NULL;
+	printf("\nLogged in as: %s\n", session_getName());
 }
 
 int session_isLoggedIn() {
-	return isLoggedIn;
+	return currentUser != NULL;
 }
 
 const char* session_getName() {
@@ -56,11 +48,7 @@ const char* session_getName() {
 }
 
 void session_logout() {
-	isLoggedIn = false;
-}
-
-int isValidUser(char* userName) {
-	return user_find(userName);
+	currentUser = NULL;
 }
 
 void prntWelcomeMsg() {

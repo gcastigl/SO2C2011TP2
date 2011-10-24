@@ -1,69 +1,91 @@
 #include <permission/user.h>
 
-PRIVATE user_t *users[USER_MAX];
+PRIVATE user_t users[USER_MAX];
 
-PRIVATE user_t *_parseUser(char* line);
-PRIVATE void _resetUsers();
-PRIVATE int _findOpenUid();
-PRIVATE boolean user_add(user_t *user);
-PRIVATE boolean user_remove(user_t *user);
+PRIVATE boolean user_parse(char *line);
+PRIVATE void user_reset();
+PRIVATE int user_findOpenUid();
+PRIVATE boolean user_add(int uid);
+PRIVATE boolean user_del(int uid);
+PRIVATE boolean user_isValidFormat(char *token);
 
 
-PRIVATE boolean user_add(user_t *user) {
-	if (user->uid < 0 || user->uid >= USER_MAX) {
-		log(L_ERROR, "{user_add} invalid uid: %d (%s)", user->uid, user->userName);
-		return false;
+PRIVATE boolean user_isSet(int uid) {
+	if (0 <= uid && uid < USER_MAX) {
+		return users[uid].uid != NO_USER;
 	}
-	if (user_find(user->userName) >= 0) {
-		log(L_ERROR, "{user_add} user with name %s already exists", user_get(user->uid)->userName);
-		return false;
-	}
-	if (user_get(user->uid) != NULL) {
-		log(L_ERROR, "{user_add} uid %d already set: %s", user->uid, user_get(user->uid)->userName);
-		return false;
-	}
-	users[user->uid] = user;
+	log(L_ERROR, "INVALID UID %d", uid);
+	return false;
+}
+
+PRIVATE boolean group_isSet(int uid) {
 	return true;
 }
 
-PRIVATE boolean user_remove(user_t *user) {
-	if (user == NULL) {
-		log(L_ERROR, "invalid user to remove");
-		return false;
+PRIVATE int user_findOpenUid() {
+	for (int i = 0; i < USER_MAX; ++i) {
+		if (!user_isSet(i)) {
+			return i;
+		}
 	}
-	users[user->uid] = NULL;
-	return true;
+	return NO_USER;
 }
 
-PRIVATE calluser_t *_userToCallUser(user_t *user) {
-	if (user == NULL) {
+PRIVATE boolean user_add(int uid) {
+	if (!user_isSet(uid)) {
+		users[uid].uid = uid;
+		users[uid].gid = uid;
+		users[uid].userName[0] = '\0';
+		users[uid].password[0] = '\0';
+		return true;
+	} else {
+		return false;
+	}
+}
+
+PRIVATE boolean user_del(int uid) {
+	user_t *user = user_get(uid);
+	if (user != NULL) {
+		user->uid = NO_USER;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+PUBLIC user_t *user_get(int uid) {
+	if (user_isSet(uid)) {
+		return &users[uid];
+	} else {
 		return NULL;
 	}
-	log(L_DEBUG, "1");
-	calluser_t *calluser = kmalloc(sizeof(calluser_t));
-	log(L_DEBUG, "2");
-	calluser->uid = user->uid;
-	log(L_DEBUG, "3");
-	calluser->gid = user->gid;
-	log(L_DEBUG, "4 %d-%d-%s", user->uid, user->gid, user->userName);
-	calluser->userName = kmalloc(strlen(user->userName)*sizeof(char));
-	log(L_DEBUG, "5");
-	strcpy(calluser->userName, user->userName);
-	log(L_DEBUG, "6");
-	return calluser;
 }
 
-PUBLIC boolean do_userlist(calluser_t **callusers) {
+PUBLIC boolean do_userlist(calluser_t *callusers) {
+	char userstring[128];
+	for (int i = 0; i < USER_MAX; ++i) {
+		user_string(i, userstring);
+		log(L_DEBUG, "user %d: %s", i, userstring);
+	}
+
+	user_t *user = NULL;
 	log(L_DEBUG, "douserlist");
 	for (int i = 0; i < USER_MAX; ++i) {
-		callusers[i] = _userToCallUser(user_get(i));
-		if (callusers[i] != NULL) {
-			log(L_DEBUG, "callu: %d, %d, %s",
-				callusers[i]->uid,
-				callusers[i]->gid,
-				callusers[i]->userName
-			);
+		user = user_get(i);
+		if (user == NULL) {
+			callusers[i].uid = NO_USER;
+			callusers[i].gid = NO_USER;
+			strcpy(callusers[i].userName, "no-user");
+		} else {
+			callusers[i].uid = user->uid;
+			callusers[i].gid = user->gid;
+			strcpy(callusers[i].userName, user->userName);
 		}
+		log(L_DEBUG, "callu: %d:%d, %d:%d, %s:%s",
+			user->uid, callusers[i].uid,
+			user->gid, callusers[i].gid,
+			user->userName, callusers[i].userName
+		);
 	}
 	return true;
 }
@@ -75,169 +97,129 @@ PUBLIC boolean do_usersetgid(char *userName, int gid) {
 		log(L_ERROR, "invalid user uid, %d: %s", uid, userName);
 		return false;
 	} else {
-		if (gid < 0 || gid >= USER_MAX) {
-			log(L_ERROR, "invalid gid: %d", gid);
-			return false;
-		}
 		log(L_INFO, "old: %d. new: %d", user->gid, gid);
 		user->gid = gid;
 		return true;
 	}
 }
 
-PUBLIC boolean do_useradd(char *userName, char *password) {
-	user_t *user = (user_t *)kmalloc(sizeof(user_t));
-	if (password == NULL || !strlen(userName)) {
-		log(L_ERROR, "not username provided.");
+PUBLIC boolean user_setUsername(int uid, char *username) {
+	if (!user_isSet(uid)) {
+		log(L_ERROR, "invalid uid %d", uid);
 		return false;
 	}
-	user->userName = kmalloc(strlen(userName)*sizeof(char));
-	strcpy(user->userName, userName);
-	if (password != NULL && strlen(password)) {
-		user->password = kmalloc(strlen(password)*sizeof(char));
-		strcpy(user->password, password);
-	} else {
-		user->password = "";
+	if (username == NULL || !strlen(username)) {
+		log(L_ERROR, "username cannot be empty");
+		return false;
 	}
-	int uid = _findOpenUid();
-	user->uid = uid;
-	user->gid = uid;
-	user->homePath = kmalloc(256*sizeof(char));
-	user->userInfo = "";
-	sprintf(user->homePath, "/home/%s", userName);
-	user_add(user);
+	if (!user_isValidFormat(username)) {
+		log(L_ERROR, "username cannot contain the ':' character");
+		return false;
+	}
+	if (user_find(username) != NO_USER ) {
+		log(L_ERROR, "username %s already exists", username);
+		return false;
+	}
+	strcpy(user_get(uid)->userName, username);
 	return true;
 }
 
-PUBLIC boolean do_userdel(char *userName) {
-	int uid = user_find(userName);
-	user_t *user = user_get(uid);
-	if (user == NULL) {
-		log(L_ERROR, "invalid user delete, %d", uid);
+PUBLIC boolean user_setPassword(int uid, char *password) {
+	if (!user_isSet(uid)) {
+		log(L_ERROR, "invalid uid %d", uid);
 		return false;
-	} else {
-		user_remove(user);
+	}
+	if (!user_isValidFormat(password)) {
+		log(L_ERROR, "password cannot contain the ':' character");
+		return false;
+	}
+	strcpy(user_get(uid)->password, password);
+	return true;
+}
+
+PUBLIC boolean user_setGid(int uid, int gid) {
+	if (!user_isSet(uid)) {
+		log(L_ERROR, "invalid uid %d", uid);
+		return false;
+	}
+	if (!group_isSet(gid)) {
+		log(L_ERROR, "invalid gid %d", gid);
+		return false;
+	}
+	user_get(uid)->gid = gid;
+	return true;
+}
+
+PRIVATE void user_reset() {
+	for (int i = 0; i < USER_MAX; ++i) {
+		users[i].uid = NO_USER;
+	}
+}
+
+PUBLIC boolean user_string(int uid, char *string) {
+	user_t *user = user_get(uid);
+	if (user) {
+		sprintf(string, "%d:%d:%s:%s",
+			user->uid,
+			user->gid,
+			user->userName,
+			user->password
+		);
 		return true;
+	} else {
+		string[0] = '\0';
+		return false;
 	}
-}
-
-PRIVATE int _findOpenUid() {
-	for (int i = 0; i < USER_MAX; ++i) {
-		if (user_get(i) == NULL) {
-			return i;
-		}
-	}
-	return -1;
-}
-
-PRIVATE void _resetUsers() {
-	for (int i = 0; i < USER_MAX; ++i) {
-		users[i] = NULL;
-	}
-}
-
-PUBLIC char *user_toString(user_t *user) {
-	if (user == NULL) {
-		return "no-user";
-	}
-	char *string = kmalloc(100*sizeof(char));
-	sprintf(string, "%s:%s:%d:%d:%s:%s",
-		user->userName,
-		user->password,
-		user->uid,
-		user->gid,
-		user->userInfo,
-		user->homePath
-	);
-	return string;
 }
 
 PUBLIC void user_init() {
-	_resetUsers();
-	user_add(_parseUser("qcho3:x:12:10:Qcho:/home/qcho"));
-	user_add(_parseUser("root:x:0:0:root:/root"));
-	user_add(_parseUser("qcho:x:10:10:Qcho:/home/qcho"));
-	user_add(_parseUser("qcho2:x:11:10:Qcho:/home/qcho"));
+	user_reset();
+	user_parse("0:0:root:pass\n");
+	user_parse("10:10:qcho:x\n");
+	user_parse("11:11:qcho1:pass1\n");
+	user_parse("12:12:qcho2:pass2");
 
-	do_useradd("Horacio", "Gomez");
-	do_useradd("Dos", "");
+	do_useradd("a", "a");
+	do_useradd("guest", "");
 	do_useradd("Tres", "Cuatro");
 
 	do_userdel("qcho2");
+	char userstring[128];
 	for (int i = 0; i < USER_MAX; ++i) {
-		log(L_DEBUG, "user %d: %s", i, user_toString(user_get(i)));
+		user_string(i, userstring);
+		log(L_DEBUG, "user %d: %s", i, userstring);
 	}
 }
 
-PRIVATE user_t *_parseUser(char* line) {
-	user_t *user = (user_t *)kmalloc(sizeof(user_t));
-	enum { USERNAME = 0, PASSWORD, UID, GID, USERINFO, HOMEPATH} item;
-	int i = 0;
-	char *buff = kmalloc(64 * sizeof(char));
-	int start = 0;
-	int len;
-	char c;
-	item = USERNAME;
-	do {
-		c = line[i++];
-		if (c == ':' || c == '\0') {
-			len = i-start-1;
-			switch (item) {
-				case USERNAME:
-					user->userName = kmalloc(len * sizeof(char));
-					strncpy(user->userName, line+start, len);
-					log(L_TRACE, "userName: %s", user->userName);
-					break;
-				case PASSWORD:
-					user->password = kmalloc(len * sizeof(char));
-					strncpy(user->password, line+start, len);
-					log(L_TRACE, "password: %s", user->password);
-					break;
-				case UID:
-					strncpy(buff, line+start, len);
-					user->uid = atoi(buff);
-					log(L_TRACE, "uid: %d", user->uid);
-					break;
-				case GID:
-					strncpy(buff, line+start, len);
-					user->gid = atoi(buff);
-					log(L_TRACE, "gid: %d", user->gid);
-					break;
-				case USERINFO:
-					user->userInfo = kmalloc(len * sizeof(char));
-					strncpy(user->userInfo, line+start, len);
-					log(L_TRACE, "userInfo: %s", user->userInfo);
-					break;
-				case HOMEPATH:
-					user->homePath = kmalloc(len * sizeof(char));
-					strncpy(user->homePath, line+start, len);
-					log(L_TRACE, "homePath: %s", user->homePath);
-					break;
-				default:
-					return user;
-			}
-			start = i;
-			item++;
+PRIVATE boolean user_parse(char *line) {
+	enum { UID = 0, GID, USERNAME, PASSWORD} field = UID;
+	boolean parsing_ok = true;
+	char *p = strtok(line, ":");
+	int uid = atoi(p);
+	parsing_ok = user_add(atoi(p));
+	while (p != NULL && parsing_ok) {
+		p = strtok(NULL, ":\n");
+		field++;
+		switch (field) {
+			case UID:
+				// DONE.
+				break;
+			case GID:
+				parsing_ok = user_setGid(uid, atoi(p));
+				break;
+			case USERNAME:
+				parsing_ok = user_setUsername(uid, p);
+				break;
+			case PASSWORD:
+				parsing_ok = user_setPassword(uid, p);
+				break;
 		}
-	} while (c != '\0');
-	kfree(buff);
-    return user;
-}
-
-/**
- * returns the user or NULL if not exist.
- */
-PUBLIC user_t *user_get(int uid) {
-	if (uid < 0 || uid >= USER_MAX) {
-		log(L_ERROR, "invalid uid: %d", uid);
-		return NULL;
 	}
-	user_t *user = users[uid];
-	if (user == NULL) {
-		log(L_TRACE, "invalid user uid: %d", uid);
+	if (!parsing_ok && field != UID) {
+		// delete invalid user.
+		user_del(uid);
 	}
-	//	log(L_DEBUG, "uid %d: %d", uid, (int)user);
-	return user;
+	return parsing_ok;
 }
 
 PUBLIC int user_find(char *userName) {
@@ -246,20 +228,45 @@ PUBLIC int user_find(char *userName) {
 			return i;
 		}
 	}
-	return -1;
+	return NO_USER;
 }
 
-PUBLIC user_t *user_login(char* userName, char* password) {
-	for (int i = 0; i < USER_MAX; ++i) {
-		if (!strcmp(user_get(i)->userName, userName)) {
-			if (!strcmp(user_get(i)->password, password)) {
-				return user_get(i);
-			} else {
-				errno = E_USER_INVALID_PASSWORD;
-				return NULL;
-			}
+PUBLIC user_t *user_login(int uid, char* password) {
+	user_t *user = user_get(uid);
+	if (user != NULL) {
+		if (!strcmp(user->password, password)) {
+			return user;
+		} else {
+			errno = E_USER_INVALID_PASSWORD;
+			return NULL;
+		}
+	} else {
+		errno = E_USER_INVALID_USERNAME;
+		return NULL;
+	}
+}
+
+PRIVATE boolean user_isValidFormat(char *token) {
+	for (int i = 0; i < strlen(token); ++i) {
+		if (token[i] == ':') {
+			return false;
 		}
 	}
-	errno = E_USER_INVALID_USERNAME;
-	return NULL;
+	return true;
+}
+
+PUBLIC boolean do_useradd(char *userName, char *password) {
+	boolean addOk = true;
+	int uid = user_findOpenUid();
+	user_add(uid);
+	addOk = user_setUsername(uid, userName);
+	addOk = user_setPassword(uid, password);
+	if (!addOk) {
+		user_del(uid);
+	}
+	return addOk;
+}
+
+PUBLIC boolean do_userdel(char *userName) {
+	return user_del(user_find(userName));
 }

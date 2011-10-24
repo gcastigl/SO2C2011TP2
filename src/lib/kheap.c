@@ -42,9 +42,10 @@ void kfree(void* p)
     free((void*)p, kheap);
 }
 
-
-void* kmalloc(int size) {
-  return _malloc(size, NOT_ALIGN, NO_PHYS);
+void* _kmalloc(char* file, int line, int size) {
+	void *ret = _malloc( size, NOT_ALIGN, NO_PHYS );
+	_log(file, line, L_TRACE, "***KMALLOC*** %d", (int)ret);
+	return ret;
 }
 
 void* kmalloc_a(int size) {
