@@ -1,6 +1,7 @@
 #ifndef DISKMANAGER_H
 #define DISKMANAGER_H
 
+#include <fs/diskCache.h>
 #include <driver/ata_disk.h>
 
 #define FILES_INITIAL_SECTOR			1024

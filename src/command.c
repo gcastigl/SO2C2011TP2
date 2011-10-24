@@ -2,9 +2,8 @@
 extern PROCESS process[];
 
 int echo_cmd(int argc, char **argv) {
-	int i;
 	if (argc > 0) {
-		for( i = 0; i < argc; i++) {
+		for(int i = 0; i < argc; i++) {
 			printf("%s ", argv[i]);
 		}
 	}
@@ -32,9 +31,8 @@ int help_cmd(int argc, char **argv) {
 			printf("\nCommand not found\n");
 		}
 	} else if (argc == 0) {
-		int i;
 		printf("\nAvailable commands:\n\n");
-		for( i=0; shell_getCmdsTable()[i].func != NULL; i++) {
+		for(int i = 0; shell_getCmdsTable()[i].func != NULL; i++) {
 			printf("\t%s\n", shell_getCmdsTable()[i].name);
 		}
 		printf("\nType in help \"cmdName\" to see the help menu for that \
@@ -161,31 +159,23 @@ int idle_p(int argc, char **argv) {
     return 0;
 }
 
-int tty_p(int argc, char **argv) {
-    int index = initTTY();
-    log(L_DEBUG, "Created tty %d", index);
-    while(1) {
-        shell_update(index);
-    }
-    return 0;
-}
-
 int top_p(int argc, char**argv) {
     int i;
     int slot;
     int execCount[MAX_PROCESSES] = { 0 };
     char *status[] = {"Ready", "Blocked", "Child Wait", "Sleeping", "Running"};
+    char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell high"};
     printf("Last 100:\n");
     for (i = 0; i < 100; i++) {
         slot = last100[i];
         if (process[slot].slotStatus == OCCUPIED)
             execCount[slot]++;
     }
-    printf("Name\tPID\tStatus\tExecutions over 100\n");
+    printf("Name\tPID\tStatus\tPriority\tExecutions over 100\n");
     for (i = 0; i < MAX_PROCESSES; i++) {
         if ((process[i].slotStatus == OCCUPIED)) {
             
-            printf("%s\t%d\t%s\t%d\n", process[i].name, process[i].pid, status[process[i].status] ,execCount[i]);
+            printf("%s\t%d\t%s\t%s\t%d\n", process[i].name, process[i].pid, status[process[i].status], priority[process[i].priority % 10], execCount[i]);
         }
     }
     

@@ -18,7 +18,15 @@ void writeDataToRegister(int ata, char upper, char lower);
 
 void translateBytes(char ans[], unsigned short sector);
 
+void ata_normalize(unsigned short* sector, int* offset) {
+	if (*offset >= 512) {
+		*sector += (*offset / 512);
+		*offset %= 512;
+	}
+}
+
 void ata_read(int ata, void* msg, int bytes, unsigned short sector, int offset) {
+	// log(L_DEBUG, "reading from ATA disk [%d, %d]", sector, offset);
 	if (ata != ATA0 && ata != ATA1) {
 		log(L_ERROR, "Trying to read from an inexistent disk!! %d - [%d, %d]", ata, sector, offset);
 		errno = E_INVALID_ARG;
@@ -70,6 +78,7 @@ void translateBytes(char * ans, unsigned short databyte) {
 }
 
 void ata_write(int ata, void * msg, int bytes, unsigned short sector, int offset) {
+	// log(L_DEBUG, "writing to ATA disk [%d, %d]", sector, offset);
 	if (ata != ATA0 && ata != ATA1) {
 		log(L_ERROR, "Trying to write to an inexistent disk!! %d - [%d, %d]", ata, sector, offset);
 		errno = E_INVALID_ARG;
@@ -100,17 +109,16 @@ void ata_write(int ata, void * msg, int bytes, unsigned short sector, int offset
 }
 
 void _write(int ata, char * msg, int bytes, unsigned short sector, int offset) {
-	int i = 0;
 	char tmp[512];
 	// Read actual sector because ATA always writes a complete sector!
 	// Don't step previour values!
 	_read(ata, tmp, sector, 0, 512);
-	for (i = 0; i < bytes; i++) {
+	for (int i = 0; i < bytes; i++) {
 		tmp[offset + i] = msg[i];
 	}
 	sendComm(ata, LBA_WRITE, sector);
 	// Write updated sector
-	for(i = 0; i < 512; i += 2) {
+	for(int i = 0; i < 512; i += 2) {
 		writeDataToRegister(ata, tmp[i + 1], tmp[i]);
 	}
 }
@@ -215,3 +223,4 @@ void ata_checkDrive(int ata) {
 		}
     }
 }
+

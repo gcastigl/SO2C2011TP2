@@ -124,9 +124,9 @@ void excecuteCmd(char* buffer) {
 
 
 int parse_cmd(char* buffer) {
-	int i, cmdLength = -1, aux;
+	int cmdLength = -1, aux;
 	int match = -1;
-	for(i = 0; cmd_table[i].func != NULL; i++) {
+	for(int i = 0; cmd_table[i].func != NULL; i++) {
 		if (substr(cmd_table[i].name, buffer)) {
 			aux = strlen(cmd_table[i].name);
 			if (aux > cmdLength) {
@@ -175,8 +175,7 @@ cmd_table_entry* shell_getCmdsTable() {
 }
 
 int shell_getCmdIndex(char * cmdName) {
-	int i;
-	for( i=0; cmd_table[i].func != NULL; i++) {
+	for(int i=0; cmd_table[i].func != NULL; i++) {
 		if (strcmp(cmdName, cmd_table[i].name) == 0) {
 			return i;
 		}

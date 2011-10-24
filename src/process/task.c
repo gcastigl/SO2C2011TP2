@@ -22,7 +22,7 @@ void initialize_tasking() {
 }
 
 int fork() {
-    asm volatile("cli");
+    __asm volatile("cli");
     
     task_t *parent_task = (task_t*)current_task;
     page_directory_t *directory = clone_directory(current_directory);
@@ -44,14 +44,14 @@ int fork() {
     
     if (current_task == parent_task) {
         u32int esp;
-            asm volatile("mov %%esp, %0" : "=r" (esp));
+            __asm volatile("mov %%esp, %0" : "=r" (esp));
         u32int ebp;
-            asm volatile("mov %%ebp, %0" : "=r" (ebp));
+            __asm volatile("mov %%ebp, %0" : "=r" (ebp));
         new_task->esp = esp;
         new_task->ebp = ebp;
         new_task->eip = eip;
         
-        asm volatile("sti");
+        __asm volatile("sti");
         return new_task->id;
     } else {
         return 0;
@@ -60,9 +60,8 @@ int fork() {
 }
 
 void move_stack(void *new_stack_start, u32int size) {
-    u32int i;
       // Allocate some space for the new stack.
-      for( i = (u32int)new_stack_start;
+      for(int i = (u32int)new_stack_start;
            i >= ((u32int)new_stack_start-size);
            i -= 0x1000)
       {
@@ -72,8 +71,8 @@ void move_stack(void *new_stack_start, u32int size) {
       
       // Flush the TLB by reading and writing the page directory address again.
       u32int pd_addr;
-      asm volatile("mov %%cr3, %0" : "=r" (pd_addr));
-      asm volatile("mov %0, %%cr3" : : "r" (pd_addr));
+      __asm volatile("mov %%cr3, %0" : "=r" (pd_addr));
+      __asm volatile("mov %0, %%cr3" : : "r" (pd_addr));
 
       // Old ESP and EBP, read from registers.
       u32int old_stack_pointer; asm volatile("mov %%esp, %0" : "=r" (old_stack_pointer));
@@ -91,7 +90,7 @@ void move_stack(void *new_stack_start, u32int size) {
 
       // Backtrace through the original stack, copying new values into
       // the new stack.  
-      for(i = (u32int)new_stack_start; i > (u32int)new_stack_start-size; i -= 4)
+      for(int i = (u32int)new_stack_start; i > (u32int)new_stack_start-size; i -= 4)
       {
         u32int tmp = * (u32int*)i;
         // If the value of tmp is inside the range of the old stack, assume it is a base pointer
@@ -106,8 +105,8 @@ void move_stack(void *new_stack_start, u32int size) {
       }
       
       // Change stacks.
-      asm volatile("mov %0, %%esp" : : "r" (new_stack_pointer));
-      asm volatile("mov %0, %%ebp" : : "r" (new_base_pointer)); 
+      __asm volatile("mov %0, %%esp" : : "r" (new_stack_pointer));
+      __asm volatile("mov %0, %%ebp" : : "r" (new_base_pointer)); 
 }
 
 void switch_task() {
@@ -136,7 +135,7 @@ void switch_task() {
     current_directory = current_task->page_directory;
     
     
-    asm volatile("         \
+    __asm volatile("         \
       cli;                 \
       mov %0, %%ecx;       \
       mov %1, %%esp;       \

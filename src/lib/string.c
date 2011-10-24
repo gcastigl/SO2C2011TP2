@@ -19,9 +19,8 @@ int strcmp(const char * s1, const char * s2) {
 
 int strncmp(char * s1, char * s2, unsigned int n) {
 	int ret = 0;
-	int i;
 	
-	for(i=0;ret == 0 && i<=n && (*s1 != '\0' || *s2 != '\0'); i++)
+	for(int i = 0; ret == 0 && i <= n && (*s1 != '\0' || *s2 != '\0'); i++)
 		ret = *s1 - *s2;
 		
 	return ret;

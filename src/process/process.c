@@ -83,9 +83,9 @@ PROCESS* getNextTask(int withPriority) {
     int temp, bestScore = 0;
     PROCESS *proc;
     
-    for (i = 0; i < MAX_PROCESSES; i++) {
+    for (i = 1; i < MAX_PROCESSES; i++) {
         proc=&process[i];
-        if ((proc->slotStatus != FREE) && ((proc->status != BLOCKED) && (proc->status != CHILD_WAIT))) {
+        if ((proc->slotStatus != FREE) && (proc->status != BLOCKED) && (proc->status != CHILD_WAIT)) {
             proc->lastCalled++;
             if (withPriority == true) {
                 temp = proc->priority * P_RATIO + proc->lastCalled;
@@ -98,7 +98,7 @@ PROCESS* getNextTask(int withPriority) {
             }
         }
     }
-    last100[(count100 = count100++ % 100)] = nextReady;
+    last100[(count100 = (count100 + 1) % 100)] = nextReady;
     return &process[nextReady];
 
     //notar que si no hay procesos disponibles, retornara &processes[0], o sea idle
@@ -133,8 +133,12 @@ void saveESP (int oldESP) {
     return;
 }
 
-int getActiveProcesses(void) {
-    return activeProcesses;
+int getCurrentPID(void) {
+    return currentPID;
+}
+
+PROCESS *getCurrentProcess(void) {
+    return getProcessByPID(currentPID);
 }
 
 void killChildren(int pid) {
@@ -177,6 +181,11 @@ void kill(int pid) {
     }
     activeProcesses--;
     //Free process memory
+}
+
+void setPriority(int pid, int newPriority) {
+    PROCESS *p = getProcessByPID(pid);
+    p->priority = newPriority;
 }
 
 void clean(void) {   
