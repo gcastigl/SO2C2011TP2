@@ -67,7 +67,7 @@ void *systemCallHandler(int sysCallNumber, void ** args) {
     void *ret = NULL;
 	switch(sysCallNumber) {
 		case SYSTEM_USERLIST:
-			do_userlist((calluser_t **)args[0]);
+			do_userlist((calluser_t *)args[0]);
 			break;
 		case SYSTEM_USERADD:
 			do_useradd(args[0], args[1]);
