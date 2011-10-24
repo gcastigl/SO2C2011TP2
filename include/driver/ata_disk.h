@@ -64,4 +64,6 @@ void ata_checkDrive(int ata);
 
 unsigned short getErrorRegister(int ata);
 
+void ata_normalize(unsigned short* sector, int* offset);
+
 #endif

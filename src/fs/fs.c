@@ -28,6 +28,7 @@ void fs_init() {
 	diskManager_init();
 	int i;
 	inodes = kmalloc(INODES * sizeof(iNode));
+	diskCache_init();
 	for (i = 0; i < INODES; i++) {
 		inodes[i].inodeId = -1;
 		inodes[i].length = 0;
