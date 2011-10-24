@@ -33,7 +33,7 @@ void diskCache_read(int disk, void* msg, int bytes, unsigned short sector, int o
 		cachedData[index].accessCount++;
 		return;
 	}
-		log(L_DEBUG, "sector is NOT cached! [%d, %d]", sector, offset);
+		// log(L_DEBUG, "sector is NOT cached! [%d, %d]", sector, offset);
 	int nextFree = _nextFreeIndex();
 	_cachSector(nextFree, disk, sector);
 	memcpy(msg, cachedData[nextFree].contents + offset, bytes);
@@ -71,17 +71,17 @@ void diskCache_write(int disk, void* msg, int bytes, unsigned short sector, int 
  * Busca el indice del array en el que se encuentra cacheado el sector "sector" del disco "disk"
  */
 PRIVATE int _cacheIndex(int disk, short sector) {
-		log(L_DEBUG, "searching for disk: %d, sector: %d", disk, sector);
+		// log(L_DEBUG, "searching for disk: %d, sector: %d", disk, sector);
 	int i;
 	for (i = 0; i < CACHE_SIZE; i++) {
-			log(L_DEBUG, "\t%d -> accessCount : %d, cachedSector: %d, disk: %d", i, cachedData[i].accessCount, cachedData[i].sector, cachedData[i].disk);
+			// log(L_DEBUG, "\t%d -> accessCount : %d, cachedSector: %d, disk: %d", i, cachedData[i].accessCount, cachedData[i].sector, cachedData[i].disk);
 		if (cachedData[i].accessCount != -1 &&
 			cachedData[i].sector == sector &&
 			cachedData[i].disk == disk) {
 			return i;
 		}
 	}
-	log(L_DEBUG, "not found...");
+	// log(L_DEBUG, "not found...");
 	return -1;
 }
 
@@ -99,6 +99,7 @@ PRIVATE int _nextFreeIndex() {
 	}
 	return nextTofree;
 }
+
 /*
  * Cachea el sector "sector" del diso "disk" en el indice "index"
  */
@@ -108,13 +109,15 @@ PRIVATE void _cachSector(int index, int disk, short sector) {
 	cachedData[index].accessCount = 1;
 	cachedData[index].dirty = false;
 	ata_read(disk, cachedData[index].contents, SECTOR_SIZE, sector, 0);
-	log(L_DEBUG, "Catching %d -> [%d, %d]", index, sector, 0);
+	// log(L_DEBUG, "Catching %d -> [%d, %d]", index, sector, 0);
 }
 
 PRIVATE void _flushCache(int index) {
 	if (index != -1) {
-		log(L_DEBUG, "flushing sector %d", cachedData[index].sector);
+		log(L_DEBUG, "flushing sector %d, %d, %s", cachedData[index].sector,cachedData[index].disk, cachedData[index].contents);
 		ata_write(cachedData[index].disk, cachedData[index].contents, SECTOR_SIZE, cachedData[index].sector, 0);
 		cachedData[index].accessCount = -1;
+	} else {
+		log(L_ERROR, "Trying to flush negative index from cache data");
 	}
 }
