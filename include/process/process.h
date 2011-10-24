@@ -4,7 +4,6 @@
 #include <defs.h>
 #include <lib/kheap.h>
 #include <util/logger.h>
-#include <tty.h>
 #define MAX_PROCESS_NAME 	32
 #define MAX_PROCESSES		64
 #define MAX_ARG             32
@@ -12,7 +11,7 @@
 enum {READY, BLOCKED, CHILD_WAIT, SLEEPING, RUNNING};
 enum {BACKGROUND, FOREGROUND};
 enum {OCCUPIED = 0, FREE};
-enum {VERY_LOW, LOW, NORMAL, HIGH};
+enum {VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SHELL_HIGH = 15};
 
 #define MAX_PRIORITY HIGH
 typedef struct {
@@ -39,11 +38,12 @@ int last100[100];
 
 void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** argv, int stacklength, void (*cleaner)(void), int tty,
     int groundness, int status, int priority);
-int getPID(void);
 PROCESS* getProcessByPID(int pid);
 PROCESS* getNextTask(int withPriority);
 void initScheduler(int withPriority);
-int getActiveProcesses(void);
+int getCurrentPID(void);
 void clean(void);
 void kill(int pid);
+PROCESS *getCurrentProcess(void);
+void setPriority(int pid, int newPriority);
 #endif

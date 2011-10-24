@@ -45,7 +45,6 @@ int printf_cmd(int argc, char **argv);
 int format(int argc, char **argv);
 int logout(int argc, char **argv);
 int idle_p(int argc, char **argv);
-int tty_p(int argc, char **argv);
 int top_p(int argc, char**argv);
 int kill_p(int argc, char**argv);
 int eternumWhile_p(int argc, char** argv);

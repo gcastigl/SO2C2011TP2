@@ -7,9 +7,14 @@
 #include <tty.h>
 //FIXME: fix this includes....
 
+#define MAX_OPEN_FILES          50
+
 typedef struct {
-	u32int index;
+    u8int   permissions;
+    u8int   inode;
 } FILE;
+
+FILE openFiles[MAX_OPEN_FILES];
 
 #define O_RDONLY    1
 #define O_WRONLY    2
