@@ -7,7 +7,7 @@
 #include <util/logger.h>
 #include <interrupts/defs.h>
 #include <process/process.h>
-#include <permission/user.h>
+#include <access/user.h>
 #include <fs/file.h>
 
 void initBasicHandlers();

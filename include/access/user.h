@@ -6,23 +6,22 @@
 
 #define NO_USER -1
 
-#define USER_MAX 20
+
 #define E_USER_INVALID_USERNAME -1;
 #define E_USER_INVALID_PASSWORD -2;
 
+#define USER_MAX 20
 typedef struct {
-    char userName[64];
-    char password[32];
     int uid;
     int gid;
-    char userInfo[64];
-    char homePath[64];
+    char userName[32];
+    char password[16];
 } user_t;
 
 typedef struct {
     int uid;
     int gid;
-    char userName[64];
+    char userName[32];
 } calluser_t;
 
 PUBLIC void user_init();

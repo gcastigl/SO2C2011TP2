@@ -1,4 +1,4 @@
-#include <permission/permission.h>
+#include <access/permission.h>
 
 void permission_set(iNode *inode, int mask) {
 	inode->mask = mask;

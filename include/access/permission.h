@@ -2,7 +2,7 @@
 #define	PERMISSION_H
 
 #include <defs.h>
-#include <permission/user.h>
+#include <access/user.h>
 
 #include <util/logger.h>
 

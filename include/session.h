@@ -6,7 +6,7 @@
 #include <driver/video.h>
 #include <lib/stdio.h>
 #include <lib/string.h>
-#include <permission/user.h>
+#include <access/user.h>
 
 #define NAME_MAX_LENGTH	20
 #define PASS_MAX_LENGTH	20

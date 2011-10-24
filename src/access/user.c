@@ -1,4 +1,4 @@
-#include <permission/user.h>
+#include <access/user.h>
 
 PRIVATE user_t users[USER_MAX];
 
