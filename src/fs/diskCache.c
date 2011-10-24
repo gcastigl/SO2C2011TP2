@@ -18,18 +18,15 @@ void diskCache_init() {
 }
 
 void diskCache_read(int disk, void* msg, int bytes, unsigned short sector, int offset) {
-		log(L_DEBUG, "READ cache -> %d, %d", sector, offset);
 	ata_normalize(&sector, &offset);
 	int index = _cacheIndex(disk, sector);
 	if (index != -1) {										// sector is cached
-			log(L_DEBUG, "read - CACHED SECTOR!! %d -> [%d, %d]", index);
 		u8int* from = cachedData[index].contents;
 		if (offset + bytes > SECTOR_SIZE) {
-			int bytesFromFisrtSector = SECTOR_SIZE - offset;
+			int bytesFromFisrtSector = SECTOR_SIZE - offset - 1;
 			memcpy(msg, cachedData[index].contents + offset, bytesFromFisrtSector);
-			int nextFree = _nextFreeIndex();
-			_cachSector(nextFree, cachedData[index].disk, cachedData[index].sector + 1);
-			memcpy(msg + bytesFromFisrtSector, cachedData[nextFree].contents, bytes - bytesFromFisrtSector);
+			diskCache_read(cachedData[index].disk, msg + bytesFromFisrtSector,
+					bytes - bytesFromFisrtSector, sector + 1, 0);
 			return;
 		}
 		memcpy(msg, from + offset, bytes);

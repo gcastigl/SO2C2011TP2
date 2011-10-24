@@ -311,6 +311,12 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int size, u32int initialSector,
 	}
 	// Update bit map information
 	diskCache_write(disk, block, numberOfblocks, 0, sizeof(FSHeader));
+	if (reservedBlocks < neededBlocks) {			// Reached end of space available and the recolected space is not enought
+		log(L_ERROR, "DISK OUT OF MEMORY!");
+		page->totalLength = 0;
+		_freeMemory(page);
+		errno = E_OUT_OF_MEMORY;
+	}
 		// log(L_DEBUG, "finished reserving mem: %d", block[0]);
 	_sti();
 	return 0;
@@ -374,7 +380,24 @@ PRIVATE int _reserveMemory(DiskPage *page, int size, u32int initialSector, u32in
 }*/
 
 PRIVATE void _freeMemory(DiskPage* page) {
-	DiskPage currPage;
+	int numberOfblocks = 512 - sizeof(FSHeader);
+	char block[numberOfblocks];
+	diskCache_read(page->disk, block, numberOfblocks, 0, sizeof(FSHeader));
+	// char j, bit i ==> ((i * 8) + j) * DISK_BLOCK_SIZE_BYTES; (sector)
+	do {
+		int sector = page->nextSector;
+		int offset = page->nextOffset;
+		if (sector % DISK_BLOCK_SIZE_BYTES != 0) {
+			log(L_ERROR, "Trying to free an invalid page at [%d, %d]", sector, offset);
+		}
+		offset /= DISK_BLOCK_SIZE_BYTES;
+		int charPos = offset / 8;
+		int bit = offset % 8;
+		block[charPos] |= 1 << bit;
+		log(L_DEBUG, "Freeing memory, [%d, %d], char: %d, bit: %d",charPos, bit);
+	} while (page->hasNextPage);
+	diskCache_read(page->disk, block, numberOfblocks, 0, sizeof(FSHeader));
+	/*DiskPage currPage;
 	u32int sector = page->nextSector;
 	u32int offset = page->nextOffset;
 	do {
@@ -383,7 +406,7 @@ PRIVATE void _freeMemory(DiskPage* page) {
 		offset = currPage.nextOffset;
 		currPage.magic = 0;
 		diskCache_write(page->disk, &currPage, sizeof(DiskPage), sector, offset);
-	} while(currPage.hasNextPage);
+	} while(currPage.hasNextPage);*/
 }
 
 PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {

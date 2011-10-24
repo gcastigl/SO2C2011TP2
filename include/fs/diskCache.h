@@ -3,7 +3,7 @@
 
 #include <driver/ata_disk.h>
 
-#define CACHE_SIZE		3
+#define CACHE_SIZE		5
 
 typedef struct {
 	int disk;
