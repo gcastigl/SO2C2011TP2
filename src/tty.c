@@ -3,8 +3,16 @@
 PRIVATE TTY tty[MAX_TTYs];
 int currentTTY = 0;
 PUBLIC int activeTTYs = 0;
+extern void shell_update(int index);
+void startTTYs() {
+    char name[5];
+    for (int i = 1; i <= MAX_TTYs; i++) {
+        sprintf(name, "tty%d", i);
+        createProcess(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, i, BACKGROUND, READY, ((i == 1) ? SHELL_HIGH : VERY_LOW));
+    }
+}
 
-int initTTY() {
+int initTTY(int pid) {
     int index = activeTTYs++;
     tty[index].id = index;
 	tty[index].terminal = (char*) kmalloc(TOTAL_VIDEO_SIZE);
@@ -12,6 +20,7 @@ int initTTY() {
     tty[index].bufferOffset = 0;
 	tty[index].bgColor = BLACK;
 	tty[index].fgColor = WHITE;
+    tty[index].pid = pid;
 	fs_node_t root;
 	fs_getRoot(&root);
 	tty[index].currDirectory = root.inode;
@@ -22,8 +31,11 @@ int initTTY() {
 }
 
 void tty_setCurrent(int tty) {
+    TTY* currTTY = tty_getCurrentTTY();
+    setPriority(currTTY->pid, VERY_LOW);
 	currentTTY = tty;
-	TTY* currTTY = tty_getCurrentTTY();
+	currTTY = tty_getCurrentTTY();
+    setPriority(currTTY->pid, SHELL_HIGH);
 	video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
 	video_setOffset(0);
 	video_write(currTTY->terminal, currTTY->offset);
@@ -88,3 +100,10 @@ void tty_setFormatToCurrTTY(char format) {
 	currTTY->bgColor = video_getBGcolor(format);
 }
 
+int tty_p(int argc, char **argv) {
+    int index = initTTY(getCurrentPID());
+    while(1) {
+        shell_update(index);
+    }
+    return 0;
+}
