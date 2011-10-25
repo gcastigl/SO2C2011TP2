@@ -1,6 +1,8 @@
 #include <tty.h>
 
 PRIVATE TTY tty[MAX_TTYs];
+PRIVATE int inactiveTTYpriority = PNONE;
+PRIVATE int activeTTYpriority = HIGH;
 int currentTTY = 0;
 PUBLIC int activeTTYs = 0;
 extern void shell_update(int index);
@@ -8,14 +10,19 @@ void startTTYs() {
     char name[5];
     for (int i = 1; i <= MAX_TTYs; i++) {
         sprintf(name, "tty%d", i);
-        createProcess(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, i, BACKGROUND, READY, ((i == 1) ? HIGH : PNONE));
+        createProcess(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, i, BACKGROUND, READY, ((i == 1) ? activeTTYpriority : inactiveTTYpriority));
+        //createProcess(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, i, BACKGROUND, READY, activeTTYpriority);
     }
 }
 
 int initTTY(int pid) {
+    log(L_DEBUG, "Starting tty %d", pid);
     int index = activeTTYs++;
     tty[index].id = index;
 	tty[index].terminal = (char*) kmalloc(TOTAL_VIDEO_SIZE);
+    for (int i = 0; i < TOTAL_VIDEO_SIZE; i++) {
+        tty[index].terminal[i] = 0;
+    }
 	tty[index].offset = 0;
     tty[index].bufferOffset = 0;
 	tty[index].bgColor = BLACK;
@@ -32,10 +39,10 @@ int initTTY(int pid) {
 
 void tty_setCurrent(int tty) {
     TTY* currTTY = tty_getCurrentTTY();
-    setPriority(currTTY->pid, NONE);
+    setPriority(currTTY->pid, inactiveTTYpriority);
 	currentTTY = tty;
 	currTTY = tty_getCurrentTTY();
-    setPriority(currTTY->pid, HIGH);
+    setPriority(currTTY->pid, activeTTYpriority);
 	video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
 	video_setOffset(0);
 	video_write(currTTY->terminal, currTTY->offset);
