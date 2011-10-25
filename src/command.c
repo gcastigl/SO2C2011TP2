@@ -164,7 +164,7 @@ int top_p(int argc, char**argv) {
     int slot;
     int execCount[MAX_PROCESSES] = { 0 };
     char *status[] = {"Ready", "Blocked", "Child Wait", "Sleeping", "Running"};
-    char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell high"};
+    char *priority[] = {"None", "Very Low", "Low", "Normal", "High", "Very High"};
     printf("Last 100:\n");
     for (i = 0; i < 100; i++) {
         slot = last100[i];
@@ -175,7 +175,7 @@ int top_p(int argc, char**argv) {
     for (i = 0; i < MAX_PROCESSES; i++) {
         if ((process[i].slotStatus == OCCUPIED)) {
             
-            printf("%s\t%d\t%s\t%s\t%d\n", process[i].name, process[i].pid, status[process[i].status], priority[process[i].priority % 10], execCount[i]);
+            printf("%s\t%d\t%s\t%s\t%d\n", process[i].name, process[i].pid, status[process[i].status], priority[process[i].priority], execCount[i]);
         }
     }
     

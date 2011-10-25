@@ -8,7 +8,7 @@ void startTTYs() {
     char name[5];
     for (int i = 1; i <= MAX_TTYs; i++) {
         sprintf(name, "tty%d", i);
-        createProcess(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, i, BACKGROUND, READY, ((i == 1) ? SHELL_HIGH : VERY_LOW));
+        createProcess(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, i, BACKGROUND, READY, ((i == 1) ? HIGH : PNONE));
     }
 }
 
@@ -32,10 +32,10 @@ int initTTY(int pid) {
 
 void tty_setCurrent(int tty) {
     TTY* currTTY = tty_getCurrentTTY();
-    setPriority(currTTY->pid, VERY_LOW);
+    setPriority(currTTY->pid, NONE);
 	currentTTY = tty;
 	currTTY = tty_getCurrentTTY();
-    setPriority(currTTY->pid, SHELL_HIGH);
+    setPriority(currTTY->pid, HIGH);
 	video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
 	video_setOffset(0);
 	video_write(currTTY->terminal, currTTY->offset);

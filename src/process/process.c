@@ -85,7 +85,7 @@ PROCESS* getNextTask(int withPriority) {
     
     for (i = 1; i < MAX_PROCESSES; i++) {
         proc=&process[i];
-        if ((proc->slotStatus != FREE) && (proc->status != BLOCKED) && (proc->status != CHILD_WAIT)) {
+        if ((proc->slotStatus != FREE) && (proc->status != BLOCKED) && (proc->status != CHILD_WAIT) && (proc->priority != PNONE)) {
             proc->lastCalled++;
             if (withPriority == true) {
                 temp = proc->priority * P_RATIO + proc->lastCalled;
