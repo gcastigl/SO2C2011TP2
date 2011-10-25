@@ -193,7 +193,7 @@ void checkReset() {
 void checkTTY() {
 	if (IS_CTRL() && newTTY == -1) {
 		int i;
-		for (i = 0; i < activeTTYs; ++i) {
+		for (i = 0; i < (activeTTYs > MAX_TTYs ? MAX_TTYs : activeTTYs); ++i) {
 			if (F_PRESSED(i)) {
 				newTTY = i;
 				break;
