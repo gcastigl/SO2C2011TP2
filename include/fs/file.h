@@ -36,6 +36,8 @@ int pwd(int argc, char **argv);
 
 int touch(int argc, char **argv);
 
+int cat(int argc, char **argv);
+
 /*
 void createFilesystem();
 

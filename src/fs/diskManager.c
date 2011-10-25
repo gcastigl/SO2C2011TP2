@@ -12,7 +12,6 @@ PRIVATE void _getiNode(u32int inodeNumber, iNodeDisk *inode);
 PRIVATE void _setiNode(u32int inodeNumber, iNodeDisk *inode);
 
 PRIVATE int _reserveMemoryBitMap(DiskPage *page, int size, u32int initialSector, u32int initialOffset);
-//PRIVATE int _reserveMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset);
 PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset);
 PRIVATE void _freeMemory(DiskPage *page);
 
@@ -100,6 +99,7 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name) {
 		errno = E_CORRUPTED_FILE;
 		return;
 	}
+	// strcpy(name, header.name);
 	strcpy(header.name, name);
 	inode->gid = header.gid;
 	inode->uid = header.uid;
@@ -117,7 +117,7 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name) {
 int diskManager_writeContents(u32int inodeNumber, char *contents, u32int length, u32int offset) {
 	iNodeDisk inode;
 	_getiNode(inodeNumber, &inode);
-		log(L_DEBUG, "updating contents, %d bytes to inode: %d -> [%d, %d]", length, inodeNumber, inode.data.nextSector, inode.data.nextOffset);
+		// log(L_DEBUG, "updating contents, %d bytes to inode: %d -> [%d, %d]", length, inodeNumber, inode.data.nextSector, inode.data.nextOffset);
 		// log(L_DEBUG,"Contents[MAX: %d, used: %d], Total[MAX: %d, used: %d]", inode.contentMaxBytes, inode.contentUsedBytes, inode.totalReservedMem, inode.usedMem);
 	if (inode.data.magic != MAGIC_NUMBER) {
 		log(L_ERROR, "Trying to write to a corrupted page!");
@@ -302,7 +302,7 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int size, u32int initialSector,
 					page->usedBytes = 0;
 					page->magic = MAGIC_NUMBER;
 					page->hasNextPage = neededBlocks > 1;
-					log(L_DEBUG, "Returning: [%d, %d, %d]. Mem: t:%d / u:%d - next page? %d", page->disk, page->nextSector, page->nextOffset, page->totalLength, page->usedBytes, page->hasNextPage);
+					// log(L_DEBUG, "Returning: [%d, %d, %d]. Mem: t:%d / u:%d - next page? %d", page->disk, page->nextSector, page->nextOffset, page->totalLength, page->usedBytes, page->hasNextPage);
 				}
 				previousSector = currSector;
 				previousOffset = currOffset;

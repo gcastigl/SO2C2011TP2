@@ -45,10 +45,8 @@ void fs_getRoot(fs_node_t* fsNode) {
 }
 
 void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
-	if (inodes[inodeNumber].inodeId == -1) {				// the inode is not loaded on memory
 		// log(L_DEBUG, "loading %d node from memory", inodeNumber);
-		diskManager_readInode(&inodes[inodeNumber], inodeNumber, fsNode->name);
-	}
+	diskManager_readInode(&inodes[inodeNumber], inodeNumber, fsNode->name);
 	iNode* inode = &inodes[inodeNumber];
 	diskManager_getFileName(inodeNumber, fsNode->name);
 	fsNode->flags = inode->flags;
@@ -240,7 +238,9 @@ u32int fs_size(fs_node_t *node) {
 }
 
 PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
+	diskManager_readInode(&inodes[node->inode], node->inode, node->name);
     iNode header = inodes[node->inode];
+    //log(L_DEBUG, "%d - %s => reading %d bytes from offset %d (inode length: %d)", node->inode, node->name, size, offset, header.length);
     if (offset > header.length) {
         return 0;
     }
@@ -252,13 +252,7 @@ PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffe
 }
 
 PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
-    iNode header = inodes[node->inode];
-    if (offset > header.length) {
-        return 0;
-    }
-    if (offset + size > header.length) {
-        size = header.length - offset;
-    }
+    // log(L_DEBUG, "%d - %s => writing %d bytes from offset %d (inode length: %d)", node->inode, node->name, size, offset, header.length);
     diskManager_writeContents(node->inode, (char*) buffer, size, offset);
     return size;
 }
