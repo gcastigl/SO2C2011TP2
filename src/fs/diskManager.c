@@ -64,7 +64,7 @@ int diskManager_nextInode() {
 
 void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 	iNodeDisk newiNode;
-	int reservedBlocks = _reserveMemoryBitMap(&newiNode.data, FILE_INITIAL_SIZE_BYTES, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
+	int reservedBlocks = _reserveMemoryBitMap(&newiNode.data, 1, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
 	newiNode.totalReservedMem = newiNode.data.totalLength;
 	newiNode.usedMem  = reservedBlocks * sizeof(DiskPage) + sizeof(FileHeader);
 	newiNode.contentMaxBytes = newiNode.totalReservedMem - newiNode.usedMem;
@@ -235,7 +235,7 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 			errno = E_OUT_OF_MEMORY;
 			return -1;
 		}
-			//log(L_DEBUG, "Next page [%d, %d]- bytes left: %d", currPage.nextSector, currPage.nextOffset, length);
+			log(L_DEBUG, "Write Next page [%d, %d]- bytes left: %d", currPage.nextSector, currPage.nextOffset, length);
 		diskCache_read(currPage.disk, &currPage, sizeof(DiskPage), currPage.nextSector, currPage.nextOffset);
 		if (currPage.magic == MAGIC_NUMBER) {
 			bytesFromContent = MIN(currPage.totalLength - sizeof(DiskPage), length);
@@ -256,22 +256,22 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 	return 0;
 }
 
-PRIVATE int _reserveMemoryBitMap(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {
+PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSector, u32int initialOffset) {
+		log(L_DEBUG, "\nReserving %d blocks....", blocks);
 	_cli();
 	DiskPage currPage;
 	int previousSector, previousOffset, currSector, currOffset;
 	int disk = ATA0;
-	int numberOfblocks = 512 - sizeof(FSHeader);
+	int numberOfblocks = SECTOR_SIZE - sizeof(FSHeader);	// Use all remaining bits until the end of the first sector
 
 	char block[numberOfblocks];
 	diskCache_read(disk, block, numberOfblocks, 0, sizeof(FSHeader));
-	int neededBlocks = (size / (DISK_BLOCK_SIZE_BYTES + 1)) + 1;
+
 	int reservedBlocks = 0;
-		log(L_DEBUG, "\nReserving %d bytes => total blocks %d\n", size, neededBlocks);
 
 	// Iterates for each byte to find a bit turned off (empty slot)
-	for(int i = 0; i < numberOfblocks && reservedBlocks < neededBlocks; i++) {
-		for (int j = 0; j < 8 && reservedBlocks < neededBlocks; j++) {					// each char has 8 bits!
+	for(int i = 0; i < numberOfblocks && reservedBlocks < blocks; i++) {
+		for (int j = 0; j < 8 && reservedBlocks < blocks; j++) {					// each char has 8 bits!
 			currSector = initialSector;
 			currOffset = initialOffset + ((i * 8) + j) * DISK_BLOCK_SIZE_BYTES;
 				log(L_DEBUG, "[%d, %d] -> %s", currSector, currOffset, (BIT(block[i], j) == 0) ? "Free" : "Used");
@@ -282,26 +282,26 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int size, u32int initialSector,
 				currPage.disk = disk;
 				currPage.usedBytes = 0;
 				currPage.totalLength = DISK_BLOCK_SIZE_BYTES;
-				if (reservedBlocks == neededBlocks) {
+				if (reservedBlocks == blocks) {
 					currPage.hasNextPage = false;
-					log(L_DEBUG, "using [%d, %d] - %d", currSector, currOffset, currPage);
+					//	log(L_DEBUG, "using [%d, %d] - %d", currSector, currOffset, reservedBlocks);
 					diskCache_write(currPage.disk, &currPage, sizeof(DiskPage), currSector, currOffset);
 				}
 				if (reservedBlocks > 1) {
 					currPage.hasNextPage = true;
 					currPage.nextSector = currSector;
 					currPage.nextOffset = currOffset;
-					log(L_DEBUG, "prev - using [%d, %d] - %d", previousSector, previousOffset, currPage);
+					//	log(L_DEBUG, "prev - using [%d, %d] - %d", previousSector, previousOffset, reservedBlocks);
 					diskCache_write(currPage.disk, &currPage, sizeof(DiskPage), previousSector, previousOffset);
 				}
 				if (reservedBlocks == 1) {		// set up first reserved page info to caller function
 					page->disk = ATA0;
 					page->nextSector = currSector;
 					page->nextOffset = currOffset;
-					page->totalLength = neededBlocks * DISK_BLOCK_SIZE_BYTES;
+					page->totalLength = blocks * DISK_BLOCK_SIZE_BYTES;
 					page->usedBytes = 0;
 					page->magic = MAGIC_NUMBER;
-					page->hasNextPage = neededBlocks > 1;
+					page->hasNextPage = blocks > 1;
 					// log(L_DEBUG, "Returning: [%d, %d, %d]. Mem: t:%d / u:%d - next page? %d", page->disk, page->nextSector, page->nextOffset, page->totalLength, page->usedBytes, page->hasNextPage);
 				}
 				previousSector = currSector;
@@ -311,11 +311,13 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int size, u32int initialSector,
 	}
 	// Update bit map information
 	diskCache_write(disk, block, numberOfblocks, 0, sizeof(FSHeader));
-	if (reservedBlocks < neededBlocks) {			// Reached end of space available and the recolected space is not enought
+	if (reservedBlocks < blocks) {			// Reached end of space available and the recolected space is not enought
 		log(L_ERROR, "DISK OUT OF MEMORY!");
 		page->totalLength = 0;
 		_freeMemory(page);
 		errno = E_OUT_OF_MEMORY;
+		_sti();
+		return -1;
 	}
 		// log(L_DEBUG, "finished reserving mem: %d", block[0]);
 	_sti();
@@ -424,9 +426,13 @@ PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int
 		diskCache_read(disk, &lastPage, sizeof(DiskPage), lastPage.nextSector, lastPage.nextOffset);
 	}
 
+	int neededBlocks = (size / (DISK_BLOCK_SIZE_BYTES + 1)) + 1;
+	size += neededBlocks * sizeof(FileHeader);
+	neededBlocks = (size / (DISK_BLOCK_SIZE_BYTES + 1)) + 1;
+
 	// Reserve extra memory
 	DiskPage cont;
-	int extraBlocks = _reserveMemoryBitMap(&cont, size, initialSector, initialOffset);
+	int extraBlocks = _reserveMemoryBitMap(&cont, neededBlocks, initialSector, initialOffset);
 	page->totalLength = cont.totalLength;
 	// Attach extra memory to the end of this segment
 	lastPage.hasNextPage = true;

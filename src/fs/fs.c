@@ -70,6 +70,7 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 }
 
 PRIVATE void fs_create() {
+	log(L_DEBUG, "loding OS from root...");
 	diskManager_writeHeader(INODES);				// Save header for the next time the system starts...
 	// Initialize root directory
 	int rootInode = diskManager_nextInode();

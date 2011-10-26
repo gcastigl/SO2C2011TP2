@@ -10,8 +10,6 @@
 #define MAGIC_NUMBER					123456
 #define FILE_BLOCK_OVERHEAD_SIZE_BYTES	(sizeof(DiskPage) + sizeof(FileHeader))
 
-#define FILE_INITIAL_SIZE_BYTES			(FILE_BLOCK_OVERHEAD_SIZE_BYTES + 100)
-
 #define DISK_BLOCK_SIZE_BYTES			200
 
 
