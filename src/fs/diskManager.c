@@ -284,14 +284,14 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSecto
 				currPage.totalLength = DISK_BLOCK_SIZE_BYTES;
 				if (reservedBlocks == blocks) {
 					currPage.hasNextPage = false;
-					log(L_DEBUG, "using [%d, %d] - %d", currSector, currOffset, reservedBlocks);
+					//	log(L_DEBUG, "using [%d, %d] - %d", currSector, currOffset, reservedBlocks);
 					diskCache_write(currPage.disk, &currPage, sizeof(DiskPage), currSector, currOffset);
 				}
 				if (reservedBlocks > 1) {
 					currPage.hasNextPage = true;
 					currPage.nextSector = currSector;
 					currPage.nextOffset = currOffset;
-					log(L_DEBUG, "prev - using [%d, %d] - %d", previousSector, previousOffset, reservedBlocks);
+					//	log(L_DEBUG, "prev - using [%d, %d] - %d", previousSector, previousOffset, reservedBlocks);
 					diskCache_write(currPage.disk, &currPage, sizeof(DiskPage), previousSector, previousOffset);
 				}
 				if (reservedBlocks == 1) {		// set up first reserved page info to caller function

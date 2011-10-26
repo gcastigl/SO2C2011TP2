@@ -21,14 +21,14 @@ void diskCache_read(int disk, void* msg, int bytes, unsigned short sector, int o
 	//ata_read(disk, msg, bytes, sector, offset);
 	//return;
 	ata_normalize(&sector, &offset);
-	log(L_DEBUG, "diskCache_read [%d, %d] bytes: %d", sector, offset, bytes);
+	//	log(L_DEBUG, "diskCache_read [%d, %d] bytes: %d", sector, offset, bytes);
 	int index = _cacheIndex(disk, sector);
 	if (index != -1) {										// sector is cached
 		cachedSector* cache = &cachedData[index];
 		if (offset + bytes >= SECTOR_SIZE) {
 			int bytesFromFisrtSector = SECTOR_SIZE - offset;
 			memcpy(msg, cache->contents + offset, bytesFromFisrtSector);
-			log(L_DEBUG, "recursive call with: %d, ->%d, %d, %d, %d", cache->disk, bytesFromFisrtSector, bytes - bytesFromFisrtSector, sector + 1, 0);
+			//	log(L_DEBUG, "recursive call with: %d, ->%d, %d, %d, %d", cache->disk, bytesFromFisrtSector, bytes - bytesFromFisrtSector, sector + 1, 0);
 			diskCache_read(cache->disk, msg + bytesFromFisrtSector, bytes - bytesFromFisrtSector, sector + 1, 0);
 			return;
 		}
@@ -36,14 +36,14 @@ void diskCache_read(int disk, void* msg, int bytes, unsigned short sector, int o
 		cachedData[index].accessCount++;
 		return;
 	}
-		// log(L_DEBUG, "sector is NOT cached! [%d, %d]", sector, offset);
+		//	log(L_DEBUG, "sector is NOT cached! [%d, %d]", sector, offset);
 	int nextFree = _nextFreeIndex();
 	_cachSector(nextFree, disk, sector);
 	if (offset + bytes >= SECTOR_SIZE) {
 		cachedSector* cache = &cachedData[nextFree];
 		int bytesFromFisrtSector = SECTOR_SIZE - offset;
 		memcpy(msg, cache->contents + offset, bytesFromFisrtSector);
-		log(L_DEBUG, "recursive call with: %d, ->%d, %d, %d, %d", cache->disk, bytesFromFisrtSector, bytes - bytesFromFisrtSector, sector + 1, 0);
+		// log(L_DEBUG, "recursive call with: %d, ->%d, %d, %d, %d", cache->disk, bytesFromFisrtSector, bytes - bytesFromFisrtSector, sector + 1, 0);
 		diskCache_read(cache->disk, msg + bytesFromFisrtSector, bytes - bytesFromFisrtSector, sector + 1, 0);
 		return;
 	}
@@ -114,7 +114,7 @@ PRIVATE void _cachSector(int index, int disk, short sector) {
 
 PRIVATE void _flushCache(int index) {
 	if (index != -1) {
-		log(L_DEBUG, "flushing sector %d, %d, %s", cachedData[index].sector,cachedData[index].disk, cachedData[index].contents);
+		// log(L_DEBUG, "flushing sector %d, %d, %s", cachedData[index].sector,cachedData[index].disk, cachedData[index].contents);
 		ata_write(cachedData[index].disk, cachedData[index].contents, SECTOR_SIZE, cachedData[index].sector, 0);
 		cachedData[index].accessCount = -1;
 	}
