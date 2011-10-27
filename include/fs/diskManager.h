@@ -44,10 +44,8 @@ typedef struct {
 
 typedef struct {
 	DiskPage data;
-	u32int contentUsedBytes;
-	u32int contentMaxBytes;
-	u32int totalReservedMem;			// Suma del tamaño total de cada pagina
-	u32int usedMem;						// Suma del tamaño usando por cada pagina
+	u32int blocks;
+	u32int usedBytes;
 } iNodeDisk;
 
 typedef struct {
