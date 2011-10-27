@@ -264,21 +264,20 @@ I will give you sucking-pig and kasha. We will have dinner with some brendy and 
 
 // TODO: finish this funcion!
 int diskManagerTest(int argc, char **argv) {
-	iNode node;
-	node.mask = FS_FILE;
-	int inodeNumber = diskManager_nextInode();
-	diskManager_createInode(&node, inodeNumber, "test.txt");
-	//char *contents = "The File interface represents file data typically obtained from the underlying file system, and the Blob interface (\"Binary Large Object\" -- a name originally introduced to web APIs in Google Gears) represents immutable raw data. File or Blob reads should happen asynchronously on the main thread, with an optional synchronous API used within threaded web applications. An asynchronous API for reading files prevents blocking and UI \"freezing\" on a user agent's main thread. This specification defines an asynchronous API based on an event model to read and access a File or Blob's data. A FileReader object provides asynchronous read methods to access that file's data through event handler attributes and the firing of events. The use of events and event handlers allows separate code blocks the ability to monitor the progress of the read (which is particularly useful for remote drives or mounted drives, where file access performance may vary from local drives) and error conditions that may arise during reading of a file. An example will be illustrative.";
-	char* contents = longText;
-	u32int len = strlen(contents) + 1;
-	diskManager_writeContents(inodeNumber, contents, len, 0);
+	int inodeNumber = fs_createFile(0, "text.txt");
+	fs_node_t node;
+	fs_getFsNode(&node, inodeNumber);
+	log(L_DEBUG, "so far so good....");
+	u8int* contents = (u8int*) longText;
+	u32int len = strlen((char*) contents) + 1;
+	write_fs(&node, 0, len, contents);
 	int calcSize = diskManager_size(inodeNumber);
-	char asd[calcSize];
-	diskManager_readContents(inodeNumber, asd, calcSize, 0);
+	u8int asd[calcSize];
+	read_fs(&node, 0, calcSize, asd);
 	printf("Recovered contents (%d, originalSize = %d):\n%s\n", calcSize, len, asd);
-	char part[40];
-	diskManager_readContents(inodeNumber, part, 40, 20);
-	part[21] = '\0';
+	u8int part[21];
+	read_fs(&node, 40, 20, part);
+	part[20] = '\0';
 	printf("Reading from 40 to 60: %s\n", part);
 	return 0;
 }

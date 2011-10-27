@@ -20,8 +20,9 @@ int initTTY(int pid) {
     int index = activeTTYs++;
     tty[index].id = index;
 	tty[index].terminal = (char*) kmalloc(TOTAL_VIDEO_SIZE);
-    for (int i = 0; i < TOTAL_VIDEO_SIZE; i++) {
-        tty[index].terminal[i] = 0;
+    for (int i = 0; i < TOTAL_VIDEO_SIZE; i+=2) {
+        tty[index].terminal[i] = WHITE;
+        tty[index].terminal[i + 1] = BLACK;
     }
 	tty[index].offset = 0;
     tty[index].bufferOffset = 0;
