@@ -312,4 +312,5 @@ int diskManagerTest2(int argc, char **argv) {
 	char name[64];
 	diskManager_getFileName(0, name);
 	log(L_DEBUG, "name: %s\n", name);
+	return 0;
 }

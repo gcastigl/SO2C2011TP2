@@ -123,18 +123,17 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name) {
 int diskManager_writeContents(u32int inodeNumber, char *contents, u32int length, u32int offset) {
 	iNodeDisk inode;
 	_getiNode(inodeNumber, &inode);
-		log(L_DEBUG, "updating contents, %d bytes to inode: %d -> [%d, %d]", length, inodeNumber, inode.data.nextSector, inode.data.nextOffset);
-		log(L_DEBUG,"Contents[MAX: %d, used: %d], reserved blocks = %d", _availableMem(&inode), inode.usedBytes, inode.blocks);
+	//	log(L_DEBUG, "updating contents, %d bytes to inode: %d -> [%d, %d]", length, inodeNumber, inode.data.nextSector, inode.data.nextOffset);
+	//	log(L_DEBUG,"Contents[MAX: %d, used: %d], reserved blocks = %d", _availableMem(&inode), inode.usedBytes, inode.blocks);
 	if (inode.data.magic != MAGIC_NUMBER) {
 		log(L_ERROR, "Trying to write to a corrupted page!");
 		errno = E_CORRUPTED_FILE;
 		return -1;
 	}
 	if (offset + length > _availableMem(&inode)) {
-		log(L_DEBUG, "%d -> Memory is not enough, have: %d, extending memory to %d bytes", inodeNumber, _availableMem(&inode), offset + length);
+		//	log(L_DEBUG, "%d -> Memory is not enough, have: %d, extending memory to %d bytes", inodeNumber, _availableMem(&inode), offset + length);
 		int extrablocks = _extendMemory(&inode.data, offset + length, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
 		inode.blocks += extrablocks;
-		// inode.usedBytes = offset + length;
 	}
 	if (offset + length > inode.usedBytes) {
 		inode.usedBytes = offset + length;
@@ -209,7 +208,6 @@ PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int off
 // FIXME: This function always writes from the beginning all the way to the end!
 PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int offset) {
 	DiskPage currPage;
-	int total = length;
 		// log(L_DEBUG,"validating file page: [%d, %d]", page->nextSector, page->nextOffset);
 	diskCache_read(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
 	if (currPage.magic != MAGIC_NUMBER) {
