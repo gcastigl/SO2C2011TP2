@@ -255,7 +255,7 @@ PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffe
 }
 
 PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
-    // log(L_DEBUG, "%d - %s => writing %d bytes from offset %d (inode length: %d)", node->inode, node->name, size, offset, header.length);
+    //	log(L_DEBUG, "%d - %s => writing %d bytes from offset %d", node->inode, node->name, size, offset);
     diskManager_writeContents(node->inode, (char*) buffer, size, offset);
     return size;
 }

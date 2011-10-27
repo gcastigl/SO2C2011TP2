@@ -74,8 +74,8 @@ int terminal_prtSpecialCharater(char* terminal, int offset, char ascii, char for
 							offset = endOfRow;
 			break;
 		case '\t': // Tab
-				tab = 2 * TAB_SIZE - (offset % (2 * TAB_SIZE));
-				terminal_formatRange(terminal, offset, offset + tab, format);
+				tab = TAB_SIZE - (offset % TAB_SIZE);
+				terminal_formatRange(terminal, offset, offset + 2 * tab, format);
 				offset += tab;
 			break;
 		case '\b': // Backspace
