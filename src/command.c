@@ -265,7 +265,7 @@ I will give you sucking-pig and kasha. We will have dinner with some brendy and 
 // TODO: finish this funcion!
 int diskManagerTest(int argc, char **argv) {
 	iNode node;
-	node.flags = FS_FILE;
+	node.mask = FS_FILE;
 	int inodeNumber = diskManager_nextInode();
 	diskManager_createInode(&node, inodeNumber, "test.txt");
 	//char *contents = "The File interface represents file data typically obtained from the underlying file system, and the Blob interface (\"Binary Large Object\" -- a name originally introduced to web APIs in Google Gears) represents immutable raw data. File or Blob reads should happen asynchronously on the main thread, with an optional synchronous API used within threaded web applications. An asynchronous API for reading files prevents blocking and UI \"freezing\" on a user agent's main thread. This specification defines an asynchronous API based on an event model to read and access a File or Blob's data. A FileReader object provides asynchronous read methods to access that file's data through event handler attributes and the firing of events. The use of events and event handlers allows separate code blocks the ability to monitor the progress of the read (which is particularly useful for remote drives or mounted drives, where file access performance may vary from local drives) and error conditions that may arise during reading of a file. An example will be illustrative.";
@@ -286,7 +286,7 @@ int diskManagerTest(int argc, char **argv) {
 int diskManagerTest2(int argc, char **argv) {
 	char read[128];
 	iNode node;
-	node.flags = 10;
+	node.mask = 10;
 	diskManager_createInode(&node, 0, "My Node");
 	char *contents = "This are the node contents!!";
 	int len = strlen(contents) + 1;

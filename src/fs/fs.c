@@ -60,7 +60,7 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	fsNode->write = fs_write;
 	fsNode->open = fs_open;
 	fsNode->close = fs_close;
-	if ((inode->flags & 0x07) == FS_DIRECTORY) {
+	if ((inode->mask&0x07) == FS_DIRECTORY) {
 		fsNode->finddir = fs_finddir;
 		fsNode->readdir = fs_readdir;
 	} else {
@@ -132,10 +132,10 @@ PRIVATE void _loadDirectory(int inodeNumber) {
 		;
 }
 
-PRIVATE void _initInode(u32int inodeNumber, char* name, u32int flags) {
+PRIVATE void _initInode(u32int inodeNumber, char* name, u32int mask) {
 	iNode* inode = &inodes[inodeNumber];
-    inode->flags = flags;
-    inode->mask = 0;
+    inode->mask = mask;
+    inode->flags = 0;
     inode->uid = 0;
     inode->gid = 0;
     inode->impl = 0;
@@ -161,7 +161,7 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 	} else {
 		strcpy(fileName, name);
 	}
-	if ((inodes[dirInodeNumber].flags & 0x07) != FS_DIRECTORY) {
+	if ((inodes[dirInodeNumber].mask & 0x07) != FS_DIRECTORY) {
 		log(L_ERROR, "Trying to add file %s to a non dir!\n\n", name);
 		errno = E_INVALID_ARG;
 		return;
@@ -234,9 +234,11 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 	return NULL;
 }
 
+
 u32int fs_size(fs_node_t *node) {
 	return diskManager_size(node->inode);
 }
+
 
 PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 	diskManager_readInode(&inodes[node->inode], node->inode, node->name);
@@ -258,10 +260,10 @@ PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buff
     return size;
 }
 
+
 PRIVATE void fs_open(fs_node_t *node) {
 
 }
-
 
 PRIVATE void fs_close(fs_node_t *node) {
 
