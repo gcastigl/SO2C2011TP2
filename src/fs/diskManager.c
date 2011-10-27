@@ -48,7 +48,7 @@ void diskManager_writeHeader(u32int maxNodes) {
 		log(L_DEBUG, "Writing OS header");
 	diskCache_write(ATA0, &header, sizeof(FSHeader), 0, 0);
 	// Mark all sector as free sectors
-	int numberOfBlocks = 512 + sizeof(FSHeader), i;
+	int numberOfBlocks = SECTOR_SIZE - sizeof(FSHeader), i;
 	char block[numberOfBlocks];
 	for (i = 0; i < numberOfBlocks; i++) block[i] = 0;
 	diskCache_write(ATA0, block, numberOfBlocks, 0, sizeof(FSHeader));
@@ -137,7 +137,6 @@ int diskManager_writeContents(u32int inodeNumber, char *contents, u32int length,
 	}
 	if (offset + length > inode.usedBytes) {
 		inode.usedBytes = offset + length;
-		log(L_DEBUG, "updating used bytes to = %d", inode.usedBytes);
 	}
 	int status = _writeBlock(&inode.data, contents, length, offset);
 	if (status == -1) {
@@ -152,7 +151,7 @@ int diskManager_readContents(u32int inodeNumber, char* contents, u32int length, 
 	iNodeDisk inode;
 	_getiNode(inodeNumber, &inode);
 	if (inode.data.magic != MAGIC_NUMBER) {
-		log(L_ERROR, "Trying to a corrupted page at [%d, %d]", inode.data.nextSector, inode.data.nextOffset);
+		log(L_ERROR, "Trying to read a corrupted page at [%d, %d]", inode.data.nextSector, inode.data.nextOffset);
 		errno = E_CORRUPTED_FILE;
 		return -1;
 	}
@@ -267,53 +266,7 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 			offset = 0;
 		} else
 			offset -= (currPage.usedBytes - sizeof(DiskPage));
-		/*diskCache_write(currPage.disk, contents, bytesFromContent, pageSector, pageOffset + sizeof(DiskPage));
-		length -= bytesFromContent;
-		contents += bytesFromContent;
-		currPage.usedBytes = bytesFromContent + sizeof(DiskPage);
-		diskCache_write(page->disk, &currPage, sizeof(DiskPage), pageSector, pageOffset);*/
 	}
-
-
-	/*
-	int bytesFromContent = MIN(currPage.totalLength - FILE_BLOCK_OVERHEAD_SIZE_BYTES, length);
-		// log(L_DEBUG,"TOTAL %d, OVERHEAD = %d / Available: %d,  length = %d", currPage.totalLength, FILE_BLOCK_OVERHEAD_SIZE_BYTES, currPage.totalLength - FILE_BLOCK_OVERHEAD_SIZE_BYTES, length);
-		// log(L_DEBUG,"writing contents to: [%d, %d]len:%d", page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES, bytesFromContent);
-	diskCache_write(page->disk, contents, bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES);
-	length -= bytesFromContent;
-	contents += bytesFromContent;
-
-	currPage.usedBytes = FILE_BLOCK_OVERHEAD_SIZE_BYTES + bytesFromContent;
-		// log(L_DEBUG, "Updating DiskPage... [%d, %d], used %d, total %d", page->nextSector, page->nextOffset, currPage.usedBytes, currPage.totalLength);
-	diskCache_write(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
-
-	int pageSector, pageOffset;
-	while(length != 0) {
-		pageSector = currPage.nextSector;
-		pageOffset = currPage.nextOffset;
-		if (!currPage.hasNextPage) {
-				log(L_ERROR, "Not enough memory in block to save contents!! expected %d more bytes!", length);
-			errno = E_OUT_OF_MEMORY;
-			return -1;
-		}
-			log(L_DEBUG, "Write Next page [%d, %d]- bytes left: %d", currPage.nextSector, currPage.nextOffset, length);
-		diskCache_read(currPage.disk, &currPage, sizeof(DiskPage), currPage.nextSector, currPage.nextOffset);
-		if (currPage.magic == MAGIC_NUMBER) {
-			bytesFromContent = MIN(currPage.totalLength - sizeof(DiskPage), length);
-				//log(L_DEBUG, "writing (%d) to [%d, %d]", bytesFromContent, pageSector, pageOffset + sizeof(DiskPage));
-			diskCache_write(currPage.disk, contents, bytesFromContent, pageSector, pageOffset + sizeof(DiskPage));
-			length -= bytesFromContent;
-			contents += bytesFromContent;
-			currPage.usedBytes = bytesFromContent + sizeof(DiskPage);
-			diskCache_write(page->disk, &currPage, sizeof(DiskPage), pageSector, pageOffset);
-		} else {
-			log(L_ERROR, "CORRUPTED file at [%d, %d]", page->nextSector, page->nextOffset);
-			errno = E_CORRUPTED_FILE;
-			return -1;
-		}
-	}
-	page->usedBytes = total;*/
-		// log(L_DEBUG, "Total used bytes after writing: %d", page->usedBytes);
 	return 0;
 }
 

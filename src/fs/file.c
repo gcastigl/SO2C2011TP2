@@ -12,7 +12,7 @@ int cd(int argc, char **argv) {
 		fs_getFsNode(&current, currentiNode);
 		fs_node_t *node = finddir_fs(&current, argv[0]);
 		if (node != NULL) {
-			if (node->flags == FS_DIRECTORY) {
+			if (node->mask == FS_DIRECTORY) {
 				tty->currDirectory = node->inode;
 			} else {
 				printf("cd: %s is not a directory\n", argv[0]);
@@ -29,15 +29,18 @@ int ls(int argc, char **argv) {
 	fs_node_t current;
 	fs_getFsNode(&current, currentiNode);
 	int i = 0;
-	fs_node_t *node = 0;
-	while ((node = readdir_fs(&current, i)) != 0) {					// get directory i
-		printf("%d - %s", node->inode, node->name);
-		if ((node->flags&0x7) == FS_DIRECTORY) {
-			printf("\t(directory)\n");
-		} else {
-			printf("\t(file)\n");
+	fs_node_t *node = NULL;
+	if (argc == 0) {
+		while ((node = readdir_fs(&current, i)) != 0) {					// get directory i
+			printf("%d - %s", node->inode, node->name);
+			if ((node->mask&0x7) == FS_DIRECTORY) {
+				printf("\t(directory)\n");
+			} else {
+				printf("\t(file)\n");
+			}
+			i++;
 		}
-		i++;
+	} else if (strcmp(argv[0], "-l")) {
 	}
 	return 0;
 }
@@ -112,7 +115,7 @@ int cat(int argc, char **argv) {
 		if (file == NULL) {
 			err = "No such file or directory";
 			return 0;
-		} else if ((file->flags&0x7) == FS_DIRECTORY) {
+		} else if ((file->mask&0x7) == FS_DIRECTORY) {
 			err = "Is a directory";
 		}
 		if (err != NULL) {
