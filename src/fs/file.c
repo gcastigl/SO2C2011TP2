@@ -12,11 +12,13 @@ int cd(int argc, char **argv) {
 		fs_getFsNode(&current, currentiNode);
 		fs_node_t *node = finddir_fs(&current, argv[0]);
 		if (node != NULL) {
-			if (node->mask == FS_DIRECTORY) {
+			if ((node->mask&0x07) == FS_DIRECTORY) {
 				tty->currDirectory = node->inode;
+				memcpy(tty->currPath, node->name, strlen(node->name) + 1);
 			} else {
 				printf("cd: %s is not a directory\n", argv[0]);
 			}
+			// free(node);
 		} else {
 			printf("cd: The directory \"%s\" does not exist", argv[0]);
 		}
