@@ -267,7 +267,6 @@ int diskManagerTest(int argc, char **argv) {
 	int inodeNumber = fs_createFile(0, "text.txt");
 	fs_node_t node;
 	fs_getFsNode(&node, inodeNumber);
-	log(L_DEBUG, "so far so good....");
 	u8int* contents = (u8int*) longText;
 	u32int len = strlen((char*) contents) + 1;
 	write_fs(&node, 0, len, contents);

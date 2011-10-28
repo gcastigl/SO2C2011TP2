@@ -46,7 +46,12 @@ void fs_getRoot(fs_node_t* fsNode) {
 
 void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 		// log(L_DEBUG, "loading %d node from memory", inodeNumber);
+	errno = 0;
 	diskManager_readInode(&inodes[inodeNumber], inodeNumber, fsNode->name);
+	if (errno != 0) {
+		log(L_ERROR, "error getting fsNode, errno is now: %d", errno);
+		return;
+	}
 	iNode* inode = &inodes[inodeNumber];
 	diskManager_getFileName(inodeNumber, fsNode->name);
 	fsNode->flags = inode->flags;
