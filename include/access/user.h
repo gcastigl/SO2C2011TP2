@@ -28,6 +28,7 @@ typedef struct {
 PUBLIC void user_init();
 PUBLIC user_t *user_get(int uid);
 PUBLIC int user_find(char *userName);
+PUBLIC boolean user_setGid(int uid, int gid);
 PUBLIC user_t *user_login(int uid, char* password);
 PUBLIC boolean user_string(int uid, char *string);
 PUBLIC boolean do_useradd(char *userName, char *password);

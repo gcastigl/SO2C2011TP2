@@ -94,8 +94,7 @@ PUBLIC boolean do_usersetgid(char *userName, int gid) {
 		return false;
 	} else {
 		log(L_INFO, "old: %d. new: %d", user->gid, gid);
-		user_setGid(uid, gid);
-		return true;
+		return user_setGid(uid, gid);
 	}
 }
 
