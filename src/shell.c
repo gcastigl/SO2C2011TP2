@@ -50,6 +50,9 @@ cmd_table_entry cmd_table[] = {
 	{"userdel", "usage: userdel USERNAME", shell_userdel},
 	{"userlist", "usage: userlist", shell_userlist},
 	{"usersetgid", "usage: usersetgid USERNAME GID", shell_usersetgid},
+	{"groupadd", "usage: groupadd GROUP PASSWORD", shell_groupadd},
+	{"groupdel", "usage: groupdel GROUP", shell_groupdel},
+	{"grouplist", "usage: grouplist", shell_grouplist},
 	{"", "", NULL}
 };
 

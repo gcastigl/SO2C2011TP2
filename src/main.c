@@ -16,6 +16,7 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
 		//initialize_paging();
 		keyboard_init();
 		video_init();
+		group_init();
 		user_init();
 		setFD(STD_OUT);
 		fs_init();

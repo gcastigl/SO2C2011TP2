@@ -3,6 +3,7 @@
 
 #include <defs.h>
 #include <util/logger.h>
+#include <access/group.h>
 
 #define NO_USER -1
 

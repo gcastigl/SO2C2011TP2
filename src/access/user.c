@@ -18,10 +18,6 @@ PRIVATE boolean user_isSet(int uid) {
 	return false;
 }
 
-PRIVATE boolean group_isSet(int uid) {
-	return true;
-}
-
 PRIVATE int user_findOpenUid() {
 	for (int i = 0; i < USER_MAX; ++i) {
 		if (!user_isSet(i)) {
