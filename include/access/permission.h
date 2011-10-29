@@ -3,8 +3,8 @@
 
 #include <defs.h>
 #include <access/user.h>
-
 #include <util/logger.h>
+#include <fs/diskManager.h>
 
 #define R_BIT           0000004	/* Rwx protection bit */
 #define W_BIT           0000002	/* rWx protection bit */
@@ -23,6 +23,11 @@
 #define S_IWOTH 00002 //Others W
 #define S_IXOTH 00001 //Others X
 
+#define MASK_STRING_LEN 10+1
+
+PUBLIC void mask_string(int perm, char *string);
+PUBLIC boolean permission_user_hasAccess(int uid, int uidFrom, char *password);
+PUBLIC boolean permission_group_hasAccess(int gid, int uid, char *password);
 
 #endif	/* PERMISSION_H */
 

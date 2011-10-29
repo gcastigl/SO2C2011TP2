@@ -6,7 +6,7 @@
 #include <access/group.h>
 
 #define NO_USER -1
-
+#define SUPER_USER 0
 
 #define E_USER_INVALID_USERNAME -1;
 #define E_USER_INVALID_PASSWORD -2;

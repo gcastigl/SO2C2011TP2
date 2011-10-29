@@ -32,9 +32,12 @@ int ls(int argc, char **argv) {
 	fs_getFsNode(&current, currentiNode);
 	int i = 0;
 	fs_node_t *node = NULL;
+	char perm[MASK_STRING_LEN] = "";
 	if (argc == 0) {
 		while ((node = readdir_fs(&current, i)) != 0) {					// get directory i
-			printf("%d - %s", node->inode, node->name);
+			log(L_DEBUG, "QQQQQQQQQQQQQQQQQQQQQQQQQQQQQ %d : %s", node->mask, perm);
+			mask_string(node->mask, perm);
+			printf("%s\t%d - %s", perm, node->inode, node->name);
 			if ((node->mask&0x7) == FS_DIRECTORY) {
 				printf("\t(directory)\n");
 			} else {

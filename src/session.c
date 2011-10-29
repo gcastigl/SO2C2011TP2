@@ -1,6 +1,7 @@
 #include <session.h>
 
 PRIVATE user_t *currentUser = NULL;
+
 void prntWelcomeMsg();
 
 void session_login() {
@@ -49,6 +50,10 @@ const char* session_getName() {
 
 void session_logout() {
 	currentUser = NULL;
+}
+
+PUBLIC user_t *getCurrentUser() {
+	return currentUser;
 }
 
 void prntWelcomeMsg() {

@@ -19,4 +19,6 @@ const char* session_getName();
 
 void session_logout();
 
+PUBLIC user_t *getCurrentUser();
+
 #endif
