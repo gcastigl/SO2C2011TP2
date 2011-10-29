@@ -3,25 +3,25 @@
 PUBLIC void mask_string(int perm, char *string) {
 	char type;
 
-	if ((perm & 0xC000) == 0xC000) {
+	if ((perm & FS_SOCKET) == FS_SOCKET) {
 	    // Socket
 	    type = 's';
-	} else if ((perm & 0xA000) == 0xA000) {
+	} else if ((perm & FS_SYMLINK) == FS_SYMLINK) {
 	    // Enlace Simbólico
 	    type = 'l';
-	} else if ((perm & 0x8000) == 0x8000) {
+	} else if ((perm & FS_FILE) == FS_FILE) {
 	    // Regular
 	    type = '-';
-	} else if ((perm & 0x6000) == 0x6000) {
+	} else if ((perm & FS_BLOCKDEVICE) == FS_BLOCKDEVICE) {
 	    // Especial Bloque
 	    type = 'b';
-	} else if ((perm & 0x4000) == 0x4000) {
+	} else if ((perm & FS_DIRECTORY) == FS_DIRECTORY) {
 	    // Directorio
 	    type = 'd';
-	} else if ((perm & 0x2000) == 0x2000) {
+	} else if ((perm & FS_CHARDEVICE) == FS_CHARDEVICE) {
 	    // Especial Carácter
 	    type = 'c';
-	} else if ((perm & 0x1000) == 0x1000) {
+	} else if ((perm & FS_PIPE) == FS_PIPE) {
 	    // Tubería FIFO
 	    type = 'p';
 	} else {

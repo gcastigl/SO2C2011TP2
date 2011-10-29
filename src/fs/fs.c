@@ -69,7 +69,7 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	fsNode->write = fs_write;
 	fsNode->open = fs_open;
 	fsNode->close = fs_close;
-	if ((inode->mask&0x07) == FS_DIRECTORY) {
+	if ((inode->mask&FS_DIRECTORY) == FS_DIRECTORY) {
 		fsNode->finddir = fs_finddir;
 		fsNode->readdir = fs_readdir;
 	} else {
@@ -195,7 +195,7 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 	} else {
 		strcpy(fileName, name);
 	}
-	if ((inodes[dirInodeNumber].mask&0x07) != FS_DIRECTORY) {
+	if ((inodes[dirInodeNumber].mask&FS_DIRECTORY) != FS_DIRECTORY) {
 		log(L_ERROR, "Trying to add file %s to a non dir!\n\n", name);
 		errno = E_INVALID_ARG;
 		return;

@@ -12,7 +12,7 @@ int cd(int argc, char **argv) {
 		fs_getFsNode(&current, currentiNode);
 		fs_node_t *node = finddir_fs(&current, argv[0]);
 		if (node != NULL) {
-			if ((node->mask&0x07) == FS_DIRECTORY) {
+			if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY) {
 				tty->currDirectory = node->inode;
 				memcpy(tty->currPath, node->name, strlen(node->name) + 1);
 			} else {
@@ -35,10 +35,9 @@ int ls(int argc, char **argv) {
 	char perm[MASK_STRING_LEN] = "";
 	if (argc == 0) {
 		while ((node = readdir_fs(&current, i)) != 0) {					// get directory i
-			log(L_DEBUG, "QQQQQQQQQQQQQQQQQQQQQQQQQQQQQ %d : %s", node->mask, perm);
 			mask_string(node->mask, perm);
 			printf("%s\t%d - %s", perm, node->inode, node->name);
-			if ((node->mask&0x7) == FS_DIRECTORY) {
+			if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY) {
 				printf("\t(directory)\n");
 			} else {
 				printf("\t(file)\n");
@@ -120,7 +119,7 @@ int cat(int argc, char **argv) {
 		if (file == NULL) {
 			err = "No such file or directory";
 			return 0;
-		} else if ((file->mask&0x7) == FS_DIRECTORY) {
+		} else if ((file->mask&FS_DIRECTORY) == FS_DIRECTORY) {
 			err = "Is a directory";
 		}
 		if (err != NULL) {
