@@ -18,70 +18,74 @@ void diskCache_init() {
 }
 
 void diskCache_read(int disk, void* msg, int bytes, unsigned short sector, int offset) {
+	ata_read(disk, msg, bytes, sector, offset);
+	return;
 	ata_normalize(&sector, &offset);
+		log(L_DEBUG, "cache READ -> [%d, %d] bytes: %d", sector, offset, bytes);
 	int index = _cacheIndex(disk, sector);
-	if (index != -1) {										// sector is cached
-		u8int* from = cachedData[index].contents;
-		if (offset + bytes > SECTOR_SIZE) {
-			int bytesFromFisrtSector = SECTOR_SIZE - offset - 1;
-			memcpy(msg, cachedData[index].contents + offset, bytesFromFisrtSector);
-			diskCache_read(cachedData[index].disk, msg + bytesFromFisrtSector,
-					bytes - bytesFromFisrtSector, sector + 1, 0);
-			return;
-		}
-		memcpy(msg, from + offset, bytes);
+	if (index == -1) {
+		index = _nextFreeIndex();
+		_cachSector(index, disk, sector);
+	}
+	cachedSector* cache = &cachedData[index];
+	if (offset + bytes > SECTOR_SIZE) {
+		int bytesFromFisrtSector = SECTOR_SIZE - offset - 1;
+		memcpy(msg, cache->contents + offset, bytesFromFisrtSector);
+		//	log(L_DEBUG, "recursive call with: %d, ->%d, %d, %d, %d", cache->disk, bytesFromFisrtSector, bytes - bytesFromFisrtSector, sector + 1, 0);
+		diskCache_read(cache->disk, msg + bytesFromFisrtSector, bytes - bytesFromFisrtSector, sector + 1, 0);
 		cachedData[index].accessCount++;
 		return;
 	}
-		log(L_DEBUG, "sector is NOT cached! [%d, %d]", sector, offset);
-	int nextFree = _nextFreeIndex();
-	_cachSector(nextFree, disk, sector);
-	memcpy(msg, cachedData[nextFree].contents + offset, bytes);
+	memcpy(msg, cache->contents + offset, bytes);
 }
 
 void diskCache_write(int disk, void* msg, int bytes, unsigned short sector, int offset) {
-	/*	//log(L_DEBUG, "WRITE cache -> %d, %d", sector, offset);
+	ata_write(disk, msg, bytes, sector, offset);
+	return;
 	ata_normalize(&sector, &offset);
-		//log(L_DEBUG, "\tnormalized-> %d, %d", sector, offset);
-	int cluster;
-	int index = _cacheIndex(disk, sector, &cluster);
-	if (index != -1) {
-			log(L_DEBUG, "write - CACHED SECTOR!! [%d, %d]");
-		if (cluster == 4 && bytes > 512) {			// Flush all cluster and then write contents
-			_flushCache(index);
-			ata_write(disk, msg, bytes, sector, offset);
+	log(L_DEBUG, "cache WRITE -> [%d, %d] bytes: %d", sector, offset, bytes);
+	int index = _cacheIndex(disk, sector);
+	if (index == -1) {
+		log(L_DEBUG, "NOT cached", sector, offset);
+		if (offset + bytes > SECTOR_SIZE) {
+			int bytesFromFisrtSector = SECTOR_SIZE - offset -1;
+			//log(L_DEBUG, "recursive call with: %d, ->%d, %d, %d, %d", cachedData[nextFree].disk, bytesFromFisrtSector, bytes - bytesFromFisrtSector, sector + 1, 0);
+			ata_write(disk, msg, bytesFromFisrtSector, sector, offset);
+			diskCache_write(disk, msg + bytesFromFisrtSector, bytes - bytesFromFisrtSector, sector + 1, 0);
 			return;
 		}
-		char* from = (char*) cachedData[index].contents[cluster];
-		memcpy(from + offset, msg, bytes);
-		cachedData[index].accessCount++;
+		ata_write(disk, msg, bytes, sector, offset);
 		return;
 	}
-	log(L_DEBUG, "write sector is NOT cached");
-	_cachSector(_nextFreeIndex(), disk, sector);*/
-	ata_normalize(&sector, &offset);
-	int index = _cacheIndex(disk, sector);
-	if (index != -1) {
+	log(L_DEBUG, "cached", sector, offset);
+	if (offset + bytes > SECTOR_SIZE) {
+		int bytesFromFisrtSector = SECTOR_SIZE - offset -1;
 		_flushCache(index);
+		//log(L_DEBUG, "recursive call with: %d, ->%d, %d, %d, %d", cachedData[nextFree].disk, bytesFromFisrtSector, bytes - bytesFromFisrtSector, sector + 1, 0);
+		ata_write(disk, msg, bytesFromFisrtSector, sector, offset);
+		diskCache_write(disk, msg + bytesFromFisrtSector, bytes - bytesFromFisrtSector, sector + 1, 0);
+		return;
 	}
+	_flushCache(index);
 	ata_write(disk, msg, bytes, sector, offset);
+	return;
 }
 
 /*
  * Busca el indice del array en el que se encuentra cacheado el sector "sector" del disco "disk"
  */
 PRIVATE int _cacheIndex(int disk, short sector) {
-		log(L_DEBUG, "searching for disk: %d, sector: %d", disk, sector);
+	// log(L_DEBUG, "searching for disk: %d, sector: %d", disk, sector);
 	int i;
 	for (i = 0; i < CACHE_SIZE; i++) {
-			log(L_DEBUG, "\t%d -> accessCount : %d, cachedSector: %d, disk: %d", i, cachedData[i].accessCount, cachedData[i].sector, cachedData[i].disk);
+			// log(L_DEBUG, "\t%d -> accessCount : %d, cachedSector: %d, disk: %d", i, cachedData[i].accessCount, cachedData[i].sector, cachedData[i].disk);
 		if (cachedData[i].accessCount != -1 &&
 			cachedData[i].sector == sector &&
 			cachedData[i].disk == disk) {
 			return i;
 		}
 	}
-	log(L_DEBUG, "not found...");
+	// log(L_DEBUG, "not found...");
 	return -1;
 }
 
@@ -89,16 +93,17 @@ PRIVATE int _cacheIndex(int disk, short sector) {
  * Busca la siguiente posicion del array para guardar nuevos contenidos
  */
 PRIVATE int _nextFreeIndex() {
-	int i, nextTofree = -1;
+	int i, nextTofree = 0;
 	for(i = 0; i < CACHE_SIZE; i++) {
 		if (cachedData[i].accessCount == -1) {
 			return i;
-		} else if (nextTofree == -1 || cachedData[i].accessCount < cachedData[nextTofree].accessCount) {
+		} else if (cachedData[i].accessCount < cachedData[nextTofree].accessCount) {
 			nextTofree = i;
 		}
 	}
 	return nextTofree;
 }
+
 /*
  * Cachea el sector "sector" del diso "disk" en el indice "index"
  */
@@ -113,7 +118,7 @@ PRIVATE void _cachSector(int index, int disk, short sector) {
 
 PRIVATE void _flushCache(int index) {
 	if (index != -1) {
-		log(L_DEBUG, "flushing sector %d", cachedData[index].sector);
+		log(L_DEBUG, "FLUSH sector %d, index: %d", cachedData[index].sector, index);
 		ata_write(cachedData[index].disk, cachedData[index].contents, SECTOR_SIZE, cachedData[index].sector, 0);
 		cachedData[index].accessCount = -1;
 	}

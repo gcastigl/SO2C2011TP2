@@ -92,6 +92,9 @@ PROCESS* getNextTask(int withPriority) {
             } else {
                 temp = proc->lastCalled;
             }
+            if (proc->priority == PNONE) {
+                temp /= 5;
+            }
             if (temp > bestScore) {
                 bestScore = temp;
                 nextReady = i;
