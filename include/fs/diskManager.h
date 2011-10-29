@@ -24,6 +24,7 @@ typedef struct {
     u32int length;      			// Size of the file, in bytes.
     u32int impl;        			// An implementation-defined number.
     u32int mask;        			// The permissions mask.
+    char name[MAX_NAME_LENGTH];		// file name
 } iNode;
 
 typedef struct {
@@ -66,7 +67,7 @@ void diskManager_writeHeader();
 int diskManager_nextInode();
 
 void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name);
-void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name);
+void diskManager_readInode(iNode *inode, u32int inodeNumber);
 
 int diskManager_writeContents(u32int inodeNumber, char* contents, u32int length, u32int offset);
 int diskManager_readContents(u32int inodeNumber, char* contents, u32int length, u32int offset);

@@ -90,7 +90,7 @@ void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 		// log(L_DEBUG, "written inode header to: [%d, %d + %d]", newiNode.data.nextSector, newiNode.data.nextOffset, sizeof(DiskPage));
 }
 
-void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name) {
+void diskManager_readInode(iNode *inode, u32int inodeNumber) {
 	iNodeDisk inodeOnDisk;
 	_getiNode(inodeNumber, &inodeOnDisk);
 		// log(L_DEBUG, "reading from inode: %d -> [%d, %d]", inodeNumber, inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset);
@@ -106,8 +106,7 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name) {
 		errno = E_CORRUPTED_FILE;
 		return;
 	}
-	// strcpy(name, header.name);
-	strcpy(header.name, name);
+	strcpy(inode->name, header.name);
 	inode->gid = header.gid;
 	inode->uid = header.uid;
 	inode->flags = header.flags;
