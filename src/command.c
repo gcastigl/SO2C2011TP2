@@ -274,13 +274,13 @@ int shell_grouplist(int argc, char **argv) {
 	}
 	callgroup_t grouplist[GROUP_MAX];
 	_SysCall(SYSTEM_GROUPLIST, grouplist);
-	printf("\tgroupname\tuid\tgid\n");
-	printf("\t--------\t---\t---\n");
+	printf("\tgroupname\tgid\n");
+	printf("\t--------\t---\n");
 	int i;
 	for (i = 0; i < GROUP_MAX; ++i) {
 		callgroup_t group = grouplist[i];
-		if (group.uid != NO_USER) {
-			printf("\t%s\t%d\t%d\n", group.groupName, group.uid, group.gid);
+		if (group.gid != NO_GROUP) {
+			printf("\t%s\t%d\n", group.groupName, group.gid);
 		}
 	}
 	return 0;

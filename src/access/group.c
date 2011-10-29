@@ -4,20 +4,20 @@ PRIVATE group_t groups[GROUP_MAX];
 
 PRIVATE boolean group_parse(char *line);
 PRIVATE void group_reset();
-PRIVATE int group_findOpenUid();
-PRIVATE boolean group_add(int uid);
-PRIVATE boolean group_del(int uid);
+PRIVATE int group_findOpenGid();
+PRIVATE boolean group_add(int gid);
+PRIVATE boolean group_del(int gid);
 PRIVATE boolean group_isValidFormat(char *token);
 
-PUBLIC boolean group_isSet(int uid) {
-	if (0 <= uid && uid < GROUP_MAX) {
-		return groups[uid].uid != NO_GROUP;
+PUBLIC boolean group_isSet(int gid) {
+	if (0 <= gid && gid < GROUP_MAX) {
+		return groups[gid].gid != NO_GROUP;
 	}
-	log(L_ERROR, "INVALID UID %d", uid);
+	log(L_ERROR, "INVALID GID %d", gid);
 	return false;
 }
 
-PRIVATE int group_findOpenUid() {
+PRIVATE int group_findOpenGid() {
 	for (int i = 0; i < GROUP_MAX; ++i) {
 		if (!group_isSet(i)) {
 			return i;
@@ -26,31 +26,30 @@ PRIVATE int group_findOpenUid() {
 	return NO_GROUP;
 }
 
-PRIVATE boolean group_add(int uid) {
-	if (!group_isSet(uid)) {
-		groups[uid].uid = uid;
-		groups[uid].gid = uid;
-		groups[uid].groupName[0] = '\0';
-		groups[uid].password[0] = '\0';
+PRIVATE boolean group_add(int gid) {
+	if (!group_isSet(gid)) {
+		groups[gid].gid = gid;
+		groups[gid].groupName[0] = '\0';
+		groups[gid].password[0] = '\0';
 		return true;
 	} else {
 		return false;
 	}
 }
 
-PRIVATE boolean group_del(int uid) {
-	group_t *group = group_get(uid);
+PRIVATE boolean group_del(int gid) {
+	group_t *group = group_get(gid);
 	if (group != NULL) {
-		group->uid = NO_GROUP;
+		group->gid = NO_GROUP;
 		return true;
 	} else {
 		return false;
 	}
 }
 
-PUBLIC group_t *group_get(int uid) {
-	if (group_isSet(uid)) {
-		return &groups[uid];
+PUBLIC group_t *group_get(int gid) {
+	if (group_isSet(gid)) {
+		return &groups[gid];
 	} else {
 		return NULL;
 	}
@@ -68,16 +67,13 @@ PUBLIC boolean do_grouplist(callgroup_t *callgroups) {
 	for (int i = 0; i < GROUP_MAX; ++i) {
 		group = group_get(i);
 		if (group == NULL) {
-			callgroups[i].uid = NO_GROUP;
 			callgroups[i].gid = NO_GROUP;
 			strcpy(callgroups[i].groupName, "no-group");
 		} else {
-			callgroups[i].uid = group->uid;
 			callgroups[i].gid = group->gid;
 			strcpy(callgroups[i].groupName, group->groupName);
 		}
-		log(L_DEBUG, "callu: %d:%d, %d:%d, %s:%s",
-			group->uid, callgroups[i].uid,
+		log(L_DEBUG, "callg: %d:%d, %s:%s",
 			group->gid, callgroups[i].gid,
 			group->groupName, callgroups[i].groupName
 		);
@@ -85,22 +81,9 @@ PUBLIC boolean do_grouplist(callgroup_t *callgroups) {
 	return true;
 }
 
-PUBLIC boolean do_groupsetgid(char *groupName, int gid) {
-	int uid = group_find(groupName);
-	group_t *group = group_get(uid);
-	if (group == NULL) {
-		log(L_ERROR, "invalid group uid, %d: %s", uid, groupName);
-		return false;
-	} else {
-		log(L_INFO, "old: %d. new: %d", group->gid, gid);
-		group->gid = gid;
-		return true;
-	}
-}
-
-PUBLIC boolean group_setGroupname(int uid, char *groupname) {
-	if (!group_isSet(uid)) {
-		log(L_ERROR, "invalid uid %d", uid);
+PUBLIC boolean group_setGroupname(int gid, char *groupname) {
+	if (!group_isSet(gid)) {
+		log(L_ERROR, "invalid gid %d", gid);
 		return false;
 	}
 	if (groupname == NULL || !strlen(groupname)) {
@@ -115,47 +98,33 @@ PUBLIC boolean group_setGroupname(int uid, char *groupname) {
 		log(L_ERROR, "groupname %s already exists", groupname);
 		return false;
 	}
-	strcpy(group_get(uid)->groupName, groupname);
+	strcpy(group_get(gid)->groupName, groupname);
 	return true;
 }
 
-PUBLIC boolean group_setPassword(int uid, char *password) {
-	if (!group_isSet(uid)) {
-		log(L_ERROR, "invalid uid %d", uid);
+PUBLIC boolean group_setPassword(int gid, char *password) {
+	if (!group_isSet(gid)) {
+		log(L_ERROR, "invalid gid %d", gid);
 		return false;
 	}
 	if (!group_isValidFormat(password)) {
 		log(L_ERROR, "password cannot contain the ':' character");
 		return false;
 	}
-	strcpy(group_get(uid)->password, password);
-	return true;
-}
-
-PUBLIC boolean group_setGid(int uid, int gid) {
-	if (!group_isSet(uid)) {
-		log(L_ERROR, "invalid uid %d", uid);
-		return false;
-	}
-	if (!group_isSet(gid)) {
-		log(L_ERROR, "invalid gid %d", gid);
-		return false;
-	}
-	group_get(uid)->gid = gid;
+	strcpy(group_get(gid)->password, password);
 	return true;
 }
 
 PRIVATE void group_reset() {
 	for (int i = 0; i < GROUP_MAX; ++i) {
-		groups[i].uid = NO_GROUP;
+		groups[i].gid = NO_GROUP;
 	}
 }
 
-PUBLIC boolean group_string(int uid, char *string) {
-	group_t *group = group_get(uid);
+PUBLIC boolean group_string(int gid, char *string) {
+	group_t *group = group_get(gid);
 	if (group) {
-		sprintf(string, "%d:%d:%s:%s",
-			group->uid,
+		sprintf(string, "%d:%s:%s",
 			group->gid,
 			group->groupName,
 			group->password
@@ -187,32 +156,29 @@ PUBLIC void group_init() {
 }
 
 PRIVATE boolean group_parse(char *line) {
-	enum { UID = 0, GID, GROUPNAME, PASSWORD} field = UID;
+	enum { GID = 0, GROUPNAME, PASSWORD} field = GID;
 	boolean parsing_ok = true;
 	char *p = strtok(line, ":");
-	int uid = atoi(p);
+	int gid = atoi(p);
 	parsing_ok = group_add(atoi(p));
 	while (p != NULL && parsing_ok) {
 		p = strtok(NULL, ":\n");
 		field++;
 		switch (field) {
-			case UID:
+			case GID:
 				// DONE.
 				break;
-			case GID:
-				parsing_ok = group_setGid(uid, atoi(p));
-				break;
 			case GROUPNAME:
-				parsing_ok = group_setGroupname(uid, p);
+				parsing_ok = group_setGroupname(gid, p);
 				break;
 			case PASSWORD:
-				parsing_ok = group_setPassword(uid, p);
+				parsing_ok = group_setPassword(gid, p);
 				break;
 		}
 	}
-	if (!parsing_ok && field != UID) {
+	if (!parsing_ok && field != GID) {
 		// delete invalid group.
-		group_del(uid);
+		group_del(gid);
 	}
 	return parsing_ok;
 }
@@ -226,8 +192,8 @@ PUBLIC int group_find(char *groupName) {
 	return NO_GROUP;
 }
 
-PUBLIC group_t *group_login(int uid, char* password) {
-	group_t *group = group_get(uid);
+PUBLIC group_t *group_login(int gid, char* password) {
+	group_t *group = group_get(gid);
 	if (group != NULL) {
 		if (!strcmp(group->password, password)) {
 			return group;
@@ -252,12 +218,12 @@ PRIVATE boolean group_isValidFormat(char *token) {
 
 PUBLIC boolean do_groupadd(char *groupName, char *password) {
 	boolean addOk = true;
-	int uid = group_findOpenUid();
-	group_add(uid);
-	addOk = group_setGroupname(uid, groupName);
-	addOk = group_setPassword(uid, password);
+	int gid = group_findOpenGid();
+	group_add(gid);
+	addOk = group_setGroupname(gid, groupName);
+	addOk = group_setPassword(gid, password);
 	if (!addOk) {
-		group_del(uid);
+		group_del(gid);
 	}
 	return addOk;
 }
