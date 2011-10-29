@@ -138,10 +138,10 @@ PUBLIC boolean group_string(int gid, char *string) {
 
 PUBLIC void group_init() {
 	group_reset();
-	group_parse("0:0:root:pass\n");
-	group_parse("10:10:qcho:x\n");
-	group_parse("11:11:qcho1:pass1\n");
-	group_parse("12:12:qcho2:pass2");
+	group_parse("0:root:pass\n");
+	group_parse("10:qcho:x\n");
+	group_parse("11:qcho1:pass1\n");
+	group_parse("12:qcho2:pass2");
 
 	do_groupadd("a", "a");
 	do_groupadd("guest", "");
