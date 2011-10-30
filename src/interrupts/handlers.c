@@ -88,7 +88,7 @@ void *systemCallHandler(int sysCallNumber, void ** args) {
             switchProcess();
             break;
         case SYSTEM_OPEN:
-            sysOpen((char*)args[0], (int)args[1], (int)args[2]);
+            ret = (void*)sysOpen((char*)args[0], (int)args[1], (int)args[2]);
             break;
 	}
 	

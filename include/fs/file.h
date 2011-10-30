@@ -16,6 +16,8 @@ typedef struct {
 
 FILE openFiles[MAX_OPEN_FILES];
 
+#define FD_OFFSET (MAX_TTYs + 3)
+
 #define O_RDONLY    1
 #define O_WRONLY    2
 #define O_RDWR      4

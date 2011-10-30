@@ -67,14 +67,3 @@ u32int yield(void) {
     _SysCall(SYSTEM_YIELD);
     return 0;
 }
-
-u32int open(char* path, int oflags, ...) {
-    int create_flags = 0;
-    if (oflags & O_CREAT) {
-        va_list ap;
-        va_start(ap, oflags);
-        create_flags = va_arg(ap, int);
-    }
-    _SysCall(SYSTEM_OPEN, path, oflags, create_flags);
-    return 0;
-}
