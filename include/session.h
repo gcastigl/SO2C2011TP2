@@ -21,4 +21,7 @@ void session_logout();
 
 PUBLIC user_t *session_getCurrentUser();
 
+PUBLIC int session_getEuid();
+PUBLIC int session_getEgid();
+
 #endif

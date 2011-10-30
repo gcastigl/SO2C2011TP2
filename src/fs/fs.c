@@ -1,4 +1,5 @@
 #include <fs/fs.h>
+#include <session.h>
 
 #define MAX(x,y)	(((x) > (y)) ? (x) : (y))
 
@@ -160,8 +161,8 @@ PRIVATE void _initInode(u32int inodeNumber, char* name, u32int mask) {
 	iNode* inode = &inodes[inodeNumber];
     inode->mask = mask;
     inode->flags = 0;
-    inode->uid = 0;
-    inode->gid = 0;
+    inode->uid = session_getEuid();
+    inode->gid = session_getEgid();
     inode->impl = 0;
     inode->length = 0;
     inode->inodeId = inodeNumber;
