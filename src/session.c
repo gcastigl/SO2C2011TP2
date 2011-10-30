@@ -52,7 +52,7 @@ void session_logout() {
 	currentUser = NULL;
 }
 
-PUBLIC user_t *getCurrentUser() {
+PUBLIC user_t *session_getCurrentUser() {
 	return currentUser;
 }
 
