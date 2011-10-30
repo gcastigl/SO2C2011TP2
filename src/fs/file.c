@@ -53,9 +53,10 @@ int mkdir(int argc, char **argv) {
 	if(argc == 0 ) {
 		printf("mkdir: missing operand\n");
 	} else {
-		int created = fs_createDirectory(tty_getCurrentTTY()->currDirectory, argv[0]);
+		errno = 0;
+		fs_createFile(tty_getCurrentTTY()->currDirectory, argv[0], FS_DIRECTORY);
 		char* err = NULL;
-		switch(created) {
+		switch(errno) {
 			case 0:		// Directory was created OK
 				break;
 			case E_FILE_EXISTS:
@@ -81,7 +82,8 @@ int touch(int argc, char **argv) {
 		printf("touch: missing operand\n");
 	} else {
 		errno = 0;
-		fs_createFile(tty_getCurrentTTY()->currDirectory, argv[0]);
+		//u32int parentiNode, char* name, u32int type
+		fs_createFile(tty_getCurrentTTY()->currDirectory, argv[0], FS_FILE);
 		char* err = NULL;
 		switch(errno) {
 			case 0:		// File was created OK

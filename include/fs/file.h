@@ -6,7 +6,6 @@
 #include <fs/fs.h>
 #include <tty.h>
 #include <access/permission.h>
-//FIXME: fix this includes....
 
 #define MAX_OPEN_FILES          50
 
@@ -39,19 +38,5 @@ int touch(int argc, char **argv);
 
 int cat(int argc, char **argv);
 
-/*
-void createFilesystem();
 
-int loadFileSystem();
-
-int fileIO(char * a);
-
-int cat(char * arg);
-
-int edit(char * arg);
-
-int tree(char *a);
-
-int rm(char * arg);
-*/
 #endif
