@@ -75,6 +75,15 @@ void *systemCallHandler(int sysCallNumber, void ** args) {
 		case SYSTEM_USERDEL:
 			do_userdel(args[0]);
 			break;
+		case SYSTEM_GROUPLIST:
+			do_grouplist((callgroup_t *)args[0]);
+			break;
+		case SYSTEM_GROUPADD:
+			do_groupadd(args[0], args[1]);
+			break;
+		case SYSTEM_GROUPDEL:
+			do_groupdel(args[0]);
+			break;
 		case SYSTEM_USERSETGID:
 			do_usersetgid(args[0], (int) args[1]);
 			break;

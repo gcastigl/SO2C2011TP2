@@ -3,31 +3,32 @@
 
 #include <defs.h>
 #include <util/logger.h>
+#include <access/group.h>
 
 #define NO_USER -1
+#define SUPER_USER 0
 
-#define USER_MAX 20
 #define E_USER_INVALID_USERNAME -1;
 #define E_USER_INVALID_PASSWORD -2;
 
+#define USER_MAX 20
 typedef struct {
-    char userName[64];
-    char password[32];
     int uid;
     int gid;
-    char userInfo[64];
-    char homePath[64];
+    char userName[32];
+    char password[16];
 } user_t;
 
 typedef struct {
     int uid;
     int gid;
-    char userName[64];
+    char userName[32];
 } calluser_t;
 
 PUBLIC void user_init();
 PUBLIC user_t *user_get(int uid);
 PUBLIC int user_find(char *userName);
+PUBLIC boolean user_setGid(int uid, int gid);
 PUBLIC user_t *user_login(int uid, char* password);
 PUBLIC boolean user_string(int uid, char *string);
 PUBLIC boolean do_useradd(char *userName, char *password);

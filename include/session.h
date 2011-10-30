@@ -6,7 +6,7 @@
 #include <driver/video.h>
 #include <lib/stdio.h>
 #include <lib/string.h>
-#include <permission/user.h>
+#include <access/user.h>
 
 #define NAME_MAX_LENGTH	20
 #define PASS_MAX_LENGTH	20
@@ -18,5 +18,7 @@ int session_isLoggedIn();
 const char* session_getName();
 
 void session_logout();
+
+PUBLIC user_t *getCurrentUser();
 
 #endif

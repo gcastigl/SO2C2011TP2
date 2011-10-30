@@ -43,7 +43,10 @@ gcc -m32 -std=c99 -g -c ../src/session.c -o session.o		 			-I../include -fno-bui
 gcc -m32 -std=c99 -g -c ../src/util/logger.c -o logger.o                -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/driver/port.c -o port.o                  -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
-gcc -m32 -std=c99 -g -c ../src/permission/user.c -o user.o              -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/access/user.c -o user.o              -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/access/group.c -o group.o              -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/access/permission.c -o permission.o              -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
+echo "\033[37;1mCOMPILATION DONE, LINKING (errors under this line means compila is missing .o)\033[0m"
 
 ld -melf_i386 -T ../src/link.ld -o kernel.bin *.o

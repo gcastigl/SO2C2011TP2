@@ -59,4 +59,8 @@ int shell_userdel(int argc, char **argv);
 int shell_userlist(int argc, char **argv);
 int shell_usersetgid(int argc, char **argv);
 
+int shell_groupadd(int argc, char **argv);
+int shell_groupdel(int argc, char **argv);
+int shell_grouplist(int argc, char **argv);
+
 #endif

@@ -5,6 +5,7 @@
 #include <lib/stdio.h>
 #include <fs/fs.h>
 #include <tty.h>
+#include <access/permission.h>
 //FIXME: fix this includes....
 
 #define MAX_OPEN_FILES          50

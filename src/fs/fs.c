@@ -1,6 +1,9 @@
 #include <fs/fs.h>
 
-PRIVATE iNode *inodes;				// List of file nodes.
+#define MAX(x,y)	(((x) > (y)) ? (x) : (y))
+
+PRIVATE iNode inodes[INODES];				// List of file nodes.
+PRIVATE u32int nextToFree = 0;
 
 PRIVATE void fs_create();
 PRIVATE void fs_load();
@@ -24,11 +27,13 @@ PRIVATE void fs_open(fs_node_t *node);
 PRIVATE void fs_close(fs_node_t *node);
 
 
+PRIVATE int _indexOf(u32int inode);
+PRIVATE int _loadInode(u32int inode);
+
 void fs_init() {
 	diskManager_init();
-	int i;
-	inodes = kmalloc(INODES * sizeof(iNode));
 	diskCache_init();
+	int i;
 	for (i = 0; i < INODES; i++) {
 		inodes[i].inodeId = -1;
 		inodes[i].length = 0;
@@ -45,15 +50,14 @@ void fs_getRoot(fs_node_t* fsNode) {
 }
 
 void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
-		// log(L_DEBUG, "loading %d node from memory", inodeNumber);
-	errno = 0;
-	diskManager_readInode(&inodes[inodeNumber], inodeNumber, fsNode->name);
-	if (errno != 0) {
-		log(L_ERROR, "error getting fsNode, errno is now: %d", errno);
-		return;
+	// log(L_DEBUG, "loading %d node from memory", inodeNumber);
+	int index =  _indexOf(inodeNumber);
+	if (index == -1) {
+		index = _loadInode(inodeNumber);
 	}
-	iNode* inode = &inodes[inodeNumber];
-	diskManager_getFileName(inodeNumber, fsNode->name);
+	
+	iNode* inode = &inodes[index];
+	strcpy(fsNode->name, inode->name);
 	fsNode->flags = inode->flags;
 	fsNode->gid = inode->gid;
 	fsNode->uid = inode->uid;
@@ -65,13 +69,37 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	fsNode->write = fs_write;
 	fsNode->open = fs_open;
 	fsNode->close = fs_close;
-	if ((inode->mask&0x07) == FS_DIRECTORY) {
+	if ((inode->mask&FS_DIRECTORY) == FS_DIRECTORY) {
 		fsNode->finddir = fs_finddir;
 		fsNode->readdir = fs_readdir;
 	} else {
 		fsNode->finddir = NULL;
 		fsNode->readdir = NULL;
 	}
+}
+
+PRIVATE int _indexOf(u32int inode) {
+	int i;
+	for(i = 0; i < INODES; i++) {
+		if (inodes[i].inodeId == inode) {
+			log(L_DEBUG, "inode %d was found at position: %d", inode, i);
+			return i;
+		}
+	}
+	return -1;
+}
+
+PRIVATE int _loadInode(u32int inode) {
+	errno = 0;
+	log(L_DEBUG, "loading inode %d from memory", inode);
+	diskManager_readInode(&inodes[nextToFree], inode);
+	if (errno != 0) {
+		log(L_ERROR, "error loading fsNode, errno is now: %d", errno);
+		return -1;
+	}
+	int index = nextToFree++;
+	nextToFree %= INODES;
+	return index;
 }
 
 PRIVATE void fs_create() {
@@ -111,7 +139,7 @@ u32int fs_createFile(u32int parentiNode, char* name) {
 		return E_FILE_EXISTS;
 	}
 	int inode = diskManager_nextInode();
-	_initInode(inode, name, FS_FILE);
+	_initInode(inode, name, FS_FILE | DEF_PERM);
 	_appendFile(parentiNode, inode, NULL);
 	return inode;
 }
@@ -146,11 +174,12 @@ PRIVATE void _initInode(u32int inodeNumber, char* name, u32int mask) {
     inode->impl = 0;
     inode->length = 0;
     inode->inodeId = inodeNumber;
+    strcpy(inode->name, name);
     diskManager_createInode(inode, inodeNumber, name);
 }
 
 PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent) {
-	_initInode(inodeNumber, name, FS_DIRECTORY);
+	_initInode(inodeNumber, name, FS_DIRECTORY | DEF_PERM);
 	_appendFile(inodeNumber, inodeNumber, ".");	// link to self
 	_appendFile(inodeNumber, parent, "..");		// link to parent
 }
@@ -166,13 +195,13 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 	} else {
 		strcpy(fileName, name);
 	}
-	if ((inodes[dirInodeNumber].mask & 0x07) != FS_DIRECTORY) {
+	if ((inodes[dirInodeNumber].mask&FS_DIRECTORY) != FS_DIRECTORY) {
 		log(L_ERROR, "Trying to add file %s to a non dir!\n\n", name);
 		errno = E_INVALID_ARG;
 		return;
 	}
 	int contentsLength = diskManager_size(dirInodeNumber);
-		// log(L_DEBUG, "_appendFile: int contLen = %d, appending %s", contentsLength, name);
+	// log(L_DEBUG, "_appendFile: int contLen = %d, appending %s", contentsLength, name);
 	int nameLen = strlen(fileName) + 1;
 	char content[contentsLength + 2 * sizeof(u32int) + nameLen];
 	diskManager_readContents(dirInodeNumber, content, contentsLength, 0);
@@ -246,9 +275,12 @@ u32int fs_size(fs_node_t *node) {
 
 
 PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
-	diskManager_readInode(&inodes[node->inode], node->inode, node->name);
+	int index =  _indexOf(node->inode);
+	if (index == -1) {
+		index = _loadInode(node->inode);
+	}
     iNode header = inodes[node->inode];
-    //log(L_DEBUG, "%d - %s => reading %d bytes from offset %d (inode length: %d)", node->inode, node->name, size, offset, header.length);
+    //	log(L_DEBUG, "%d - %s => reading %d bytes from offset %d (inode length: %d)", node->inode, node->name, size, offset, header.length);
     if (offset > header.length) {
         return 0;
     }
@@ -261,6 +293,11 @@ PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffe
 
 PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
     //	log(L_DEBUG, "%d - %s => writing %d bytes from offset %d", node->inode, node->name, size, offset);
+    int index = _indexOf(node->inode);
+	if (index == -1) {
+		index = _loadInode(node->inode);
+	}
+	inodes[index].length = MAX(inodes[index].length, offset + size);
     diskManager_writeContents(node->inode, (char*) buffer, size, offset);
     return size;
 }
@@ -273,7 +310,6 @@ PRIVATE void fs_open(fs_node_t *node) {
 PRIVATE void fs_close(fs_node_t *node) {
 
 }
-
 
 
 

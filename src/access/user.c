@@ -1,4 +1,4 @@
-#include <permission/user.h>
+#include <access/user.h>
 
 PRIVATE user_t users[USER_MAX];
 
@@ -16,10 +16,6 @@ PRIVATE boolean user_isSet(int uid) {
 	}
 	log(L_ERROR, "INVALID UID %d", uid);
 	return false;
-}
-
-PRIVATE boolean group_isSet(int uid) {
-	return true;
 }
 
 PRIVATE int user_findOpenUid() {
@@ -98,8 +94,7 @@ PUBLIC boolean do_usersetgid(char *userName, int gid) {
 		return false;
 	} else {
 		log(L_INFO, "old: %d. new: %d", user->gid, gid);
-		user->gid = gid;
-		return true;
+		return user_setGid(uid, gid);
 	}
 }
 

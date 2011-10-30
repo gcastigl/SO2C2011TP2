@@ -90,7 +90,7 @@ void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 		// log(L_DEBUG, "written inode header to: [%d, %d + %d]", newiNode.data.nextSector, newiNode.data.nextOffset, sizeof(DiskPage));
 }
 
-void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name) {
+void diskManager_readInode(iNode *inode, u32int inodeNumber) {
 	iNodeDisk inodeOnDisk;
 	_getiNode(inodeNumber, &inodeOnDisk);
 		// log(L_DEBUG, "reading from inode: %d -> [%d, %d]", inodeNumber, inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset);
@@ -106,8 +106,7 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber, char* name) {
 		errno = E_CORRUPTED_FILE;
 		return;
 	}
-	// strcpy(name, header.name);
-	strcpy(header.name, name);
+	strcpy(inode->name, header.name);
 	inode->gid = header.gid;
 	inode->uid = header.uid;
 	inode->flags = header.flags;
@@ -339,63 +338,6 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSecto
 	_sti();
 	return 0;
 }
-/*
-PRIVATE int _reserveMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {
-	_cli();
-	u32int disk = ATA0;
-	DiskPage currPage;
-	int sector = initialSector;
-	int offset = initialOffset;
-	int reserved = 0;
-	int previousSector, previousOffset;
-
-	u32int maxOffset = 16384;	// FIXME: implement driveCapacity() in the ata_driver
-
-	int blocks = (size / (DISK_BLOCK_SIZE_BYTES + 1)) + 1;
-		log(L_DEBUG, "\nReserving %d bytes => total blocks %d\n", size, blocks);
-	while (reserved < blocks && offset < maxOffset) {
-		diskCache_read(ATA0, &currPage, sizeof(DiskPage), sector, offset);
-		log(L_DEBUG, "[%d, %d] -> %s", sector, offset, currPage.magic == MAGIC_NUMBER ? "Used" : "free");
-		if (currPage.magic != MAGIC_NUMBER) {										// The block is empty... can be used
-			currPage.magic = MAGIC_NUMBER;
-			currPage.hasNextPage = false;
-			currPage.usedBytes = 0;
-			currPage.totalLength = DISK_BLOCK_SIZE_BYTES;
-			currPage.disk = disk;
-			log(L_DEBUG, "using [%d, %d] - %d", sector, offset, currPage);
-			diskCache_write(disk, &currPage, sizeof(DiskPage), sector, offset);			// write header to disk
-			if (reserved > 0) {														// Update previous header to point to this one
-					// log(L_DEBUG, "reading prevoius header [%d, %d]", previousSector, previousOffset);
-				diskCache_read(disk, &currPage, sizeof(DiskPage), previousSector, previousOffset);
-				currPage.nextSector = sector;
-				currPage.nextOffset = offset;
-				currPage.hasNextPage = true;
-				currPage.disk = disk;
-				diskCache_write(disk, &currPage, sizeof(DiskPage), previousSector, previousOffset);
-			} else {																// Return first disk position to return
-				page->disk = disk;
-				page->nextSector = sector;
-				page->nextOffset = offset;
-				page->usedBytes = 0;
-				page->totalLength = DISK_BLOCK_SIZE_BYTES * blocks;
-				page->magic = MAGIC_NUMBER;
-			}
-			previousSector = sector;
-			previousOffset = offset;
-			reserved++;
-		}
-		offset += DISK_BLOCK_SIZE_BYTES;
-	}
-	if (offset >= maxOffset) {			// Reached end of space available and the recolected spaace is not enought
-		log(L_ERROR, "DISK OUT OF MEMORY!");
-		page->totalLength = 0;
-		_freeMemory(page);
-		errno = E_OUT_OF_MEMORY;
-	}
-	_sti();
-		// log(L_DEBUG, "finished reserving memory\n");
-	return blocks;
-}*/
 
 PRIVATE void _freeMemory(DiskPage* page) {
 	int numberOfblocks = 512 - sizeof(FSHeader);
@@ -415,16 +357,6 @@ PRIVATE void _freeMemory(DiskPage* page) {
 		log(L_DEBUG, "Freeing memory, [%d, %d], char: %d, bit: %d",charPos, bit);
 	} while (page->hasNextPage);
 	diskCache_read(page->disk, block, numberOfblocks, 0, sizeof(FSHeader));
-	/*DiskPage currPage;
-	u32int sector = page->nextSector;
-	u32int offset = page->nextOffset;
-	do {
-		diskCache_read(page->disk, &currPage, sizeof(DiskPage), sector, offset);
-		sector = currPage.nextSector;
-		offset = currPage.nextOffset;
-		currPage.magic = 0;
-		diskCache_write(page->disk, &currPage, sizeof(DiskPage), sector, offset);
-	} while(currPage.hasNextPage);*/
 }
 
 PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {

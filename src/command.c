@@ -248,6 +248,44 @@ int shell_usersetgid(int argc, char **argv) {
 	return 0;
 }
 
+/** GROUP **/
+int shell_groupadd(int argc, char **argv) {
+	if (argc != 2) {
+		printf("usage: groupadd GROUP PASSWORD\n");
+		return -1;
+	}
+	_SysCall(SYSTEM_GROUPADD, argv[0], argv[1]);
+	return 0;
+}
+
+int shell_groupdel(int argc, char **argv) {
+	if (argc != 1) {
+		printf("usage: groupdel USERNAME\n");
+		return -1;
+	}
+	_SysCall(SYSTEM_GROUPDEL, argv[0]);
+	return 0;
+}
+
+int shell_grouplist(int argc, char **argv) {
+	if (argc != 0) {
+		printf("usage: grouplist\n");
+		return -1;
+	}
+	callgroup_t grouplist[GROUP_MAX];
+	_SysCall(SYSTEM_GROUPLIST, grouplist);
+	printf("\tgroupname\tgid\n");
+	printf("\t--------\t---\n");
+	int i;
+	for (i = 0; i < GROUP_MAX; ++i) {
+		callgroup_t group = grouplist[i];
+		if (group.gid != NO_GROUP) {
+			printf("\t%s\t%d\n", group.groupName, group.gid);
+		}
+	}
+	return 0;
+}
+
 // =========================================================================
 //				Test for the FS
 // =========================================================================

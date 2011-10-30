@@ -60,6 +60,9 @@ typedef void*           type_t;
 #define SYSTEM_USERADD 		10
 #define SYSTEM_USERDEL 		11
 #define SYSTEM_USERSETGID	12
+#define SYSTEM_GROUPLIST 	15
+#define SYSTEM_GROUPADD 	16
+#define SYSTEM_GROUPDEL 	17
 
 #define STD_IN		0
 #define STD_OUT		1
