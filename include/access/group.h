@@ -32,5 +32,6 @@ PUBLIC boolean do_groupdel(char *groupName);
 PUBLIC boolean do_grouplist(callgroup_t *callgroups);
 PUBLIC boolean group_isSet(int gid);
 #define group_isValidGid(...) _isValidGid(__FILE__, __LINE__, __VA_ARGS__);
+PUBLIC char *group_getName(int gid);
 
 #endif	/* GROUP_H */
