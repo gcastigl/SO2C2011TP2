@@ -5,6 +5,7 @@
 #include <asm/libasm.h>
 #include <stdarg.h>
 #include <fs/file.h>
+#include <fs/fs_API.h>
 
 int open(const char *path, int oflag, ...);
 
@@ -18,4 +19,5 @@ int write(int fildes, const void * buffer, int n);
 
 int lseek(int fildes, int offset, int oflag);
 
+int mkfifo(char *name, int mode);
 #endif

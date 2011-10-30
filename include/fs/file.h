@@ -10,11 +10,12 @@
 #define MAX_OPEN_FILES          50
 
 typedef struct {
-    u8int   permissions;
-    u8int   inode;
-    u8int   flags;
-    u32int  w_offset;
-    u32int  r_offset;
+    char        name[MAX_NAME_SIZE];
+    u8int       permissions;
+    u8int       inode;
+    fs_node_t   *node;
+    u8int       flags;
+    u32int      offset;
 } FILE;
 
 FILE openFiles[MAX_OPEN_FILES];
