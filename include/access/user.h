@@ -36,6 +36,7 @@ PUBLIC boolean do_userdel(char *userName);
 PUBLIC boolean do_usersetgid(char *userName, int gid);
 PUBLIC boolean do_userlist(calluser_t *callusers);
 #define user_isValidUid(...) _isValidUid(__FILE__, __LINE__, __VA_ARGS__);
+PUBLIC char *user_getName(int uid);
 
 #endif	/* USER_H */
 

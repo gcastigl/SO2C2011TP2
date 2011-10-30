@@ -171,11 +171,11 @@ int top_p(int argc, char**argv) {
         if (process[slot].slotStatus == OCCUPIED)
             execCount[slot]++;
     }
-    printf("Name\tPID\tStatus\tPriority\tExecutions over 100\n");
+    printf("User\tName\tPID\tStatus\tPriority\tExecutions over 100\n");
     for (i = 0; i < MAX_PROCESSES; i++) {
         if ((process[i].slotStatus == OCCUPIED)) {
             log(L_DEBUG, "%s\t%d\t%s\t%s\t%d\n", process[i].name, process[i].pid, status[process[i].status], priority[process[i].priority], execCount[i]);
-            printf("%s\t%d\t%s\t%s\t%d\n", process[i].name, process[i].pid, status[process[i].status], priority[process[i].priority % 10], execCount[i]);
+            printf("%s\t%s\t%d\t%s\t%s\t%d\n", user_getName(process[i].ownerUid), process[i].name, process[i].pid, status[process[i].status], priority[process[i].priority % 10], execCount[i]);
         }
     }
     

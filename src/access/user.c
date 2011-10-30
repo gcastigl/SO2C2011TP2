@@ -265,3 +265,12 @@ PUBLIC boolean do_useradd(char *userName, char *password) {
 PUBLIC boolean do_userdel(char *userName) {
 	return user_del(user_find(userName));
 }
+
+PUBLIC char *user_getName(int uid) {
+	user_t *user = user_get(uid);
+	if (user != NULL) {
+		return user->userName;
+	} else {
+		return "unknown";
+	}
+}

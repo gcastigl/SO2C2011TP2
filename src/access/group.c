@@ -231,3 +231,12 @@ PUBLIC boolean do_groupadd(char *groupName, char *password) {
 PUBLIC boolean do_groupdel(char *groupName) {
 	return group_del(group_find(groupName));
 }
+
+PUBLIC char *group_getName(int gid) {
+	group_t *group = group_get(gid);
+	if (group != NULL) {
+		return group->groupName;
+	} else {
+		return "unknown";
+	}
+}
