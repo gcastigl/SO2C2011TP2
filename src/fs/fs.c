@@ -82,7 +82,7 @@ PRIVATE int _indexOf(u32int inode) {
 	int i;
 	for(i = 0; i < INODES; i++) {
 		if (inodes[i].inodeId == inode) {
-			log(L_DEBUG, "inode %d was found at position: %d", inode, i);
+			//	log(L_DEBUG, "inode %d was found at position: %d", inode, i);
 			return i;
 		}
 	}
@@ -91,7 +91,7 @@ PRIVATE int _indexOf(u32int inode) {
 
 PRIVATE int _loadInode(u32int inode) {
 	errno = 0;
-	log(L_DEBUG, "loading inode %d from memory", inode);
+	//	log(L_DEBUG, "loading inode %d from memory", inode);
 	diskManager_readInode(&inodes[nextToFree], inode);
 	if (errno != 0) {
 		log(L_ERROR, "error loading fsNode, errno is now: %d", errno);
@@ -103,7 +103,6 @@ PRIVATE int _loadInode(u32int inode) {
 }
 
 PRIVATE void fs_create() {
-	log(L_DEBUG, "loding OS from root...");
 	diskManager_writeHeader(INODES);				// Save header for the next time the system starts...
 	// Initialize root directory
 	int rootInode = diskManager_nextInode();
@@ -129,6 +128,7 @@ PRIVATE void fs_create() {
 }
 
 PRIVATE void fs_load() {
+	log(L_DEBUG, "loding OS from root...");
 	_loadDirectory(0);			// Initialize root
 }
 
