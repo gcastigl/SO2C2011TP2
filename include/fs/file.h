@@ -7,7 +7,7 @@
 #include <tty.h>
 #include <access/permission.h>
 
-#define MAX_OPEN_FILES          50
+#define MAX_OPEN_FILES          60
 
 typedef struct {
     char        name[MAX_NAME_SIZE];

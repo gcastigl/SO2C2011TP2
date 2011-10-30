@@ -61,11 +61,12 @@ int sysOpen(char* fileName, int oflags, int cflags) {
             }
         }
         if (i != MAX_OPEN_FILES) {
-            fd = i;
+            fd = i + FD_OFFSET;
         }
         if (fd == 0) {
             fs_node_t *node = finddir_fs(&current, fileName);
             FILE *file = &openFiles[nextFreeFd - FD_OFFSET];
+            strcpy(file->name, fileName);
             file->node = node;
             file->flags &= oflags;
             fd = nextFreeFd++;

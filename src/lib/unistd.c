@@ -19,12 +19,24 @@ int close(int fildes) {
 	return 0;
 }
 
-int read(int fildes, void* buffer, int n) {
-	return 0;
+/*
+ *	fd = File descriptor referring to the open file.
+ *	buffer = Storage location for data.
+ *	count = Maximum number of bytes.
+ */
+u32int read(int fd, void * buffer, u32int count) {
+	_SysCall(SYSTEM_READ,fd, buffer, count);
+	return count;
 }
 
-int write(int fildes, const void * buffer, int n) {
-	return 0;
+/*
+ *	fd = File descriptor of file into which data is written.
+ *	buffer = Data to be written..
+ *	count = Maximum number of bytes.
+ */
+u32int write(int fd, const void * buffer, u32int count) {
+	_SysCall(SYSTEM_WRITE, fd, buffer, count);
+	return count;
 }
 
 int lseek(int fildes, int offset, int oflag) {

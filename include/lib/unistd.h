@@ -13,9 +13,25 @@ int creat(const char *path, int mode);	// idem as open
 
 int close(int fildes);
 
-int read(int fildes, void* buffer, int n);
+/* write
+*
+* Recibe como parametros:
+* - File Descriptor
+* - Buffer del source
+* - Cantidad
+*
+**/
+u32int write(int fd, const void* buffer, u32int count);
 
-int write(int fildes, const void * buffer, int n);
+/* read
+*
+* Recibe como parametros:
+* - File Descriptor
+* - Buffer a donde escribir
+* - Cantidad
+*
+**/
+u32int read(int fd, void* buffer, u32int count);
 
 int lseek(int fildes, int offset, int oflag);
 

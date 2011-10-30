@@ -337,7 +337,7 @@ int diskManagerTest2(int argc, char **argv) {
 	log(L_DEBUG, "size2: %d\n", diskManager_size(0));
 	diskManager_readContents(0, read, len2, 0);
 	log(L_DEBUG, "contents: %s\n", read);
-	// Over-rite a part
+	// Overwrite a part
 	char *contents3 = "X0X0X0";
 	int len3 = strlen(contents3);
 	diskManager_writeContents(0, contents3, len3, 6);

@@ -12,7 +12,7 @@ void setFD(int fileDescriptor) {
 }
 
 void putchar(char c) {
-    __write(currentFd, &c, 1);
+    write(currentFd, &c, 1);
 }
 
 void printf(char * formatString, ...) {
