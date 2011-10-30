@@ -52,6 +52,7 @@ void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** 
 	}
 	
 	memcpy(newProcess->name, name, strlen(name) + 1);
+	newProcess->ownerUid = 0;
 	newProcess->pid = getNextPID();
 	newProcess->stacksize = stacklength;
 	newProcess->stackstart = (int) stack + stacklength - 1;

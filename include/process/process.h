@@ -15,6 +15,7 @@ enum {PNONE, VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SHELL_HIGH = 15};
 
 #define MAX_PRIORITY HIGH
 typedef struct {
+	int ownerUid;
 	int pid;
 	char name[MAX_PROCESS_NAME];
 	int priority;
