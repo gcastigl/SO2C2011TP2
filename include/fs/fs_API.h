@@ -24,22 +24,24 @@
 #define FS_SYMLINK     0xA000
 #define FS_SOCKET      0xC000
 
+#define DEF_PERM	   0x0644
+
 #define R_BIT	0000004	/* Rwx protection bit */
 #define W_BIT	0000002	/* rWx protection bit */
 #define X_BIT	0000001	/* rwX protection bit */
 
-#define S_IRWXU 00700 //User RWX
-#define S_IRUSR 00400 //User R
-#define S_IWUSR 00200 //User W
-#define S_IXUSR 00100 //User X
-#define S_IRWXG 00070 //Group RWX
-#define S_IRGRP 00040 //Group R
-#define S_IWGRP 00020 //Group W
-#define S_IXGRP 00010 //Group X
-#define S_IRWXO 00007 //Others RWX
-#define S_IROTH 00004 //Others R
-#define S_IWOTH 00002 //Others W
-#define S_IXOTH 00001 //Others X
+#define S_IRWXU 0x0700 //User RWX
+#define S_IRUSR 0x0400 //User R
+#define S_IWUSR 0x0200 //User W
+#define S_IXUSR 0x0100 //User X
+#define S_IRWXG 0x0070 //Group RWX
+#define S_IRGRP 0x0040 //Group R
+#define S_IWGRP 0x0020 //Group W
+#define S_IXGRP 0x0010 //Group X
+#define S_IRWXO 0x0007 //Others RWX
+#define S_IROTH 0x0004 //Others R
+#define S_IWOTH 0x0002 //Others W
+#define S_IXOTH 0x0001 //Others X
 
 struct fs_node;
 

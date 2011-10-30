@@ -30,26 +30,15 @@ PUBLIC void mask_string(int perm, char *string) {
 	}
 
 	string[0] = type;
-	// Propietario
-	string[1] = ((perm & 0x0100) ? 'r' : '-');
-	string[2] = ((perm & 0x0080) ? 'w' : '-');
-	string[3] = ((perm & 0x0040) ?
-			((perm & 0x0800) ? 's' : 'x' ) :
-			((perm & 0x0800) ? 'S' : '-'));
-
-	// Grupo
-	string[4] = ((perm & 0x0020) ? 'r' : '-');
-	string[5] = ((perm & 0x0010) ? 'w' : '-');
-	string[6] = ((perm & 0x0008) ?
-	            ((perm & 0x0400) ? 's' : 'x' ) :
-	            ((perm & 0x0400) ? 'S' : '-'));
-
-	// Mundo
-	string[7] = ((perm & 0x0004) ? 'r' : '-');
-	string[8] = ((perm & 0x0002) ? 'w' : '-');
-	string[9] = ((perm & 0x0001) ?
-	            ((perm & 0x0200) ? 't' : 'x' ) :
-	            ((perm & 0x0200) ? 'T' : '-'));
+	string[1] = ((perm & S_IRUSR) ? 'r' : '-');
+	string[2] = ((perm & S_IWUSR) ? 'w' : '-');
+	string[3] = ((perm & S_IXUSR) ? 'x' : '-');
+	string[4] = ((perm & S_IRGRP) ? 'r' : '-');
+	string[5] = ((perm & S_IWGRP) ? 'w' : '-');
+	string[6] = ((perm & S_IXGRP) ? 'x' : '-');
+	string[7] = ((perm & S_IROTH) ? 'r' : '-');
+	string[8] = ((perm & S_IWOTH) ? 'w' : '-');
+	string[9] = ((perm & S_IXOTH) ? 'x' : '-');
 	string[10] = '\0';
 }
 

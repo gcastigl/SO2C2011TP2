@@ -36,12 +36,7 @@ int ls(int argc, char **argv) {
 	if (argc == 0) {
 		while ((node = readdir_fs(&current, i)) != 0) {					// get directory i
 			mask_string(node->mask, perm);
-			printf("%s\t%d - %s", perm, node->inode, node->name);
-			if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY) {
-				printf("\t(directory)\n");
-			} else {
-				printf("\t(file)\n");
-			}
+			printf("%s\t%d\t%s\n", perm, node->inode, node->name);
 			i++;
 		}
 	} else if (strcmp(argv[0], "-l")) {

@@ -139,7 +139,7 @@ u32int fs_createFile(u32int parentiNode, char* name) {
 		return E_FILE_EXISTS;
 	}
 	int inode = diskManager_nextInode();
-	_initInode(inode, name, FS_FILE);
+	_initInode(inode, name, FS_FILE | DEF_PERM);
 	_appendFile(parentiNode, inode, NULL);
 	return inode;
 }
@@ -179,7 +179,7 @@ PRIVATE void _initInode(u32int inodeNumber, char* name, u32int mask) {
 }
 
 PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent) {
-	_initInode(inodeNumber, name, FS_DIRECTORY);
+	_initInode(inodeNumber, name, FS_DIRECTORY | DEF_PERM);
 	_appendFile(inodeNumber, inodeNumber, ".");	// link to self
 	_appendFile(inodeNumber, parent, "..");		// link to parent
 }
