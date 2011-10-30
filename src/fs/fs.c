@@ -132,37 +132,28 @@ PRIVATE void fs_load() {
 	_loadDirectory(0);			// Initialize root
 }
 
-u32int fs_createFile(u32int parentiNode, char* name) {
-	fs_node_t node;
-	fs_getFsNode(&node, parentiNode);
-	if (fs_finddir(&node, name) != NULL) {
-		return E_FILE_EXISTS;
-	}
-	int inode = diskManager_nextInode();
-	_initInode(inode, name, FS_FILE | DEF_PERM);
-	_appendFile(parentiNode, inode, NULL);
-	return inode;
-}
-
-u32int fs_createDirectory(u32int parentInode, char* name) {
-	fs_node_t node;
-	fs_getFsNode(&node, parentInode);
-	if (fs_finddir(&node, name) != NULL) {
-		return E_FILE_EXISTS;
-	}
-	// log(L_DEBUG, "initializing dierctory %d, name %s", newInode, name);
-	int newInode = diskManager_nextInode();
-	_initInode_dir(newInode, name, parentInode);
-	_appendFile(parentInode, newInode, NULL);
-	return 0;
-}
-
 PRIVATE void _loadDirectory(int inodeNumber) {
 	int i = 0;
 	fs_node_t curr;
 	fs_getFsNode(&curr, inodeNumber);
 	while(fs_readdir(&curr, i++) != NULL)
 		;
+}
+
+u32int fs_createFile(u32int parentiNode, char* name, u32int type) {
+	fs_node_t node;
+	fs_getFsNode(&node, parentiNode);
+	if (fs_finddir(&node, name) != NULL) {
+		return E_FILE_EXISTS;
+	}
+	int inode = diskManager_nextInode();
+	if (type == FS_DIRECTORY) {
+		_initInode_dir(inode, name, parentiNode);
+	} else {
+		_initInode(inode, name, type | DEF_PERM);
+	}
+	_appendFile(parentiNode, inode, NULL);
+	return inode;
 }
 
 PRIVATE void _initInode(u32int inodeNumber, char* name, u32int mask) {

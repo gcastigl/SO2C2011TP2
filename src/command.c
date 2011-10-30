@@ -302,7 +302,7 @@ I will give you sucking-pig and kasha. We will have dinner with some brendy and 
 
 // TODO: finish this funcion!
 int diskManagerTest(int argc, char **argv) {
-	int inodeNumber = fs_createFile(0, "text.txt");
+	int inodeNumber = fs_createFile(0, "longText.txt", FS_FILE);
 	fs_node_t node;
 	fs_getFsNode(&node, inodeNumber);
 	u8int* contents = (u8int*) longText;
