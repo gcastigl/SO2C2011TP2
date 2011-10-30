@@ -43,7 +43,8 @@ int sysOpen(char* fileName, int oflags, int cflags) {
 	u32int currentiNode = tty->currDirectory;
 	fs_node_t current;
 	fs_getFsNode(&current, currentiNode);
-    return 0;
+    fs_node_t *file = finddir_fs(&current, fileName);
+    return 58;
 }
 
 

@@ -350,3 +350,10 @@ int diskManagerTest2(int argc, char **argv) {
 	log(L_DEBUG, "name: %s\n", name);
 	return 0;
 }
+
+int pipeTest_cmd(int argc, char **argv) {
+    int fd = open("test.pipe", O_RDWR);
+    printf("Got %d\n", fd);
+    
+    return 0;
+}

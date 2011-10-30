@@ -9,10 +9,10 @@ int open(const char *path, int oflags, ...) {
     }
     int fd = (int)_SysCall(SYSTEM_OPEN, path, oflags, create_flags);
     log(L_DEBUG, "FD: %d", fd);
-    return 0;
+    return fd;
 }
 
-int creat(const char *path, mode_t mode) { 		// idem as open
+int creat(const char *path, int mode) { 		// idem as open
 	return 0;
 }
 

@@ -10,7 +10,7 @@
 #include <lib/math.h>
 #include <interrupts/interrupts.h>
 #include <process/process.h>
-
+#include <lib/unistd.h>
 #define HELP_HELP			"Shows this help function"
 
 #define HELP_RESTART		"Restarts the OS"
@@ -42,6 +42,7 @@ int setAppearance_cmd(int argc, char **argv);
 int getchar_cmd(int argc, char **argv);
 int scanf_cmd(int argc, char **argv);
 int printf_cmd(int argc, char **argv);
+int pipeTest_cmd(int argc, char **argv);
 int format(int argc, char **argv);
 int logout(int argc, char **argv);
 int idle_p(int argc, char **argv);

@@ -13,6 +13,9 @@
 typedef struct {
     u8int   permissions;
     u8int   inode;
+    u8int   flags;
+    u32int  w_offset;
+    u32int  r_offset;
 } FILE;
 
 FILE openFiles[MAX_OPEN_FILES];
@@ -21,7 +24,7 @@ FILE openFiles[MAX_OPEN_FILES];
 
 #define O_RDONLY    1
 #define O_WRONLY    2
-#define O_RDWR      4
+#define O_RDWR      3
 
 #define O_APPEND    (1 << 0)
 #define O_CREAT     (1 << 1)

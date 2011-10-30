@@ -53,6 +53,7 @@ cmd_table_entry cmd_table[] = {
 	{"groupadd", "usage: groupadd GROUP PASSWORD", shell_groupadd},
 	{"groupdel", "usage: groupdel GROUP", shell_groupdel},
 	{"grouplist", "usage: grouplist", shell_grouplist},
+	{"pt", "usage: pipeTest (1/0)", pipeTest_cmd},
 	{"", "", NULL}
 };
 

@@ -2,9 +2,9 @@
 #define UNINSTD_H_
 
 #include <defs.h>
-#include <libasm.h>
+#include <asm/libasm.h>
 #include <stdarg.h>
-#include <file.h>
+#include <fs/file.h>
 
 int open(const char *path, int oflag, ...);
 
