@@ -56,6 +56,22 @@ PUBLIC user_t *session_getCurrentUser() {
 	return currentUser;
 }
 
+PUBLIC int session_getEuid() {
+	if (currentUser != NULL) {
+		return currentUser->uid;
+	} else {
+		return SUPER_USER;
+	}
+}
+
+PUBLIC int session_getEgid() {
+	if (currentUser != NULL) {
+		return currentUser->gid;
+	} else {
+		return SUPER_USER;
+	}
+}
+
 void prntWelcomeMsg() {
 	TTY* currTty = tty_getCurrentTTY();
 	char format = video_getFormattedColor(currTty->fgColor, currTty->bgColor); // current format backup
