@@ -168,6 +168,9 @@ void kill(int pid) {
     int i;
     PROCESS *p = NULL;
     PROCESS *parent;
+    if (pid < MAX_TTYs) {
+        return;
+    }
     for (i = 0; i < MAX_PROCESSES; i++) {
         if (process[i].slotStatus == OCCUPIED) {
             if (process[i].pid == pid) {
