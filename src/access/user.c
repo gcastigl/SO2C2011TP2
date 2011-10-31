@@ -183,12 +183,8 @@ PUBLIC void user_init() {
     user_parse("10:0:qcho:x\n");
     user_parse("11:11:qcho1:pass1\n");
     user_parse("12:12:qcho2:pass2");
-
     do_useradd("a", "a");
     do_useradd("guest", "");
-    do_useradd("Tres", "Cuatro");
-
-    do_userdel("qcho2");
     if (passwd == NULL) {
         fs_getFsNode(passwd, fs_createFile(etcInode->inode, "passwd", FS_FILE));
         flushList();
@@ -205,7 +201,6 @@ PUBLIC void user_init() {
 }
 
 PRIVATE void loadList() {
-    return;
     u8int buff[256];
     int offset = 0;
     int read;
@@ -216,7 +211,6 @@ PRIVATE void loadList() {
 }
 
 PRIVATE void flushList() {
-    return;
     // FIXME: delete all.
     int offset = 0;
     char userstring[128];
