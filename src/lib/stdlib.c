@@ -47,6 +47,15 @@ int atoi(const char *str) {
     return i;
 }
 
+int htoi(const char *str) {
+    int i = 0;
+    while (*str) {
+        i = (i << 4) + (*str - '0');
+        str++;
+    }
+    return i;
+}
+
 void panic(char* str, int line ,int lock) {
     _cli();
 //  char format = video_getFormattedColor(WHITE, BLACK);

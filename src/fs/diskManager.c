@@ -425,11 +425,18 @@ void diskManager_setFileName(u32int inode, char *name) {
 }
 
 void diskManager_setFileMode(u32int inode, int mode) {
+    mode &= (S_IRWXU | S_IRWXG | S_IRWXO);
     FileHeader header;
     errno = 0;
     _getFileheader(inode, &header);
     if (errno == 0) {
-        header.mask = (header.mask & FS_TYPE) || (mode & (S_IRWXU || S_IRWXG || S_IRWXO));
+        int new = (header.mask & FS_TYPE) | mode;
+        log(L_DEBUG, "changing inode %d to %x mode [old: %x]",
+                inode,
+                new,
+                header.mask
+        );
+        header.mask = new;
         _setFileheader(inode, &header);
     }
 }

@@ -17,6 +17,7 @@ void panic(char* msg, int line, int lock);
 void* realloc(void* ptr, int newsize);
 
 int atoi(const char *str);
+int htoi(const char *str);
 
 #endif
 

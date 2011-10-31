@@ -60,12 +60,5 @@ PUBLIC boolean permission_file_hasAccess(fs_node_t node, int access_desired) {
 		shift = 0; /* other */
 	}
 	perm_bits = (bits >> shift) & (R_BIT | W_BIT | X_BIT);
-
-	/* If access desired is not a subset of what is allowed, it is refused. */
-	int r = OK;
-	if ((perm_bits | access_desired) != perm_bits) {
-		r = EACCES;
-	}
-
-	return r;
+	return (perm_bits | access_desired) == perm_bits;
 }

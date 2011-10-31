@@ -367,7 +367,7 @@ int cd_cmd(int argc, char **argv) {
         fs_getFsNode(&current, currentiNode);
         fs_node_t *node = finddir_fs(&current, argv[0]);
         if (!permission_file_hasAccess(*node, R_BIT)) {
-            printf("cd: You don't have read access to %s", argv[0]);
+            printf("cd: You don't have read access to %s\n", argv[0]);
             return -1;
         }
         if (node != NULL) {
@@ -379,7 +379,7 @@ int cd_cmd(int argc, char **argv) {
             }
             // free(node);
         } else {
-            printf("cd: The directory \"%s\" does not exist", argv[0]);
+            printf("cd: The directory \"%s\" does not exist\n", argv[0]);
         }
     }
     return 0;
@@ -526,7 +526,7 @@ int chmod_cmd(int argc, char **argv) {
         }
         printf("chmoding...");
         errno = OK;
-        diskManager_setFileMode(file->inode, atoi(argv[0]));
+        diskManager_setFileMode(file->inode, htoi(argv[0]));
         if (errno != OK) {
             printf ("ERROR %d", errno);
         }
