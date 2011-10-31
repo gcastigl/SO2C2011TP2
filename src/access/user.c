@@ -306,7 +306,7 @@ PRIVATE boolean createUserDir(int uid) {
     }
     errno = OK;
     int inode = fs_createFile(homeInode->inode, user->userName, FS_DIRECTORY);
-    if (inode == -1 & errno == E_FILE_EXISTS) {
+    if (inode == -1 && errno == E_FILE_EXISTS) {
         return true;
     } else {
         return false;
