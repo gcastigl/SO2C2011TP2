@@ -11,6 +11,7 @@
 #include <interrupts/interrupts.h>
 #include <process/process.h>
 #include <lib/unistd.h>
+#include <fs/file.h>
 #define HELP_HELP			"Shows this help function"
 
 #define HELP_RESTART		"Restarts the OS"
@@ -63,5 +64,13 @@ int shell_usersetgid(int argc, char **argv);
 int shell_groupadd(int argc, char **argv);
 int shell_groupdel(int argc, char **argv);
 int shell_grouplist(int argc, char **argv);
+
+int cd_cmd(int argc, char **argv);
+int ls_cmd(int argc, char **argv);
+int mkdir_cmd(int argc, char **argv);
+int pwd_cmd(int argc, char **argv);
+int touch_cmd(int argc, char **argv);
+int cat_cmd(int argc, char **argv);
+int chmod_cmd(int argc, char **argv);
 
 #endif

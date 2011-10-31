@@ -51,18 +51,20 @@ typedef          char   s8int;
 typedef void*           type_t;
 
 
-#define SYSTEM_READ		3
-#define SYSTEM_WRITE	4
+#define SYSTEM_READ     3
+#define SYSTEM_WRITE    4
 #define SYSTEM_OPEN     5
 #define SYSTEM_YIELD    6
 
-#define SYSTEM_USERLIST 	9
-#define SYSTEM_USERADD 		10
-#define SYSTEM_USERDEL 		11
-#define SYSTEM_USERSETGID	12
-#define SYSTEM_GROUPLIST 	15
-#define SYSTEM_GROUPADD 	16
-#define SYSTEM_GROUPDEL 	17
+#define SYSTEM_USERLIST     9
+#define SYSTEM_USERADD      10
+#define SYSTEM_USERDEL      11
+#define SYSTEM_USERSETGID   12
+#define SYSTEM_GROUPLIST    15
+#define SYSTEM_GROUPADD     16
+#define SYSTEM_GROUPDEL     17
+
+#define SYSTEM_CHMOD        20
 
 #define STD_IN		0
 #define STD_OUT		1

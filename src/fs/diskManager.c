@@ -63,7 +63,6 @@ int diskManager_nextInode() {
 	return nextiNode;
 }
 
-
 void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 	iNodeDisk newiNode;
 	int initialBlocks = 1;
@@ -423,6 +422,16 @@ void diskManager_setFileName(u32int inode, char *name) {
 		memcpy(header.name, name, MAX_NAME_LENGTH);
 		_setFileheader(inode, &header);
 	}
+}
+
+void diskManager_setFileMode(u32int inode, int mode) {
+    FileHeader header;
+    errno = 0;
+    _getFileheader(inode, &header);
+    if (errno == 0) {
+        header.mask = (header.mask & FS_TYPE) || (mode & (S_IRWXU || S_IRWXG || S_IRWXO));
+        _setFileheader(inode, &header);
+    }
 }
 
 

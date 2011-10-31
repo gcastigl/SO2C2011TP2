@@ -31,12 +31,12 @@ cmd_table_entry cmd_table[] = {
 	{"random", 			HELP_RANDOM, random_cmd},
 	{"echo", 			HELP_ECHO, echo_cmd},
 	//{"setAppearance",	HELP_SETAPPEARANCE, setAppearance_cmd},
-	{"cd", 				"switch current directory", cd},
-	{"ls", 				"List information about the FILEs (the current directory by default).", ls},
-	{"mkdir", 			"Create the DIRECTORY(ies), if they do not already exist.", mkdir},
-	{"pwd",				"Show current user path", pwd},
-	{"touch",			"Creates a new empty file", touch},
-	{"cat",				"Shows the content for a specified filename", cat},
+	{"cd", 				"switch current directory", cd_cmd},
+	{"ls", 				"List information about the FILEs (the current directory by default).", ls_cmd},
+	{"mkdir", 			"Create the DIRECTORY(ies), if they do not already exist.", mkdir_cmd},
+	{"pwd",				"Show current user path", pwd_cmd},
+	{"touch",			"Creates a new empty file", touch_cmd},
+	{"cat",				"Shows the content for a specified filename", cat_cmd},
 	//{"format",			"Formats disk ATA0!", format},
 	//{"getchar", "Funcion para la catedra para testeo de getchar\n", getchar_cmd},
 	//{"printf", "Funcion para la catedra para testeo de printf\n", printf_cmd},
@@ -54,6 +54,7 @@ cmd_table_entry cmd_table[] = {
 	{"groupdel", "usage: groupdel GROUP", shell_groupdel},
 	{"grouplist", "usage: grouplist", shell_grouplist},
 	{"pt", "usage: pipeTest (1/0)", pipeTest_cmd},
+	{"chmod", "usage: OCTALMODE FILE", chmod_cmd},
 	{"", "", NULL}
 };
 

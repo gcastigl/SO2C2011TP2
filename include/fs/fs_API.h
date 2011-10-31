@@ -15,7 +15,7 @@
 //#define FS_PIPE        0x05
 //#define FS_SYMLINK     0x06
 //#define FS_MOUNTPOINT  0x08 // Is the file an active mountpoint?
-
+#define FS_TYPE        0xF000
 #define FS_PIPE        0x1000
 #define FS_CHARDEVICE  0x2000
 #define FS_DIRECTORY   0x4000

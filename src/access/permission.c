@@ -32,25 +32,29 @@ PUBLIC void mask_string(int perm, char *string) {
 	string[10] = '\0';
 }
 
-PUBLIC boolean permission_user_hasAccess(int userId, int uid) {
-	return (uid == SUPER_USER || uid == userId);
+PUBLIC boolean permission_user_isOwner(int uid) {
+	return (session_getEuid() == SUPER_USER || session_getEuid() == uid);
 }
 
-PUBLIC boolean permission_group_hasAccess(int gid, int uid) {
-	return (uid == SUPER_USER || uid == gid);
+PUBLIC boolean permission_group_isOwner(int gid) {
+	return (session_getEuid() == SUPER_USER || session_getEuid() == gid);
 }
 
-PUBLIC boolean permission_file_hasAccess(iNode *inode, int uid, int access_desired) {
+PUBLIC boolean permission_file_isOwner(fs_node_t node) {
+    return (session_getEuid() == SUPER_USER || session_getEuid() == node.uid);
+}
+
+PUBLIC boolean permission_file_hasAccess(fs_node_t node, int access_desired) {
 	int shift = 0, perm_bits = 0;
-	if (uid == SUPER_USER) {
+	if (session_getEuid() == SUPER_USER) {
 		return true;
 	}
-	user_t *user = user_get(uid);
-	int bits = inode->mask;
+	user_t *user = user_get(session_getEuid());
+	int bits = node.mask;
 
-	if (uid == inode->uid) {
+	if (session_getEuid() == node.uid) {
 		shift = 6; /* owner */
-	} else if (user->gid == inode->gid) {
+	} else if (user->gid == node.gid) {
 		shift = 3; /* group */
 	} else {
 		shift = 0; /* other */

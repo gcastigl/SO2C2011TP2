@@ -6,6 +6,8 @@
 #include <fs/fs.h>
 #include <tty.h>
 #include <access/permission.h>
+#include <fs/diskManager.h>
+#include <lib/stdlib.h>
 
 #define MAX_OPEN_FILES          60
 
@@ -32,17 +34,7 @@ FILE openFiles[MAX_OPEN_FILES];
 #define O_NOFOLLOW  (1 << 3)
 #define O_TRUNC     (1 << 4)
 
-int cd(int argc, char **argv);
 
-int ls(int argc, char **argv);
-
-int mkdir(int argc, char **argv);
-
-int pwd(int argc, char **argv);
-
-int touch(int argc, char **argv);
-
-int cat(int argc, char **argv);
 
 
 #endif

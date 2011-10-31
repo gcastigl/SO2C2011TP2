@@ -168,8 +168,7 @@ void kill(int pid) {
     for (i = 0; i < MAX_PROCESSES; i++) {
         if (process[i].slotStatus == OCCUPIED) {
             if (process[i].pid == pid) {
-                if (permission_user_hasAccess(process[i].ownerUid,
-                        session_getEuid())) {
+                if (permission_user_isOwner(process[i].ownerUid)) {
                     p = &process[i];
                     break;
                 } else {
