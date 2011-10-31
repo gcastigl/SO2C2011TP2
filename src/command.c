@@ -322,6 +322,15 @@ int cd_cmd(int argc, char **argv) {
             return -1;
         }
         if (node != NULL) {
+        	if ((node->mask&FS_SYMLINK) == FS_SYMLINK) {
+        		int link;
+        		read_fs(node, 0, sizeof(u32int), (u8int*) &link);
+        		fs_node_t target;
+        		fs_getFsNode(&target, link);
+        		char* name = target.name;
+        		cd_cmd(1, (char**) &name);
+        		return 0;
+        	}
             if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY) {
                 tty->currDirectory = node->inode;
                 memcpy(tty->currPath, node->name, strlen(node->name) + 1);
@@ -476,10 +485,19 @@ int cat_cmd(int argc, char **argv) {
             printf("cat: You don't have read access to %s", argv[0]);
             return -1;
         }
-        u8int buff[256];
+        if ((file->mask&FS_SYMLINK) == FS_SYMLINK) {
+        	int link;
+        	read_fs(file, 0, sizeof(u32int), (u8int*) &link);
+        	fs_node_t target;
+        	fs_getFsNode(&target, link);
+        	char* name = target.name;
+        	cat_cmd(1, (char**) &name);
+        	return 0;
+        }
+        u8int buff[512];
         int offset = 0;
         int read;
-        while((read = read_fs(file, offset, 256, buff)) != 0) {
+        while((read = read_fs(file, offset, 512, buff)) != 0) {
             printf("%s\n", buff);
             offset += read;
         }
