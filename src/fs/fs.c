@@ -58,7 +58,7 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	}
 	
 	iNode* inode = &inodes[index];
-	strcpy(fsNode->name, inode->name);
+	memcpy(fsNode->name, inode->name, strlen(inode->name) + 1);
 	fsNode->flags = inode->flags;
 	fsNode->gid = inode->gid;
 	fsNode->uid = inode->uid;
@@ -262,6 +262,10 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 
 
 u32int fs_size(fs_node_t *node) {
+	int index =  _indexOf(node->inode);
+	if (index != -1) {
+		return inodes[index].length;
+	}
 	return diskManager_size(node->inode);
 }
 

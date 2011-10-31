@@ -112,6 +112,16 @@ PRIVATE void _cachSector(int index, int disk, short sector) {
 	cachedData[index].accessCount = 1;
 	cachedData[index].dirty = false;
 	ata_read(disk, cachedData[index].contents, SECTOR_SIZE, sector, 0);
-	log(L_DEBUG, "Catching %d -> [%d, %d]", index, sector, 0);
+	// log(L_DEBUG, "Catching %d -> [%d, %d]", index, sector, 0);
+}
+
+void cache_flush() {
+	int i;
+	for(i = 0; i < CACHE_SIZE; i++) {
+		if (cachedData[i].dirty) {
+			ata_write(cachedData[i].disk, cachedData[i].contents, SECTOR_SIZE, cachedData[i].sector, 0);
+			cachedData[i].dirty = false;
+		}
+	}
 }
 

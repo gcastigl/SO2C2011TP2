@@ -87,25 +87,6 @@ int random_cmd(int argc, char **argv) {
 	return rand;
 }
 
-int setAppearance_cmd(int argc, char **argv) {
-	if (argc != 2) {
-		printf("You need to call this function with 2 colors\n");
-	} else {
-		char* foreGround = argv[0];
-		char* backGround = argv[1];
-		
-		int fg = parseHexa(foreGround[0]);
-		int bg = parseHexa(backGround[0]);
-		if (strlen(foreGround) != 1 || strlen(backGround) != 1 || fg == -1
-			|| bg == -1) {
-			printf("Both arguments must be a hexadecimal number between 0 \
-				and F\n");
-		}
-		tty_setFormatToCurrTTY(video_getFormattedColor(fg, bg));
-	}
-	return 0;
-}
-
 int getchar_cmd(int argc, char **argv) {
 	printf("Please type in a character\n");
 	char c = getchar();
@@ -311,6 +292,8 @@ int diskManagerTest(int argc, char **argv) {
 	int calcSize = diskManager_size(inodeNumber);
 	u8int asd[calcSize];
 	read_fs(&node, 0, calcSize, asd);
+	printf("Press any key to show contents...");
+	getchar();
 	printf("Recovered contents (%d, originalSize = %d):\n%s\n", calcSize, len, asd);
 	u8int part[21];
 	read_fs(&node, 40, 20, part);
@@ -319,34 +302,4 @@ int diskManagerTest(int argc, char **argv) {
 	return 0;
 }
 
-int diskManagerTest2(int argc, char **argv) {
-	char read[128];
-	iNode node;
-	node.mask = 10;
-	diskManager_createInode(&node, 0, "My Node");
-	char *contents = "This are the node contents!!";
-	int len = strlen(contents) + 1;
-	diskManager_writeContents(0, contents, len, 0);
-	log(L_DEBUG, "size1: %d\n", diskManager_size(0));
-	diskManager_readContents(0, read, len, 0);
-	log(L_DEBUG, "contents: %s\n", read);
-	// Completely re-write
-	char *contents2 = "Saving different data than the original one!";
-	int len2 = strlen(contents2) + 1;
-	diskManager_writeContents(0, contents2, len2, 0);
-	log(L_DEBUG, "size2: %d\n", diskManager_size(0));
-	diskManager_readContents(0, read, len2, 0);
-	log(L_DEBUG, "contents: %s\n", read);
-	// Over-rite a part
-	char *contents3 = "X0X0X0";
-	int len3 = strlen(contents3);
-	diskManager_writeContents(0, contents3, len3, 6);
-	log(L_DEBUG, "size3: %d\n", diskManager_size(0));
-	diskManager_readContents(0, read, len2, 0);
-	log(L_DEBUG, "contents: %s\n", read);
 
-	char name[64];
-	diskManager_getFileName(0, name);
-	log(L_DEBUG, "name: %s\n", name);
-	return 0;
-}

@@ -20,7 +20,7 @@ int cd(int argc, char **argv) {
 			}
 			// free(node);
 		} else {
-			printf("cd: The directory \"%s\" does not exist", argv[0]);
+			printf("cd: The directory \"%s\" does not exist\n", argv[0]);
 		}
 	}
 	return 0;
@@ -78,12 +78,13 @@ int pwd(int argc, char **argv) {
 }
 
 int touch(int argc, char **argv) {
+	int ret;
 	if(argc == 0 ) {
 		printf("touch: missing operand\n");
 	} else {
 		errno = 0;
-		//u32int parentiNode, char* name, u32int type
 		fs_createFile(tty_getCurrentTTY()->currDirectory, argv[0], FS_FILE);
+		ret = errno;
 		char* err = NULL;
 		switch(errno) {
 			case 0:		// File was created OK
@@ -107,7 +108,7 @@ int touch(int argc, char **argv) {
 			kfree(file);
 		}
 	}
-	return 0;
+	return ret;
 }
 
 int cat(int argc, char **argv) {
@@ -120,7 +121,6 @@ int cat(int argc, char **argv) {
 		char* err = NULL;
 		if (file == NULL) {
 			err = "No such file or directory";
-			return 0;
 		} else if ((file->mask&FS_DIRECTORY) == FS_DIRECTORY) {
 			err = "Is a directory";
 		}
@@ -128,10 +128,21 @@ int cat(int argc, char **argv) {
 			printf("cat: %s: %s\n", argv[0], err);
 			return 0;
 		}
-		u8int buff[256];
+		if ((file->mask&FS_SYMLINK) == FS_SYMLINK) {
+			u32int link;
+			read_fs(file, 0, sizeof(u32int), (u8int*) &link);
+			printf("getting fs nonde: %d", link);
+			fs_getFsNode(file, link);
+			file->name[10] = '\0';
+			printf("recursive with filename: %s\n", file->name);
+			cat(1, (char**) &file->name);
+			return 0;
+			//fs_getFsNode(file, link);
+		}
+		u8int buff[512];
 		int offset = 0;
 		int read;
-		while((read = read_fs(file, offset, 256, buff)) != 0) {
+		while((read = read_fs(file, offset, 512, buff)) != 0) {
 			printf("%s\n", buff);
 			offset += read;
 		}
@@ -139,3 +150,31 @@ int cat(int argc, char **argv) {
 	}
 	return 0;
 }
+
+int ln(int argc, char **argv) {
+	if (argc != 2) {
+		printf("ln: missing file operand\n");
+		return 0;
+	}
+	u32int currentiNode = tty_getCurrentTTY()->currDirectory;
+	fs_node_t currentFsNode;
+	fs_getFsNode(&currentFsNode, currentiNode);
+	fs_node_t *target = finddir_fs(&currentFsNode, argv[0]);
+	if (target == NULL) {
+		printf("ln: accessing \"%s\": No such file or directory\n", argv[0]);
+		return -1;
+	}
+	// create sym link
+	u32int symLinkiNode = fs_createFile(currentiNode, argv[1], FS_SYMLINK);
+	if (symLinkiNode == E_FILE_EXISTS) {
+		printf("ln: accessing \"%s\": File exists\n", argv[1]);
+		return -1;
+	}
+	fs_node_t symLink;
+	fs_getFsNode(&symLink, symLinkiNode);
+	// add contents to sym link
+	write_fs(&symLink, 0, sizeof(u32int), (u8int*) &target->inode);
+	kfree(target);
+	return 0;
+}
+

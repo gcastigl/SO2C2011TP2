@@ -204,7 +204,6 @@ PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int off
 	return 0;
 }
 
-// FIXME: This function always writes from the beginning all the way to the end!
 PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int offset) {
 	DiskPage currPage;
 		// log(L_DEBUG,"validating file page: [%d, %d]", page->nextSector, page->nextOffset);

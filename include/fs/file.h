@@ -38,5 +38,6 @@ int touch(int argc, char **argv);
 
 int cat(int argc, char **argv);
 
+int ln(int argc, char **argv);
 
 #endif

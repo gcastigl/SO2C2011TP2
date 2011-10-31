@@ -78,7 +78,7 @@ void translateBytes(char * ans, unsigned short databyte) {
 }
 
 void ata_write(int ata, void * msg, int bytes, unsigned short sector, int offset) {
-	// log(L_DEBUG, "writing to ATA disk [%d, %d]", sector, offset);
+	 log(L_DEBUG, "writing to ATA disk [%d, %d]", sector, offset);
 	if (ata != ATA0 && ata != ATA1) {
 		log(L_ERROR, "Trying to write to an inexistent disk!! %d - [%d, %d]", ata, sector, offset);
 		errno = E_INVALID_ARG;
