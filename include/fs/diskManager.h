@@ -127,4 +127,9 @@ PUBLIC boolean diskManager_setFileUid(u32int inode, int uid);
  */
 PUBLIC boolean diskManager_setFileGid(u32int inode, int gid);
 
+/*
+ * Elimina del disco la informacion relacionada con el inode numero inode
+ */
+PUBLIC void diskManager_delete(u32int inode);
+
 #endif

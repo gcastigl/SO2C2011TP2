@@ -347,3 +347,12 @@ PUBLIC void fs_setFileGid(u32int inode, int gid) {
         inodes[index].gid = gid;
     }
 }
+
+PUBLIC void fs_remove(u32int inode) {
+	int index = _indexOf(inode);
+	if (index != -1) {
+		inodes[index].inodeId = -1;
+	}
+	diskManager_delete(inode);
+}
+

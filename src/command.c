@@ -394,8 +394,26 @@ int mkdir_cmd(int argc, char **argv) {
     return 0;
 }
 
+int rm_cmd(int argc, char **argv) {
+	printf("Not finished yet... =/\n");
+	return;
+	if (argc == 1) {
+        u32int currentiNode = tty_getCurrentTTY()->currDirectory;
+        fs_node_t current;
+        fs_getFsNode(&current, currentiNode);
+        fs_node_t *node = finddir_fs(&current, argv[0]);
+        if (!permission_file_hasAccess(*node, W_BIT)) {
+            printf("rm: You don't have write access to %s", argv[0]);
+            return -1;
+        }
+		fs_remove(node->inode);
+		kfree(node);
+	}
+	return 0;
+}
+
 int pwd_cmd(int argc, char **argv) {
-    printf("%s\n", tty_getCurrentTTY()->currPath);
+    printf("(NOT IMPLEMENTED YET) - %s\n", tty_getCurrentTTY()->currPath);
     return 0;
 }
 

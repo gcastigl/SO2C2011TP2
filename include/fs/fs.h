@@ -43,4 +43,9 @@ PUBLIC void fs_setFileUid(u32int inode, int uid);
  */
 PUBLIC void fs_setFileGid(u32int inode, int gid);
 
+/*
+ * Elimina del disco la informacion relacionada con el inode numero inode
+ */
+PUBLIC void fs_remove(u32int inode);
+
 #endif
