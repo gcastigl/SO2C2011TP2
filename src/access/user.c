@@ -1,8 +1,8 @@
 #include <access/user.h>
 
 PRIVATE user_t users[USER_MAX];
-PRIVATE fs_node_t *homeInode;
-PRIVATE fs_node_t *passwd;
+PRIVATE fs_node_t *homeInode = NULL;
+PRIVATE fs_node_t *passwd = NULL;
 
 PRIVATE boolean user_parse(char *line);
 PRIVATE void user_reset();
@@ -195,7 +195,6 @@ PUBLIC void user_init() {
     } else {
         loadList();
     }
-
     char userstring[128];
     for (int i = 0; i < USER_MAX; ++i) {
         user_string(i, userstring);
@@ -307,10 +306,19 @@ PRIVATE boolean createUserDir(int uid) {
     }
     errno = OK;
     int inode = fs_createFile(homeInode->inode, user->userName, FS_DIRECTORY);
-    fs_setFileUid(inode, user->uid);
-    fs_setFileGid(inode, user->gid);
-    fs_setFileMode(inode, 0x600);
-    return (errno == OK || errno == E_FILE_EXISTS);
+    if (inode == -1 & errno == E_FILE_EXISTS) {
+        return true;
+    } else {
+        return false;
+    }
+    if (errno == OK) {
+        fs_setFileUid(inode, user->uid);
+        fs_setFileGid(inode, user->gid);
+        fs_setFileMode(inode, 0x600);
+        return true;
+    } else {
+        return false;
+    }
 }
 
 PRIVATE boolean deleteUserDir(int uid) {
