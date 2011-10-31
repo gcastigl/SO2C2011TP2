@@ -8,7 +8,7 @@
 #define MAGIC_NUMBER					123456
 #define FILE_BLOCK_OVERHEAD_SIZE_BYTES	(sizeof(DiskPage) + sizeof(FileHeader))
 
-#define DISK_BLOCK_SIZE_BYTES			200
+#define DISK_BLOCK_SIZE_BYTES			256
 
 
 typedef struct {
@@ -22,7 +22,7 @@ typedef struct {
     u32int length;      			// Size of the file, in bytes.
     u32int impl;        			// An implementation-defined number.
     u32int mask;        			// The permissions mask.
-    char name[MAX_NAME_LENGTH];		// file name
+    char name[MAX_NAME_LENGTH];		// File name
 } iNode;
 
 typedef struct {
@@ -57,26 +57,74 @@ typedef struct {
     u32int impl;        			// An implementation-defined number.
 } FileHeader;
 
+/*
+ + Inicializa al diskManager
+ */
 void diskManager_init();
 
+/*
+ + Intenta leer del sector 0 del disco, una estructura de tipo FSHeader y valida su magic number. En casoo de macheo, retorna true.
+ */
 boolean diskManager_validateHeader();
+
+/*
+ + Escribe en el sector 0 del disco duro, una estructura valida de FSHeader, de esta manera, la proxima ve que el SO inicialize, se sabra que ya existen datos validos.
+ */
 void diskManager_writeHeader();
 
+/*
+Retorna un int representando un numero de inode libre para ser utilizado para crear un nuevo archivo.
+*/
 int diskManager_nextInode();
 
+/*
+ + Guarda en disco ek iNode resivido en el primer parametros con nombre name como numero de inodo iNodeNumber.
+ */
 void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name);
+
+/*
+ + Carga del disco el inodo que este guardado como inodeNumber y lo guarda en inode. En caso de error, se setea errno con el valor inidicando el tipo de error que ocurrio.
+ */
 void diskManager_readInode(iNode *inode, u32int inodeNumber);
 
+/*
+ * Escribe length bytes de contents con el offset indicado, en el contenido de inodeNumber. En caso que offset + length sea mayor al largo del contenido del nodo ya exitente, simplemente se exitende la memoria y el nuevo largo es ahora = offset + length.
+ */
 int diskManager_writeContents(u32int inodeNumber, char* contents, u32int length, u32int offset);
+
+/*
+ * Lee length bytes de contents con el offset indicado, en el contenido de inodeNumber. En caso que offset + length sea mayor al largo del contenido del nodo ya exitente, simplemente se lee hasta el final del archivo.
+ */
 int diskManager_readContents(u32int inodeNumber, char* contents, u32int length, u32int offset);
 
-
+/*
+ * retorna en name, el nombre asociado al inodo "inode", name tiene que contener como minimo MIN_NAME_LENGTH bytes disponibles
+*/
 void diskManager_getFileName(u32int inode, char* name);
+
+/*
+ * renombra el inodo inode con el nombre dado en el segundo parametro. Se guardan los primeros MIN_NAME_LENGTH bytes.
+ */
 void diskManager_setFileName(u32int inode, char* name);
+
+/*
+ * Retorna un entero indianco la cnatidad de bytesque ocupa el inodo inodenumber.
+ */
 u32int diskManager_size(u32int inodeNumber);
 
+/*
+ * Setea el modo del file header
+ */
 PUBLIC boolean diskManager_setFileMode(u32int inode, int newMode);
+
+/*
+ * Setea el uid del file header
+ */
 PUBLIC boolean diskManager_setFileUid(u32int inode, int uid);
+
+/*
+ * Setea el gid del file header
+ */
 PUBLIC boolean diskManager_setFileGid(u32int inode, int gid);
 
 #endif

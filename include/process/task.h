@@ -1,6 +1,8 @@
 #ifndef TASK_H
 #define TASK_H
 
+// TASK.C IS DEPRECATED
+
 #include <defs.h>
 #include <lib/stdio.h>
 #include <paging/paging.h>

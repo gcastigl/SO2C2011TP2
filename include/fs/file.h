@@ -34,7 +34,4 @@ FILE openFiles[MAX_OPEN_FILES];
 #define O_NOFOLLOW  (1 << 3)
 #define O_TRUNC     (1 << 4)
 
-
-
-
 #endif

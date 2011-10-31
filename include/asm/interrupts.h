@@ -1,8 +1,22 @@
 #ifndef ASM_INTERRUPTS_H
 #define ASM_INTERRUPTS_H
 
+/* _systemCallHandler
+*
+* Handler de las system calls
+**/
 void *_systemCallHandler();
+
+/* _increaseTTCounter
+*
+* Aumenta el valor del Timer tick counter
+**/
 void _increaseTTCounter();
+
+/* isr_N
+*
+* Handlers de la isr N
+**/
 void isr_0();
 void isr_1();
 void isr_2();
@@ -35,6 +49,11 @@ void isr_28();
 void isr_29();
 void isr_30();
 void isr_31();
+
+/* irq_N
+*
+* Handlers de la irq N
+**/
 void irq_0();
 void irq_1();
 void irq_2();
@@ -51,7 +70,4 @@ void irq_12();
 void irq_13();
 void irq_14();
 void irq_15();
-
-// These extern directives let us access the addresses of our ASM ISR handlers.
-
 #endif

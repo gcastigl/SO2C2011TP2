@@ -87,25 +87,6 @@ int random_cmd(int argc, char **argv) {
 	return rand;
 }
 
-int setAppearance_cmd(int argc, char **argv) {
-	if (argc != 2) {
-		printf("You need to call this function with 2 colors\n");
-	} else {
-		char* foreGround = argv[0];
-		char* backGround = argv[1];
-		
-		int fg = parseHexa(foreGround[0]);
-		int bg = parseHexa(backGround[0]);
-		if (strlen(foreGround) != 1 || strlen(backGround) != 1 || fg == -1
-			|| bg == -1) {
-			printf("Both arguments must be a hexadecimal number between 0 \
-				and F\n");
-		}
-		tty_setFormatToCurrTTY(video_getFormattedColor(fg, bg));
-	}
-	return 0;
-}
-
 int getchar_cmd(int argc, char **argv) {
 	printf("Please type in a character\n");
 	char c = getchar();
@@ -154,16 +135,16 @@ int logout(int argc, char **argv) {
 
 //Processes
 
-int idle_p(int argc, char **argv) {
+int idle_cmd(int argc, char **argv) {
     while(1) {}
     return 0;
 }
 
-int top_p(int argc, char**argv) {
+int top_cmd(int argc, char**argv) {
     int i;
     int slot;
     int execCount[MAX_PROCESSES] = { 0 };
-    char *status[] = {"Ready", "Blocked", "Child Wait", "Sleeping", "Running"};
+    char *status[] = {"Ready", "Child Wait", "Running"};
     char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
     printf("Last 100:\n");
     for (i = 0; i < 100; i++) {
@@ -182,7 +163,7 @@ int top_p(int argc, char**argv) {
     return 0;
 }
 
-int kill_p(int argc, char**argv) {
+int kill_cmd(int argc, char**argv) {
     if (argc == 1) {
         kill(atoi(argv[0]));
     } else {
@@ -191,7 +172,7 @@ int kill_p(int argc, char**argv) {
     return 0;
 }
 
-int eternumWhile_p(int argc, char** argv) {
+int eternumWhile_cmd(int argc, char** argv) {
     while(1);
 }
 
@@ -311,6 +292,8 @@ int diskManagerTest(int argc, char **argv) {
 	int calcSize = diskManager_size(inodeNumber);
 	u8int asd[calcSize];
 	read_fs(&node, 0, calcSize, asd);
+	printf("Press any key to show contents...");
+	getchar();
 	printf("Recovered contents (%d, originalSize = %d):\n%s\n", calcSize, len, asd);
 	u8int part[21];
 	read_fs(&node, 40, 20, part);
@@ -319,42 +302,10 @@ int diskManagerTest(int argc, char **argv) {
 	return 0;
 }
 
-int diskManagerTest2(int argc, char **argv) {
-	char read[128];
-	iNode node;
-	node.mask = 10;
-	diskManager_createInode(&node, 0, "My Node");
-	char *contents = "This are the node contents!!";
-	int len = strlen(contents) + 1;
-	diskManager_writeContents(0, contents, len, 0);
-	log(L_DEBUG, "size1: %d\n", diskManager_size(0));
-	diskManager_readContents(0, read, len, 0);
-	log(L_DEBUG, "contents: %s\n", read);
-	// Completely re-write
-	char *contents2 = "Saving different data than the original one!";
-	int len2 = strlen(contents2) + 1;
-	diskManager_writeContents(0, contents2, len2, 0);
-	log(L_DEBUG, "size2: %d\n", diskManager_size(0));
-	diskManager_readContents(0, read, len2, 0);
-	log(L_DEBUG, "contents: %s\n", read);
-	// Overwrite a part
-	char *contents3 = "X0X0X0";
-	int len3 = strlen(contents3);
-	diskManager_writeContents(0, contents3, len3, 6);
-	log(L_DEBUG, "size3: %d\n", diskManager_size(0));
-	diskManager_readContents(0, read, len2, 0);
-	log(L_DEBUG, "contents: %s\n", read);
-
-	char name[64];
-	diskManager_getFileName(0, name);
-	log(L_DEBUG, "name: %s\n", name);
-	return 0;
-}
-
 int pipeTest_cmd(int argc, char **argv) {
-    int fd = open("test.pipe", O_RDWR);
-    printf("Got %d\n", fd);
-    
+    mkfifo("fifo.bleh", 777);
+    int fd = open("fifo.bleh", O_RDONLY);
+    log(L_DEBUG, "fd : %d", fd);
     return 0;
 }
 
@@ -473,6 +424,33 @@ int touch_cmd(int argc, char **argv) {
             kfree(file);
         }
     }
+    return 0;
+}
+
+int ln_cmd(int argc, char **argv) {
+    if (argc != 2) {
+        printf("ln: missing file operand\n");
+        return 0;
+    }
+    u32int currentiNode = tty_getCurrentTTY()->currDirectory;
+    fs_node_t currentFsNode;
+    fs_getFsNode(&currentFsNode, currentiNode);
+    fs_node_t *target = finddir_fs(&currentFsNode, argv[0]);
+    if (target == NULL) {
+        printf("ln: accessing \"%s\": No such file or directory\n", argv[0]);
+        return -1;
+    }
+    // create sym link
+    u32int symLinkiNode = fs_createFile(currentiNode, argv[1], FS_SYMLINK);
+    if (symLinkiNode == E_FILE_EXISTS) {
+        printf("ln: accessing \"%s\": File exists\n", argv[1]);
+        return -1;
+    }
+    fs_node_t symLink;
+    fs_getFsNode(&symLink, symLinkiNode);
+    // add contents to sym link
+    write_fs(&symLink, 0, sizeof(u32int), (u8int*) &target->inode);
+    kfree(target);
     return 0;
 }
 
