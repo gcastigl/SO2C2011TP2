@@ -396,7 +396,7 @@ int mkdir_cmd(int argc, char **argv) {
 
 int rm_cmd(int argc, char **argv) {
 	printf("Not finished yet... =/\n");
-	return;
+	return -1;
 	if (argc == 1) {
         u32int currentiNode = tty_getCurrentTTY()->currDirectory;
         fs_node_t current;
