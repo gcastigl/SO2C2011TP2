@@ -35,5 +35,13 @@ u32int read(int fd, void* buffer, u32int count);
 
 int lseek(int fildes, int offset, int oflag);
 
+/* mkfifo
+*
+* Recibe como parametros:
+* - Nombre
+* - Modo
+*
+* Crea un named pipe en el directorio actual
+**/
 int mkfifo(char *name, int mode);
 #endif
