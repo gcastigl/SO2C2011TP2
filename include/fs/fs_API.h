@@ -26,9 +26,9 @@
 
 #define DEF_PERM	   0x0644
 
-#define R_BIT	0000004	/* Rwx protection bit */
-#define W_BIT	0000002	/* rWx protection bit */
-#define X_BIT	0000001	/* rwX protection bit */
+#define R_BIT	0x0004	/* Rwx protection bit */
+#define W_BIT	0x0002	/* rWx protection bit */
+#define X_BIT	0x0001	/* rwX protection bit */
 
 #define S_IRWXU 0x0700 //User RWX
 #define S_IRUSR 0x0400 //User R
