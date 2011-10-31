@@ -227,13 +227,13 @@ int shell_userlist(int argc, char **argv) {
 	}
 	calluser_t userlist[USER_MAX];
 	_SysCall(SYSTEM_USERLIST, userlist);
-	printf("\tusername\tuid\tgid\n");
-	printf("\t--------\t---\t---\n");
+	printf("\tuid\tgid\tusername\n");
+	printf("\t---\t---\t--------\n");
 	int i;
 	for (i = 0; i < USER_MAX; ++i) {
 		calluser_t user = userlist[i];
 		if (user.uid != NO_USER) {
-			printf("\t%s\t%d\t%d\n", user.userName, user.uid, user.gid);
+			printf("\t%d\t%d\t%s\n", user.uid, user.gid, user.userName);
 		}
 	}
 	return 0;
@@ -274,13 +274,13 @@ int shell_grouplist(int argc, char **argv) {
 	}
 	callgroup_t grouplist[GROUP_MAX];
 	_SysCall(SYSTEM_GROUPLIST, grouplist);
-	printf("\tgroupname\tgid\n");
-	printf("\t--------\t---\n");
+	printf("\tgid\tgroupname\n");
+	printf("\t---\t---------\n");
 	int i;
 	for (i = 0; i < GROUP_MAX; ++i) {
 		callgroup_t group = grouplist[i];
 		if (group.gid != NO_GROUP) {
-			printf("\t%s\t%d\n", group.groupName, group.gid);
+			printf("\t%d\t%s\n", group.gid, group.groupName);
 		}
 	}
 	return 0;
