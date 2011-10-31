@@ -9,12 +9,17 @@ int firstTime = true;
 int schedulerActive = false;
 static int usePriority;
 static int activeProcesses;
-void clean(void);
 extern int loadStackFrame();
+
+/* saveESP
+*
+* Recibe como parametros:
+* - valor del viejo ESP
+*
+* Guarda el ESP del proceso actual
+**/
 void saveESP(int oldESP);
 extern int getNextPID();
-int idle_p(int argc, char **argv);
-int idle_p2(int argc, char **argv);
 
 void initScheduler(int withPriority) {
 	int i;
@@ -24,7 +29,7 @@ void initScheduler(int withPriority) {
     count100 = 0;
     activeProcesses = 0;
     usePriority = withPriority;
-    createProcess("Idle", &idle_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, -1, BACKGROUND, READY, VERY_LOW);
+    createProcess("Idle", &idle_cmd, 0, NULL, DEFAULT_STACK_SIZE, &clean, -1, BACKGROUND, READY, VERY_LOW);
     schedulerActive = true;
 }
 
@@ -87,7 +92,7 @@ PROCESS* getNextTask(int withPriority) {
     
     for (i = 1; i < MAX_PROCESSES; i++) {
         proc=&process[i];
-        if ((proc->slotStatus != FREE) && (proc->status != BLOCKED) && (proc->status != CHILD_WAIT)) {
+        if ((proc->slotStatus != FREE) && (proc->status != CHILD_WAIT)) {
             proc->lastCalled++;
             if (withPriority == true) {
                 temp = proc->priority * P_RATIO + proc->lastCalled;

@@ -18,6 +18,10 @@
 #include <access/user.h>
 #include <driver/port.h>
 
+/* getNextPID
+*
+* Devuelve el próximo PID libre
+**/
 int getNextPID();
 
 #endif

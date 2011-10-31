@@ -40,9 +40,9 @@ cmd_table_entry cmd_table[] = {
 	//{"format",			"Formats disk ATA0!", format},
 	{"DMtest", "disk manager test", diskManagerTest},
 	{"logout", "Logout current user\n", logout},
-	{"top", "Shows the current running processes", top_p},
-	{"kill", "Kills process with given PID", kill_p},
-	{"infWhile", "Process that loops till the end of time!", eternumWhile_p},
+	{"top", "Shows the current running processes", top_cmd},
+	{"kill", "Kills process with given PID", kill_cmd},
+	{"infWhile", "Process that loops till the end of time!", eternumWhile_cmd},
 	{"useradd", "usage: useradd USERNAME PASSWORD", shell_useradd},
 	{"userdel", "usage: userdel USERNAME", shell_userdel},
 	{"userlist", "usage: userlist", shell_userlist},
@@ -50,6 +50,7 @@ cmd_table_entry cmd_table[] = {
 	{"groupadd", "usage: groupadd GROUP PASSWORD", shell_groupadd},
 	{"groupdel", "usage: groupdel GROUP", shell_groupdel},
 	{"grouplist", "usage: grouplist", shell_grouplist},
+	{"pt", "usage: pipeTest (1/0)", pipeTest_cmd},
 	{"", "", NULL}
 };
 
@@ -193,7 +194,7 @@ void checkReset() {
 void checkTTY() {
 	if (IS_CTRL() && newTTY == -1) {
 		int i;
-		for (i = 0; i < activeTTYs; ++i) {
+		for (i = 0; i < (activeTTYs > MAX_TTYs ? MAX_TTYs : activeTTYs); ++i) {
 			if (F_PRESSED(i)) {
 				newTTY = i;
 				break;

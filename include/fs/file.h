@@ -7,18 +7,24 @@
 #include <tty.h>
 #include <access/permission.h>
 
-#define MAX_OPEN_FILES          50
+#define MAX_OPEN_FILES          60
 
 typedef struct {
-    u8int   permissions;
-    u8int   inode;
+    char        name[MAX_NAME_SIZE];
+    u8int       permissions;
+    u8int       inode;
+    fs_node_t   *node;
+    u8int       flags;
+    u32int      offset;
 } FILE;
 
 FILE openFiles[MAX_OPEN_FILES];
 
+#define FD_OFFSET (MAX_TTYs + 3)
+
 #define O_RDONLY    1
 #define O_WRONLY    2
-#define O_RDWR      4
+#define O_RDWR      3
 
 #define O_APPEND    (1 << 0)
 #define O_CREAT     (1 << 1)

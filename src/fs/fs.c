@@ -39,6 +39,7 @@ void fs_init() {
 		inodes[i].inodeId = -1;
 		inodes[i].length = 0;
 	}
+	
 	if (diskManager_validateHeader()) {
 		fs_load();
 	} else {

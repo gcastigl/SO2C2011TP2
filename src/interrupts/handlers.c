@@ -102,7 +102,7 @@ void *systemCallHandler(int sysCallNumber, void ** args) {
             switchProcess();
             break;
         case SYSTEM_OPEN:
-            sysOpen((char*)args[0], (int)args[1], (int)args[2]);
+            ret = (void*)sysOpen((char*)args[0], (int)args[1], (int)args[2]);
             break;
 	}
 	
@@ -129,12 +129,6 @@ regs.edi, regs.esi, regs.ebp, regs.esp, regs.ebx, regs.edx, regs.ecx,\
 regs.eax, regs.eip, regs.cs, regs.ss);
         panic(exceptionString[regs.int_no], 1, true);
     }
-    /*
-    if (interruptHandlers[regs.int_no] != 0) {
-        isr_t handler = interruptHandlers[regs.int_no];
-        handler(regs);
-    }
-    */
 }
 
 // This gets called from our ASM interrupt handler stub.

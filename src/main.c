@@ -44,38 +44,7 @@ PROCESS *getProcessByPID(int pid) {
     return NULL;
 }
 
-/*
- *	fd = File descriptor referring to the open file.
- *	buffer = Storage location for data.
- *	count = Maximum number of bytes.
- */
-u32int __read(int fd, void * buffer, u32int count) {
-	_SysCall(SYSTEM_READ,fd, buffer, count);
-	return count;
-}
-
-/*
- *	fd = File descriptor of file into which data is written.
- *	buffer = Data to be written..
- *	count = Maximum number of bytes.
- */
-u32int __write(int fd, const void * buffer, u32int count) {
-	_SysCall(SYSTEM_WRITE, fd, buffer, count);
-	return count;
-}
-
 u32int yield(void) {
     _SysCall(SYSTEM_YIELD);
-    return 0;
-}
-
-u32int open(char* path, int oflags, ...) {
-    int create_flags = 0;
-    if (oflags & O_CREAT) {
-        va_list ap;
-        va_start(ap, oflags);
-        create_flags = va_arg(ap, int);
-    }
-    _SysCall(SYSTEM_OPEN, path, oflags, create_flags);
     return 0;
 }

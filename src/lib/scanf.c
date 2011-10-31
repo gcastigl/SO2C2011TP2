@@ -12,7 +12,7 @@ char getc(int fd) {
 	while(bufferIsEmpty()) {
 		// WAIT...
 	}
-	__read(fd, &c, 1);
+	read(fd, &c, 1);
 	return c;
 }
 
