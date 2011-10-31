@@ -124,12 +124,6 @@ regs.edi, regs.esi, regs.ebp, regs.esp, regs.ebx, regs.edx, regs.ecx,\
 regs.eax, regs.eip, regs.cs, regs.ss);
         panic(exceptionString[regs.int_no], 1, true);
     }
-    /*
-    if (interruptHandlers[regs.int_no] != 0) {
-        isr_t handler = interruptHandlers[regs.int_no];
-        handler(regs);
-    }
-    */
 }
 
 // This gets called from our ASM interrupt handler stub.

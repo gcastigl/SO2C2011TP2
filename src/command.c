@@ -154,16 +154,16 @@ int logout(int argc, char **argv) {
 
 //Processes
 
-int idle_p(int argc, char **argv) {
+int idle_cmd(int argc, char **argv) {
     while(1) {}
     return 0;
 }
 
-int top_p(int argc, char**argv) {
+int top_cmd(int argc, char**argv) {
     int i;
     int slot;
     int execCount[MAX_PROCESSES] = { 0 };
-    char *status[] = {"Ready", "Blocked", "Child Wait", "Sleeping", "Running"};
+    char *status[] = {"Ready", "Child Wait", "Running"};
     char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
     printf("Last 100:\n");
     for (i = 0; i < 100; i++) {
@@ -182,7 +182,7 @@ int top_p(int argc, char**argv) {
     return 0;
 }
 
-int kill_p(int argc, char**argv) {
+int kill_cmd(int argc, char**argv) {
     if (argc == 1) {
         kill(atoi(argv[0]));
     } else {
@@ -191,7 +191,7 @@ int kill_p(int argc, char**argv) {
     return 0;
 }
 
-int eternumWhile_p(int argc, char** argv) {
+int eternumWhile_cmd(int argc, char** argv) {
     while(1);
 }
 
@@ -352,8 +352,8 @@ int diskManagerTest2(int argc, char **argv) {
 }
 
 int pipeTest_cmd(int argc, char **argv) {
-    int fd = open("test.pipe", O_RDWR);
-    printf("Got %d\n", fd);
-    
+    mkfifo("fifo.bleh", 777);
+    int fd = open("fifo.bleh", O_RDONLY);
+    log(L_DEBUG, "fd : %d", fd);
     return 0;
 }
