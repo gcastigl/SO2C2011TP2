@@ -15,4 +15,8 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber);
 
 u32int fs_createFile(u32int parentiNode, char* name, u32int type);
 
+PUBLIC void fs_setFileMode(u32int inode, int mode);
+PUBLIC void fs_setFileUid(u32int inode, int uid);
+PUBLIC void fs_setFileGid(u32int inode, int gid);
+
 #endif

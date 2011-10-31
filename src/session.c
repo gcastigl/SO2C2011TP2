@@ -13,7 +13,7 @@ void session_login() {
 	do {
 		int uid = NO_USER;
 		while (uid == NO_USER) {
-			printf("\nUsername (try qcho): ");
+			printf("\nUsername: ");
 			gets(user);
 			uid = user_find(user);
 			if (uid == NO_USER) {
@@ -22,7 +22,7 @@ void session_login() {
 		}
 		int retry = 3;
 		while (--retry && !session_isLoggedIn()) {
-			printf("\nPassword (try x): ");
+			printf("\nPassword: ");
 			gets(password);
 			currentUser = user_login(uid, password);
 			if (currentUser == NULL) {

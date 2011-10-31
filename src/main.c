@@ -7,29 +7,29 @@ extern int nf_address;
 u32int initial_esp; // New global variable.
 
 int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
-	_cli();
+    _cli();
         initial_esp = initial_stack;
-		init_descriptor_tables();
-		_mascaraPIC1(0xFC);
-		_mascaraPIC2(0xFF);
-		port_serial_init();
-		//initialize_paging();
-		keyboard_init();
-		video_init();
-		group_init();
-		user_init();
-		setFD(STD_OUT);
-		fs_init();
+        init_descriptor_tables();
+        _mascaraPIC1(0xFC);
+        _mascaraPIC2(0xFF);
+        port_serial_init();
+        //initialize_paging();
+        keyboard_init();
+        video_init();
+        group_init();
+        user_init();
+        setFD(STD_OUT);
+        fs_init();
         initScheduler(true);
-		_initTTCounter();
+        _initTTCounter();
         startTTYs();
-	_sti();
+    _sti();
     while (1);
-	return 0;
+    return 0;
 }
 
 int getNextPID() {
-	return nextPID++;
+    return nextPID++;
 }
 
 PROCESS *getProcessByPID(int pid) {

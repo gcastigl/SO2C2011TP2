@@ -72,5 +72,7 @@ int pwd_cmd(int argc, char **argv);
 int touch_cmd(int argc, char **argv);
 int cat_cmd(int argc, char **argv);
 int chmod_cmd(int argc, char **argv);
+int chown_cmd(int argc, char **argv);
+int chgrp_cmd(int argc, char **argv);
 
 #endif

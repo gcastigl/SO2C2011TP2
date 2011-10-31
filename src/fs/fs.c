@@ -109,12 +109,14 @@ PRIVATE void fs_create() {
 	// Initialize root directory
 	int rootInode = diskManager_nextInode();
 	_initInode_dir(rootInode, "/", rootInode);
+	fs_setFileMode(rootInode, 0x777);
 
 	int devInode = diskManager_nextInode();
 	_initInode_dir(devInode, "dev", rootInode);
 
 	int homeInode = diskManager_nextInode();
 	_initInode_dir(homeInode, "home", rootInode);
+	fs_setFileMode(homeInode, 0x777);
 
 	int rootHomeInode = diskManager_nextInode();
 	_initInode_dir(rootHomeInode, "root", rootInode);
@@ -145,8 +147,13 @@ PRIVATE void _loadDirectory(int inodeNumber) {
 u32int fs_createFile(u32int parentiNode, char* name, u32int type) {
 	fs_node_t node;
 	fs_getFsNode(&node, parentiNode);
+	if (!permission_file_hasAccess(node, W_BIT)) {
+	    errno = EACCES;
+	    return -1;
+	}
 	if (fs_finddir(&node, name) != NULL) {
-		return E_FILE_EXISTS;
+		errno = E_FILE_EXISTS;
+		return -1;
 	}
 	int inode = diskManager_nextInode();
 	if (type == FS_DIRECTORY) {
@@ -304,5 +311,39 @@ PRIVATE void fs_close(fs_node_t *node) {
 
 }
 
+PUBLIC void fs_setFileMode(u32int inode, int mode) {
+    mode &= (S_IRWXU | S_IRWXG | S_IRWXO);
+    int index = _indexOf(inode);
+    if (index == -1) {
+        index = _loadInode(inode);
+    }
+    int newMode = (inodes[index].mask & FS_TYPE) | mode;
+    log(L_DEBUG, "changing inode %d to %x mode [old: %x]",
+            inode,
+            newMode,
+            inodes[index].mask
+    );
+    if (diskManager_setFileMode(inode, newMode)) {
+        inodes[index].mask = newMode;
+    }
+}
 
+PUBLIC void fs_setFileUid(u32int inode, int uid) {
+    int index = _indexOf(inode);
+    if (index == -1) {
+        index = _loadInode(inode);
+    }
+    if (diskManager_setFileUid(inode, uid)) {
+        inodes[index].uid = uid;
+    }
+}
 
+PUBLIC void fs_setFileGid(u32int inode, int gid) {
+    int index = _indexOf(inode);
+    if (index == -1) {
+        index = _loadInode(inode);
+    }
+    if (diskManager_setFileGid(inode, gid)) {
+        inodes[index].gid = gid;
+    }
+}

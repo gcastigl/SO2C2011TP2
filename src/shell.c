@@ -55,6 +55,8 @@ cmd_table_entry cmd_table[] = {
 	{"grouplist", "usage: grouplist", shell_grouplist},
 	{"pt", "usage: pipeTest (1/0)", pipeTest_cmd},
 	{"chmod", "usage: OCTALMODE FILE", chmod_cmd},
+	{"chown", "usage: USERNAME FILE", chown_cmd},
+	{"chgrp", "usage: GROUPNAME FILE", chgrp_cmd},
 	{"", "", NULL}
 };
 

@@ -3,7 +3,6 @@
 
 #include <fs/diskCache.h>
 #include <driver/ata_disk.h>
-#include <fs/fs_API.h>
 
 #define MAX_NAME_LENGTH					32
 #define MAGIC_NUMBER					123456
@@ -73,11 +72,11 @@ int diskManager_readContents(u32int inodeNumber, char* contents, u32int length, 
 
 
 void diskManager_getFileName(u32int inode, char* name);
-
 void diskManager_setFileName(u32int inode, char* name);
-
-void diskManager_setFileMode(u32int inode, int mode);
-
 u32int diskManager_size(u32int inodeNumber);
+
+PUBLIC boolean diskManager_setFileMode(u32int inode, int newMode);
+PUBLIC boolean diskManager_setFileUid(u32int inode, int uid);
+PUBLIC boolean diskManager_setFileGid(u32int inode, int gid);
 
 #endif

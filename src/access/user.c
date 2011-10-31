@@ -170,7 +170,7 @@ PUBLIC boolean user_string(int uid, char *string) {
 PUBLIC void user_init() {
 	user_reset();
 	user_parse("0:0:root:pass\n");
-	user_parse("10:10:qcho:x\n");
+	user_parse("10:0:qcho:x\n");
 	user_parse("11:11:qcho1:pass1\n");
 	user_parse("12:12:qcho2:pass2");
 

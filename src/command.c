@@ -419,7 +419,7 @@ int mkdir_cmd(int argc, char **argv) {
             case OK:
                 break;
             case EACCES:
-                err = "You need write permission to create a dir here.";
+                err = "No write permission.";
                 break;
             case E_FILE_EXISTS:
                 err = "Directory exists";
@@ -428,7 +428,7 @@ int mkdir_cmd(int argc, char **argv) {
                 err = "Unknown error";
         }
         if (err != NULL) {
-            printf("mkdir: cannot create file %s: %s\n", argv[0], err);
+            printf("mkdir: cannot create dir %s: %s\n", argv[0], err);
         }
     }
     return 0;
@@ -451,13 +451,14 @@ int touch_cmd(int argc, char **argv) {
             case OK:
                 break;
             case EACCES:
-                err = "You need write permission to create a file here.";
+                err = "No write permission.";
                 break;
             case E_FILE_EXISTS:
                 err = "File exists";
                 break;
             default:
                 err = "Unknown error";
+                break;
         }
         if (errno != 0) {
             printf("touch: cannot create file %s: %s\n", argv[0], err);
@@ -482,10 +483,6 @@ int cat_cmd(int argc, char **argv) {
         fs_node_t current;
         fs_getFsNode(&current, currentiNode);
         fs_node_t* file = finddir_fs(&current, argv[0]);
-        if (!permission_file_hasAccess(*file, R_BIT)) {
-            printf("cat: You don't have read access to %s", argv[0]);
-            return -1;
-        }
         char* err = NULL;
         if (file == NULL) {
             err = "No such file or directory";
@@ -496,6 +493,10 @@ int cat_cmd(int argc, char **argv) {
         if (err != NULL) {
             printf("cat: %s: %s\n", argv[0], err);
             return 0;
+        }
+        if (!permission_file_hasAccess(*file, R_BIT)) {
+            printf("cat: You don't have read access to %s", argv[0]);
+            return -1;
         }
         u8int buff[256];
         int offset = 0;
@@ -517,18 +518,89 @@ int chmod_cmd(int argc, char **argv) {
         fs_getFsNode(&current, currentiNode);
         fs_node_t* file = finddir_fs(&current, argv[1]);
         if (file == NULL) {
-            printf("chmod: No such file or directory %s.", argv[1]);
+            printf("chmod: No such file or directory %s.\n", argv[1]);
             return -1;
         }
         if (!permission_file_isOwner(*file)) {
-            printf("chmod: You are not the owner of %s.", argv[1]);
+            printf("chmod: You are not the owner of %s.\n", argv[1]);
             return -2;
         }
-        printf("chmoding...");
         errno = OK;
-        diskManager_setFileMode(file->inode, htoi(argv[0]));
+        fs_setFileMode(file->inode, htoi(argv[0]));
         if (errno != OK) {
             printf ("ERROR %d", errno);
+        }
+        kfree(file);
+    } else {
+        printf("Usage: chmod OCTALMODE FILE");
+    }
+    return 0;
+}
+
+int chown_cmd(int argc, char **argv) {
+    if (argc == 2) {
+        TTY* tty = tty_getCurrentTTY();
+        u32int currentiNode = tty->currDirectory;
+        fs_node_t current;
+        fs_getFsNode(&current, currentiNode);
+        fs_node_t* file = finddir_fs(&current, argv[1]);
+        if (file == NULL) {
+            printf("chown: No such file or directory %s.\n", argv[1]);
+            kfree(file);
+            return -1;
+        }
+        if (!permission_file_isOwner(*file)) {
+            printf("chown: You are not the owner of %s.\n", argv[1]);
+            kfree(file);
+            return -2;
+        }
+        errno = OK;
+        int uid = user_find(argv[0]);
+        if (uid == NO_USER) {
+            printf("chown: User %s does not exist.\n", argv[0]);
+            kfree(file);
+            return -2;
+        } else {
+            fs_setFileUid(file->inode, uid);
+            if (errno != OK) {
+                printf ("ERROR %d", errno);
+            }
+        }
+        kfree(file);
+    } else {
+        printf("Usage: chmod OCTALMODE FILE");
+    }
+    return 0;
+}
+
+int chgrp_cmd(int argc, char **argv) {
+    if (argc == 2) {
+        TTY* tty = tty_getCurrentTTY();
+        u32int currentiNode = tty->currDirectory;
+        fs_node_t current;
+        fs_getFsNode(&current, currentiNode);
+        fs_node_t* file = finddir_fs(&current, argv[1]);
+        if (file == NULL) {
+            printf("chown: No such file or directory %s.\n", argv[1]);
+            kfree(file);
+            return -1;
+        }
+        if (!permission_file_isOwner(*file)) {
+            printf("chown: You are not the owner of %s.\n", argv[1]);
+            kfree(file);
+            return -2;
+        }
+        errno = OK;
+        int gid = group_find(argv[0]);
+        if (gid == NO_GROUP) {
+            printf("chown: Group %s does not exist.\n", argv[0]);
+            kfree(file);
+            return -2;
+        } else {
+            fs_setFileGid(file->inode, gid);
+            if (errno != OK) {
+                printf ("ERROR %d", errno);
+            }
         }
         kfree(file);
     } else {
