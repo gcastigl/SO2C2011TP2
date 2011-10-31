@@ -498,3 +498,14 @@ u32int _availableMem(iNodeDisk* inode) {
 	total += (inode->blocks - 1) * (DISK_BLOCK_SIZE_BYTES - sizeof(DiskPage));
 	return total;
 }
+
+void diskManager_delete(u32int inodeNumber) {
+	iNodeDisk inode;
+	inode.usedBytes = 0;
+	inode.blocks = 0;
+	_setiNode(inodeNumber, &inode);
+	FileHeader header;
+	header.magic = 0;
+	_setFileheader(inodeNumber, &header);
+}
+
