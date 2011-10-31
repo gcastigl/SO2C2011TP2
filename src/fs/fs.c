@@ -118,16 +118,12 @@ PRIVATE void fs_create() {
 	_initInode_dir(homeInode, "home", rootInode);
 	fs_setFileMode(homeInode, 0x777);
 
-	int rootHomeInode = diskManager_nextInode();
-	_initInode_dir(rootHomeInode, "root", rootInode);
-
 	int etcInode = diskManager_nextInode();
 	_initInode_dir(etcInode, "etc", rootInode);
 
 	// Add dev as sub-directory of root
 	_appendFile(rootInode, devInode, NULL);
 	_appendFile(rootInode, homeInode, NULL);
-	_appendFile(rootInode, rootHomeInode, NULL);
 	_appendFile(rootInode, etcInode, NULL);
 }
 

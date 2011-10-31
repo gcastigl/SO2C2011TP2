@@ -56,6 +56,8 @@ TTY* tty_getCurrentTTY();
 
 void tty_getCurrentNode(fs_node_t* node);
 
+PUBLIC void tty_setCurrentNode(fs_node_t node);
+
 /* tty_getTTY
 *
 * Recibe como parametros:

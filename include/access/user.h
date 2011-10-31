@@ -4,6 +4,8 @@
 #include <defs.h>
 #include <util/logger.h>
 #include <access/group.h>
+#include <fs/fs.h>
+
 
 #define NO_USER -1
 #define SUPER_USER 0
@@ -118,6 +120,11 @@ PUBLIC boolean do_userlist(calluser_t *callusers);
 * Devuelve el nombre del user con id 'uid'
 **/
 PUBLIC char *user_getName(int uid);
+
+/**
+ * Devuelve el inodo de la home folder /home/username
+ */
+PUBLIC fs_node_t *user_getUserHomeInode(int uid);
 
 #endif
 
