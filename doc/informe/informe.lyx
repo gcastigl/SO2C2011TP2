@@ -77,7 +77,7 @@ La implementación de driver
  Si bien realizar esto, dificulto bastante la lógica del driver, permite
  tener una logica de programación mas simple en las capaz superiores ya
  que no es necesario leer un sector entero para lugego ir hasta el offset
- deseado y obtener de ahi los bytes deseados (ni hablar si se quiere tomar
+ deseado y obtener de ahi los bytes necesarios (ni hablar si se quiere tomar
  informaciòn que se encuentra partida en varios sectores contiguos).
  Es por eso que el driver utilizado permite 
 \begin_inset Formula $"abstraerse"$
@@ -121,8 +121,8 @@ Disk Cache
 
 \begin_layout Standard
 Debido a los problemas de eficiencia mencionados en la seccion anterior,
- se decidió que seria una buena idea el tener una estructura cache, que
- minimize los accesos a discos sin consumir mucha cantidad de moemria.
+ se decidió que seria una buena idea tener una estructura cache, que minimize
+ los accesos a discos sin consumir mucha cantidad de memoria ni procesamiento.
  
 \end_layout
 
@@ -133,8 +133,8 @@ La implementación de esta capa es muy sencilla, consiste en un vector de
 \end_inset
 
  estructuras en la que cada una tiene el contenido de un sector entero y
- campos para indicar si el sector se encuentra sucio (necesita ser escrito)
- y a que sector y disco corresponde.
+ campos para indicar si el sector se encuentra sucio (si tiene cambios con
+ respecto al disco) y a que sector y disco corresponde.
 \end_layout
 
 \begin_layout Standard
@@ -172,8 +172,12 @@ File System
 
 \begin_layout Standard
 Nuestro File System se divide en dos partes, la primer parte es, el file
- system en si y la segunda es la administracion de la infomacion en el disco
- duro (DiskManager).
+ system en si y la segunda es la administración de la infomacion en el disco
+ duro (
+\begin_inset Formula $DiskManager$
+\end_inset
+
+).
 \end_layout
 
 \begin_layout Standard
@@ -182,8 +186,8 @@ Para el manejo de archivos en
 \end_inset
 
  de decidió tomar la misma implementacion que usa Linux.
- Es decir, archivos regulares, directorioes, symbolic links, etc son todos
- de tipo 
+ Es decir, archivos regulares, directorios, symbolic links, etc son todos
+ la misma estructura 
 \begin_inset Formula $fs$
 \end_inset
 
@@ -198,7 +202,7 @@ _
  (en donde se define el tipo).
  Inicialmente se comenzó tratando a cada tipo de archivo como un tipo de
  estructura diferente, pero nos dimos cuenta que se volvía muy compleja
- la logica de parseo de informacion en el disco.
+ la logica de parseo de información en el disco.
 \end_layout
 
 \begin_layout Subsection
@@ -214,16 +218,16 @@ Debido a la notable lentitud que posee el acceso a disco frente el acceso
 
 \begin_layout Standard
 Uno de los primeros problemas que se presentaron al comenzar a trabjar en
- disco, era como averiguar si un determinado sector de memoria estaba era
- o no valido.
- Frente a esto, en cada Header(mas adelante se hablara mejor de estos) se
- agregó un campo 
+ disco, era como averiguar si un determinado sector de memoria era o no
+ valido.
+ Frente a esto, en cada Header (mas adelante se hablara mejor de estos)
+ se agregó un campo 
 \begin_inset Formula $magic$
 \end_inset
 
- que sirve para validacion de los campos leidos.
+ que sirve para la validacion de los campos a leer.
  En otras palabras, si el magic number coincide con el magic number definido
- en el SO, entonces exite una estructura valida almacendada en esa porcion
+ en el SO, entonces exite una estructura valida almacendada en esa posición
  de memoria.
  
 \begin_inset Newline newline
@@ -233,7 +237,7 @@ Uno de los primeros problemas que se presentaron al comenzar a trabjar en
 \end_layout
 
 \begin_layout Standard
-El disco duro para este file system fue dividido basicamente en cuatro sectores:
+El disco duro para este file system fue dividido basicamente en cuatro partes:
 \end_layout
 
 \begin_layout Enumerate
@@ -291,25 +295,9 @@ Imgen disco duro
 
 \begin_layout Standard
 Para el F.S.
- Header simplemente se guardo un magic number y dos numeros mas para indicar
- el tamaño maximo del vector de inodos y la cantidad actual que existen.
- Esto es así ya que (por falta de tiempo), cada vez que se crea un nuevo
- archivo, se consulta este valor, se lo incrementa y luego se utiliza el
- valor obtenido para utizar la posicion 
-\begin_inset Formula $i-esima$
-\end_inset
-
- del vector de inodos (para el nuevo archivo).
- Se quiere aclarar que esta es una implementación que nos parece muy mala
- y la que se tenía pensado en utilizar una basada en bitmap, en donde el
- bit 
-\begin_inset Formula $i-esimo$
-\end_inset
-
- indicaria si el sector esta libre o no (este mismo algoritmo se utilizó
- para el manejo de espacio en el disco duro y se explica en detalle mas
- adelante).
- 
+ Header simplemente se guardó un magic number y dos números mas para indicar
+ el tamaño máximo del vector de inodos y la cantidad actual de inodos que
+ se tienen guardados.
 \end_layout
 
 \begin_layout Standard
@@ -498,21 +486,53 @@ Un detalle a tener en cuenta es que esta implementación de
 \end_layout
 
 \begin_layout Section
-Problemas y posibles soluciones
+Problemas, posibles soluciones y features a agregar
 \end_layout
 
-\begin_layout Standard
-Uno de los problemas mas importantes que tiene esta implementacion del 
-\begin_inset Formula $SO$
+\begin_layout Itemize
+File System:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Cada vez que se crea un nuevo archivo, el FSHeader es consultado y se incrementa
+ el valor de la cantidad actual de inodos en el disco y se utiliza este
+ nuevo valor para utizar la siguiente posicion del vector de inodos (para
+ el nuevo archivo).
+ Se quiere aclarar que esta es una implementación que nos parece muy mala
+ y se tiene planeado cambiarla por una en la que se utilize un bitmap, en
+ donde el bit 
+\begin_inset Formula $i-esimo$
 \end_inset
 
- es la falta de semaforos y mutexes, especialmente para el momento de reserva
- de memoria para archivos y para la lectura/escritura de archivos! (problema
- de los N lectores y un escritor).
- Queda en la lista de cosas para agregar en futuras actualizaciones del
- SO ya que no pudo ser agregado por falta de tiempo.
+ indicaría si el sector esta libre o no (mismo algoritmo utilizado para
+ el manejo de espacio de archivos en el disco duro).
  
 \end_layout
 
+\begin_layout Itemize
+Queda a implemetar el comando borrar archivo, que esperamos este disponible
+ para la póxima entrega.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Otros
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Uno de los problemas mas importantes que tiene la actual versión del 
+\begin_inset Formula $SO$
+\end_inset
+
+ es la falta de semáforos y mutexs, especialmente para el momento de reserva
+ de memoria y para la lectura/escritura de archivos! (problema de los N
+ lectores y un escritor).
+ Queda en la lista de cosas para agregar en futuras actualizaciones del
+ SO ya que no pudo ser implementad por falta de tiempo.
+\end_layout
+
+\end_deeper
 \end_body
 \end_document

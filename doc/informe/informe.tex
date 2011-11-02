@@ -1,3 +1,7 @@
+% Preview source code
+
+%% LyX 2.0.0 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
 \documentclass[english]{article}
 \usepackage[T1]{fontenc}
 \usepackage[latin9]{inputenc}
@@ -14,11 +18,11 @@ lectura como para escritura). Si bien realizar esto, dificulto bastante
 la lógica del driver, permite tener una logica de programación mas
 simple en las capaz superiores ya que no es necesario leer un sector
 entero para lugego ir hasta el offset deseado y obtener de ahi los
-bytes deseados (ni hablar si se quiere tomar informaciòn que se encuentra
-partida en varios sectores contiguos). Es por eso que el driver utilizado
-permite $"abstraerse"$ de esta división por sectores y poder acceder
-a disco a partir de un sector con cualquier offset y cualquier cantidad
-de bytes que se quiera leer.
+bytes necesarios (ni hablar si se quiere tomar informaciòn que se
+encuentra partida en varios sectores contiguos). Es por eso que el
+driver utilizado permite $"abstraerse"$ de esta división por sectores
+y poder acceder a disco a partir de un sector con cualquier offset
+y cualquier cantidad de bytes que se quiera leer.
 
 Además presenta otros métodos para detección de las propiedades de
 un disco (Si es removible, ATA, soporta DMA y LBA), no se pudo (por
@@ -40,13 +44,14 @@ grabar la mayor cantidad de bytes posibles en cada acceso.
 \section{Disk Cache}
 
 Debido a los problemas de eficiencia mencionados en la seccion anterior,
-se decidió que seria una buena idea el tener una estructura cache,
-que minimize los accesos a discos sin consumir mucha cantidad de moemria. 
+se decidió que seria una buena idea tener una estructura cache, que
+minimize los accesos a discos sin consumir mucha cantidad de memoria
+ni procesamiento. 
 
 La implementación de esta capa es muy sencilla, consiste en un vector
 de $N$ estructuras en la que cada una tiene el contenido de un sector
-entero y campos para indicar si el sector se encuentra sucio (necesita
-ser escrito) y a que sector y disco corresponde.
+entero y campos para indicar si el sector se encuentra sucio (si tiene
+cambios con respecto al disco) y a que sector y disco corresponde.
 
 El algoritmo de reemplazo elejido es el de LRU (es que menos accesos
 tuvo, se reemplaza). 
@@ -64,16 +69,16 @@ fija de $ticks$, todos los sectores sucios serian escritos a disco.
 }
 
 Nuestro File System se divide en dos partes, la primer parte es, el
-file system en si y la segunda es la administracion de la infomacion
-en el disco duro (DiskManager).
+file system en si y la segunda es la administración de la infomacion
+en el disco duro ($DiskManager$).
 
 Para el manejo de archivos en $RAM$ de decidió tomar la misma implementacion
-que usa Linux. Es decir, archivos regulares, directorioes, symbolic
-links, etc son todos de tipo $fs$\_$node$ y lo único que los diferencia
-es su campo $mask$ (en donde se define el tipo). Inicialmente se
-comenzó tratando a cada tipo de archivo como un tipo de estructura
-diferente, pero nos dimos cuenta que se volvía muy compleja la logica
-de parseo de informacion en el disco.
+que usa Linux. Es decir, archivos regulares, directorios, symbolic
+links, etc son todos la misma estructura $fs$\_$node$ y lo único
+que los diferencia es su campo $mask$ (en donde se define el tipo).
+Inicialmente se comenzó tratando a cada tipo de archivo como un tipo
+de estructura diferente, pero nos dimos cuenta que se volvía muy compleja
+la logica de parseo de información en el disco.
 
 
 \subsection{Manejo de disco}
@@ -84,16 +89,16 @@ siempre en cuenta la cantidad de accesos y no tanto la cantidad de
 bytes extras que se pueda llegar a desperdiciar por archivo.
 
 Uno de los primeros problemas que se presentaron al comenzar a trabjar
-en disco, era como averiguar si un determinado sector de memoria estaba
-era o no valido. Frente a esto, en cada Header(mas adelante se hablara
-mejor de estos) se agregó un campo $magic$ que sirve para validacion
-de los campos leidos. En otras palabras, si el magic number coincide
+en disco, era como averiguar si un determinado sector de memoria era
+o no valido. Frente a esto, en cada Header (mas adelante se hablara
+mejor de estos) se agregó un campo $magic$ que sirve para la validacion
+de los campos a leer. En otras palabras, si el magic number coincide
 con el magic number definido en el SO, entonces exite una estructura
-valida almacendada en esa porcion de memoria. \\
+valida almacendada en esa posición de memoria. \\
 
 
 El disco duro para este file system fue dividido basicamente en cuatro
-sectores:
+partes:
 \begin{enumerate}
 \item File System header
 \item Memory bitmap
@@ -107,17 +112,9 @@ sectores:
 \end{figure}
 
 
-Para el F.S. Header simplemente se guardo un magic number y dos numeros
-mas para indicar el tamaño maximo del vector de inodos y la cantidad
-actual que existen. Esto es así ya que (por falta de tiempo), cada
-vez que se crea un nuevo archivo, se consulta este valor, se lo incrementa
-y luego se utiliza el valor obtenido para utizar la posicion $i-esima$
-del vector de inodos (para el nuevo archivo). Se quiere aclarar que
-esta es una implementación que nos parece muy mala y la que se tenía
-pensado en utilizar una basada en bitmap, en donde el bit $i-esimo$
-indicaria si el sector esta libre o no (este mismo algoritmo se utilizó
-para el manejo de espacio en el disco duro y se explica en detalle
-mas adelante). 
+Para el F.S. Header simplemente se guardó un magic number y dos números
+mas para indicar el tamaño máximo del vector de inodos y la cantidad
+actual de inodos que se tienen guardados.
 
 Cuando el SO se inicializa, intenta leer este sector de memoria, si
 el magic number es valido, quiere decir que exite una particion valida
@@ -191,13 +188,32 @@ de disco ($diskCache$).
 \pagebreak{}
 
 
-\section{Problemas y posibles soluciones}
+\section{Problemas, posibles soluciones y features a agregar}
+\begin{itemize}
+\item File System:
 
-Uno de los problemas mas importantes que tiene esta implementacion
-del $SO$ es la falta de semaforos y mutexes, especialmente para el
-momento de reserva de memoria para archivos y para la lectura/escritura
-de archivos! (problema de los N lectores y un escritor). Queda en
-la lista de cosas para agregar en futuras actualizaciones del SO ya
-que no pudo ser agregado por falta de tiempo. 
+\begin{itemize}
+\item Cada vez que se crea un nuevo archivo, el FSHeader es consultado y
+se incrementa el valor de la cantidad actual de inodos en el disco
+y se utiliza este nuevo valor para utizar la siguiente posicion del
+vector de inodos (para el nuevo archivo). Se quiere aclarar que esta
+es una implementación que nos parece muy mala y se tiene planeado
+cambiarla por una en la que se utilize un bitmap, en donde el bit
+$i-esimo$ indicaría si el sector esta libre o no (mismo algoritmo
+utilizado para el manejo de espacio de archivos en el disco duro). 
+\item Queda a implemetar el comando borrar archivo, que esperamos este disponible
+para la póxima entrega.
+\end{itemize}
+\item Otros
+
+\begin{itemize}
+\item Uno de los problemas mas importantes que tiene la actual versión del
+$SO$ es la falta de semáforos y mutexs, especialmente para el momento
+de reserva de memoria y para la lectura/escritura de archivos! (problema
+de los N lectores y un escritor). Queda en la lista de cosas para
+agregar en futuras actualizaciones del SO ya que no pudo ser implementad
+por falta de tiempo.\end{itemize}
+\end{itemize}
+
 \end{document}
 
