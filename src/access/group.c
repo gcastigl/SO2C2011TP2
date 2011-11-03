@@ -1,4 +1,5 @@
 #include <access/group.h>
+#include <access/permission.h>
 
 PRIVATE group_t groups[GROUP_MAX];
 
@@ -229,7 +230,26 @@ PUBLIC boolean do_groupadd(char *groupName, char *password) {
 }
 
 PUBLIC boolean do_groupdel(char *groupName) {
-	return group_del(group_find(groupName));
+
+
+    int gid = group_find(groupName);
+        if (gid == NO_GROUP) {
+            printf("No group exists with %s groupname.\n", groupName);
+            errno = INVALID_INPUT;
+            return false;
+        }
+        if (session_getEgid() == gid) {
+            printf("You can't delete your own group.\n");
+            errno = INVALID_INPUT;
+            return false;
+        }
+        if (permission_group_isOwner(gid)) {
+            return group_del(gid);
+        } else {
+            printf("Access denied.\n");
+            errno = EACCES;
+            return false;
+        }
 }
 
 PUBLIC char *group_getName(int gid) {

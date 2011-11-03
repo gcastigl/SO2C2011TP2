@@ -1,4 +1,5 @@
 #include <access/user.h>
+#include <access/permission.h>
 
 PRIVATE user_t users[USER_MAX];
 PRIVATE fs_node_t *homeInode = NULL;
@@ -332,7 +333,25 @@ PUBLIC boolean do_useradd(char *userName, char *password) {
 }
 
 PUBLIC boolean do_userdel(char *userName) {
-    return user_del(user_find(userName));
+    int uid = user_find(userName);
+    if (uid == NO_USER) {
+        printf("No user exists with %s username.\n", userName);
+        errno = INVALID_INPUT;
+        return false;
+    }
+    user_t *user = user_get(uid);
+    if (session_getEuid() == uid) {
+        printf("You can't delete your own user.\n");
+        errno = INVALID_INPUT;
+        return false;
+    }
+    if (permission_user_isOwner(uid) || permission_group_isOwner(user->gid)) {
+        return user_del(uid);
+    } else {
+        printf("Access denied.\n");
+        errno = EACCES;
+        return false;
+    }
 }
 
 PUBLIC char *user_getName(int uid) {
