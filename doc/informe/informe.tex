@@ -223,6 +223,70 @@ el driver de disco ($diskCache$).
 
 \pagebreak{}
 
+\section{Permisos}
+
+\section{Alta-Baja-Modificación de Usuarios.}
+El sistema posee de un array de usuarios que es cargado en el startup llamando a la función $user_init()$, el mismo se mantiene en memoria a lo largo de toda la ejecución del sistema. Inspirados en la implementación de Linux, los usuarios son parseados de un archivo localizado en /etc/passwd que contiene en cada línea un string de estas características:
+$$uid:gid:username:password$$
+Cada vez que se realiza un cambio en el array de usuarios, se llama a la función de flush para actualizar el archivo correspondiente con los cambios.
+Las siguientes son las system-calls que se pueden utilizar para el manejo de usuarios:
+\begin{itemize}
+
+\item $userlist$: lista los usuarios del sistema.
+\subitem Cualquier usuario puede utilizar este comando.
+
+\item $useradd USERNAME PASSWORD$: agrega un nuevo usuario al sistema.
+\subitem Cualquier usuario puede utilizar este comando.
+\subitem El usuario se crea dentro del grupo del usuario logueado.
+
+\item $userdel USERNAME$: borra el usuario del sistema.
+\subitem Sólo root o el dueño del grupo al que pertenecen puede borrar usuarios.
+\subitem No se puede borrar el usuario logueado.
+
+\end{itemize}
+ 
+\subsection{Alta-Baja-Modificación de Grupos.}
+Análogo al sistema de usuarios con la salvedad de que el archivo de persistencia es /etc/group y los strings tienen la siguiente forma:
+$$gid:groupname:password$$
+Las siguientes son las system-calls que se pueden utilizar para el manejo de grupos:
+\begin{itemize}
+
+\item $grouplist$: lista los grupos del sistema.
+\subitem Cualquier usuario puede utilizar este comando.
+
+\item $groupadd GROUPNAME PASSWORD$: agrega un nuevo grupo al sistema.
+\subitem Cualquier usuario puede utilizar este comando.
+\subitem El grupo se crea con gid libre.
+
+\item $groupdel GROUPNAME$: borra el grupo del sistema.
+\subitem Sólo root o el dueño puede borrar un grupo.
+\subitem No se puede borrar el grupo del usuario logueado.
+
+\end{itemize}
+
+ 
+\subsection{Access}
+Una vez que se posee en memoria una base de datos de usuarios y grupos, junto con los datos del usuario que está logueado en la sesión se pueden realizar chequeos de acceso.
+
+\subsection {Permisos de File-System}
+Los permisos sobre el filesystem se chequean de manera similar a la que hace linux. Cada archivo tiene el uid de su dueño y el gid del grupo al cual pertenecen.
+Cuando se crea un archivo hereda el uid del usuario logueado y su grupo. En caso de que no exista un usuario logueado (por ejemplo cuando se inicia el sistema) se supone el sistema está en “modo kernel” y se crea todo con uid y gid de root. Con respecto a los permisos se crean con una máscara por defecto de 0x644 que explicaremos luego con más detalle.
+Los comandos y system-calls que realizan operaciones sobre archivos poseen llamadas a los métodos de permission.h para verificar que tenga acceso a lo que desea realizar. Por ejemplo al hacer un LS sobre un directorio se chequea que el usuario actual tenga permiso de LECTURA en el mismo. El permiso de lectura puede ser otorgado o no dependiendo de qué permisos posee el directorio.
+Si el usuario no es dueño ni parte del grupo al cual pertenece el archivo se chequean los 3 bits menos significativos 0-1-2 (0x007) de la máscara de permisos que posee el mismo, si el usuario, en cambio, es parte del grupo, los bits 3-4-5 (0x070). Si el usuario es el dueño, los bits 6-7-8 (0x700).
+Si el usuario logueado es root, no se chequea ningún permiso, se otorga acceso directamente (esto sirve para por ejemplo modificar archivos que poseen permisos 0x444 o 0x000).
+Las siguientes system-calls sólo pueden ser llamadas por el dueño del archivo o root para modificar los permisos del mismo.
+\begin{itemize}
+\item $chmod OCTAL FILE$: agrega un nuevo grupo al sistema.
+\subitem El OCTAL es igual que en Linux ej: 764 = $-rwxrw-r--$
+\item $chown USERNAME FILE$: cambia el dueño de un archivo.
+\item $chgrp GROUPNAME FILE$: cambia el grupo al que pertenece un archivo.
+\end{itemize}
+ 
+\subsection {Permisos en Procesos}
+Cuando se crea un proceso, sucede lo mismo que sucede con los archivos, hereda el uid del usuario logueado o root en caso de que no haya uno (“kernel mode”).
+Para matar (utilizando el comando kill) un proceso es necesario ser el dueño del mismo o root, en caso contrario se muestra un mensaje de Access denied.
+ 
+\pagebreak{}
 
 \section{Problemas, posibles soluciones y features a agregar}
 \begin{itemize}
@@ -248,7 +312,14 @@ $SO$ es la falta de semáforos y mutexs, especialmente para el momento
 de reserva de memoria y para la lectura/escritura de archivos! (problema
 de los N lectores y un escritor). Queda en la lista de cosas para
 agregar en futuras actualizaciones del SO ya que no pudo ser implementad
-por falta de tiempo.\end{itemize}
+por falta de tiempo.
+\end{itemize}
+
+\item Usuarios y Grupos
+\begin{itemize}
+\item Debido a problemas de último momento, la persistencia de grupos y usuarios se tuvo que inhabilitar. Es decir no se están utilizando los archivos passwd y group, sino que se están levantando una serie de usuarios por defecto que provienen de strings hardcodeadas que simulan la lectura de los mencionados archivos. No obstante el sistema de permisos funciona, correctamente. En caso de que se listen archivos donde no existen los usuarios o grupos al cual pertenecen, en la lista figurara como “unknown” en esos campos.
+\end{itemize}
+
 \end{itemize}
 
 \end{document}
