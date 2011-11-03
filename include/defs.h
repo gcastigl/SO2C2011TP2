@@ -112,6 +112,7 @@ int errno;
 
 #define OK 0
 #define EACCES	(-13)  /* permission denied */
+#define INVALID_INPUT  (-20)
 
 #pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */
 
