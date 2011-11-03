@@ -4,21 +4,59 @@
 %% Do not edit unless you really know what you are doing.
 \documentclass[english]{article}
 \usepackage[T1]{fontenc}
-\usepackage[latin9]{inputenc}
+%\usepackage[latin9]{inputenc}
+\usepackage[utf8]{inputenc}
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{babel}
 \begin{document}
+
+\section{Procesos}
+
+Para implementar procesos inicialmente se decidió utilizar como base el código proveído por la cátedra. Luego de bastante tiempo sin llegar a nada, se decidió comenzar desde cero.
+
+Se realizó un diagrama del stack necesario para un proceso resultando en el siguiente:
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=5cm,height=2.5cm,keepaspectratio]{stack}
+
+\caption{Stack frame}
+\end{center}
+\end{figure}
+
+Una vez realizado ése diagrama, se procedió a armar manualmente el stack para correr el sistema operativo, haciendo que la función kmain sea solo una función dummy que llamase a una función de assembler para que crease dicho stack frame. Una vez construido éste, se cambió el ESP con otra función de assembler y el sistema siguió ejecutando en la función indicada por el stack frame.
+
+Luego de entender como funciona el stack para ejecutar una función determinada, pasandole ciertos argumentos y haciendo que en su retorno, vaya a otra función, se procedió a crear una función que agregase éstos "procesos" a una lista para que luego puedan ser procesados por el scheduler.
+
+\subsection{Scheduler}
+Se decidió implementar un scheduler con prioridad, y un scheduler de tipo Round Robin.
+Éste inicialmente se disparaba cada dos ticks, pero eso hacía el sistema muy lento.
+
+\subsubsection{Scheduler con prioridad}
+Al usar un scheduler con prioridad, los procesos pasan a ser más o menos importantes dependiendo de que prioridad se le asignó en su creación. Los procesos lanzados por el usuario mediante comandos en la consola son creados con una determinada prioridad. Hay un grupo de procesos que corre con prioridades especiales, uno de ellos el el proceso \emph{idle}.
+
+Éste corre con prioridad muy baja, dado que es el que se ejecuta cuando no hay ningún otro proceso listo para ejecutarse. Otro grupo de procesos que corre con proridad especial son las shells.
+
+Las shells no son bloqueantes, por lo que constantemente están polleando el tecleado para ver si hay nuevos caracteres que mostrar. Ésto hace que sea necesario hacer que las shells tengan distintas prioridades dependiendo de si están activas o no. La shell activa pasa a tener más de un 80\% del uso del procesador, y las restantes menos de un 5\%.
+
+\subsection{Estados}
+Cada proceso puede tener alguno de los siguientes estados:
+\begin{itemize}
+\item READY: El proceso está listo para ejecutarse
+\item RUNNING: El proceso está siendo ejecutado en ese momento
+\item CHILD\_WAIT: El proceso está bloqueado esperando que algún hijo finalice. Esto sucede cuando, por ejemplo, una consola ejecuta un proceso en \emph{foreground}.
+\end{itemize}
 
 \section{Driver disco ATA}
 
 La implementación de driver $ATA$ que se implementó en este $SO$
 permite acceso a un sector con offset y tamaño arbitrario (tanto para
 lectura como para escritura). Si bien realizar esto, dificulto bastante
-la lógica del driver, permite tener una logica de programación mas
-simple en las capaz superiores ya que no es necesario leer un sector
-entero para lugego ir hasta el offset deseado y obtener de ahi los
-bytes necesarios (ni hablar si se quiere tomar informaciòn que se
+la lógica del driver, permite tener una lógica de programación mas
+simple en las capas superiores ya que no es necesario leer un sector
+entero para luego ir hasta el offset deseado y obtener de ahí los
+bytes necesarios (ni hablar si se quiere tomar información que se
 encuentra partida en varios sectores contiguos). Es por eso que el
 driver utilizado permite $"abstraerse"$ de esta división por sectores
 y poder acceder a disco a partir de un sector con cualquier offset
@@ -43,7 +81,7 @@ grabar la mayor cantidad de bytes posibles en cada acceso.
 
 \section{Disk Cache}
 
-Debido a los problemas de eficiencia mencionados en la seccion anterior,
+Debido a los problemas de eficiencia mencionados en la sección anterior,
 se decidió que seria una buena idea tener una estructura cache, que
 minimize los accesos a discos sin consumir mucha cantidad de memoria
 ni procesamiento. 
@@ -53,12 +91,12 @@ de $N$ estructuras en la que cada una tiene el contenido de un sector
 entero y campos para indicar si el sector se encuentra sucio (si tiene
 cambios con respecto al disco) y a que sector y disco corresponde.
 
-El algoritmo de reemplazo elejido es el de LRU (es que menos accesos
+El algoritmo de reemplazo elegido es el de LRU (es que menos accesos
 tuvo, se reemplaza). 
 
 Un problema al implementar esta capa era que hacer con los sectores
 sucios ya que como se encuentran en RAM, hasta no ser guardados, la
-informacion es propensa a perderse (ya sea por fallas del sistema,
+información es propensa a perderse (ya sea por fallas del sistema,
 corte de luz, etc). Frente a esto se decidió que cada una cantidad
 fija de $ticks$, todos los sectores sucios serian escritos a disco. 
 
@@ -69,10 +107,10 @@ fija de $ticks$, todos los sectores sucios serian escritos a disco.
 }
 
 Nuestro File System se divide en dos partes, la primer parte es, el
-file system en si y la segunda es la administración de la infomacion
+file system en si y la segunda es la administración de la información
 en el disco duro ($DiskManager$).
 
-Para el manejo de archivos en $RAM$ de decidió tomar la misma implementacion
+Para el manejo de archivos en $RAM$ de decidió tomar la misma implementación
 que usa Linux. Es decir, archivos regulares, directorios, symbolic
 links, etc son todos la misma estructura $fs$\_$node$ y lo único
 que los diferencia es su campo $mask$ (en donde se define el tipo).
@@ -88,16 +126,16 @@ acceso a memoria, se diseñó el almacenamiento de la información teniendo
 siempre en cuenta la cantidad de accesos y no tanto la cantidad de
 bytes extras que se pueda llegar a desperdiciar por archivo.
 
-Uno de los primeros problemas que se presentaron al comenzar a trabjar
+Uno de los primeros problemas que se presentaron al comenzar a trabajar
 en disco, era como averiguar si un determinado sector de memoria era
 o no valido. Frente a esto, en cada Header (mas adelante se hablara
-mejor de estos) se agregó un campo $magic$ que sirve para la validacion
+mejor de estos) se agregó un campo $magic$ que sirve para la validación
 de los campos a leer. En otras palabras, si el magic number coincide
-con el magic number definido en el SO, entonces exite una estructura
-valida almacendada en esa posición de memoria. \\
+con el magic number definido en el SO, entonces existe una estructura
+valida almacenada en esa posición de memoria. \\
 
 
-El disco duro para este file system fue dividido basicamente en cuatro
+El disco duro para este file system fue dividido básicamente en cuatro
 partes:
 \begin{enumerate}
 \item File System header
@@ -105,10 +143,13 @@ partes:
 \item Vector de iNodos
 \item Archivos
 \end{enumerate}
+
 \begin{figure}[H]
+\begin{center}
 \includegraphics[width=10cm,height=5cm,keepaspectratio]{Imagen_disco}
 
-\caption{Imgen disco duro}
+\caption{Imágen disco duro}
+\end{center}
 \end{figure}
 
 
@@ -116,23 +157,23 @@ Para el F.S. Header simplemente se guardó un magic number y dos números
 mas para indicar el tamaño máximo del vector de inodos y la cantidad
 actual de inodos que se tienen guardados.
 
-Cuando el SO se inicializa, intenta leer este sector de memoria, si
-el magic number es valido, quiere decir que exite una particion valida
+Cuando arranca el sistema operativo, intenta leer este sector de memoria, si
+el magic number es valido, quiere decir que existe una partición valida
 y entonces se intenta cargarla.
 
 En cuanto al vector de iNodos, se trata de un vector de $N$ estructuras
 de tamaño fijo (muy importante!) ya que permite el acceso al elemento
-$i$ mediante una simple operacion matematica. En una de estas estructiras
-del vector, se tiene almacenda una estructura de tipo $DiskPage$
+$i$ mediante una simple operación matemática. En una de estas estructuras
+del vector, se tiene almacenada una estructura de tipo $DiskPage$
 (parte tres del disco), para indicar en que bloque del disco puede
-la informacion ser encontrada y dos enteros, para indicar la cantidad
+la información ser encontrada y dos enteros, para indicar la cantidad
 de bloques que esta página tiene reservada para su uso y otro para
-la cantiad de bytes utlizados por el contenido del usuario.
+la cantidad de bytes utilizados por el contenido del usuario.
 
 La parte del disco dedicada a archivos se encuentra dividida en bloques
-de tamaño fiijo definido por el SO. Lo mas importante para destacar
+de tamaño fijo definido por el SO. Lo mas importante para destacar
 en esta parte es la forma que se tiene para el almacenamiento de cada
-archivo. El formato elejido para el almacenamiento de la informacion
+archivo. El formato elegido para el almacenamiento de la información
 es muy parecido al de una $LinkedList$. Todo archivo en disco consiste
 de:
 \begin{enumerate}
@@ -140,12 +181,13 @@ de:
 \item File Header
 \item Su contenido
 \end{enumerate}
+
 \begin{figure}[H]
+\begin{center}
 \includegraphics[width=10cm,height=7cm,keepaspectratio]{Archivo}
 
-\caption{Formato de almacentamiento de un archivo}
-
-
+\caption{Formato de almacenamiento de un archivo}
+\end{center}
 \end{figure}
 
 
@@ -154,29 +196,29 @@ y es la que posee el nombre, tipo, permisos y demás atributos que
 no son parte del contenido en si.\\
 
 
-Para crear un nuevo archivo, debe reservarse una determianda cantidad
-de bloques. El primer algorimto que se utilizó para este trabajo consisitia
+Para crear un nuevo archivo, debe reservarse una determinada cantidad
+de bloques. El primer algoritmo que se utilizó para este trabajo consistía
 en ir leyendo cada bloque del disco desde el principio y utilizar
-apartir de ahi los que necesito y esten diponibles. Inicialmente parecia
+a partir de ahi los que necesito y esten disponibles. Inicialmente parecia
 funcionar bien (ya que no se tenias mas de 2 o 3 carpetas creadas),
 pero, a medida que se empezó a avanzar con el $SO$ y se requeria
-de mayor catidad de archivos y carpetas, se comenzaba a ver lo terriblemente
+de mayor cantidad de archivos y carpetas, se comenzaba a ver lo terriblemente
 lento que podia volverse este algoritmo. Es en esta parte donde entra
-en uso el sector de $memory$ $bitmap$, el cual se ecuentra complentado
+en uso el sector de $memory$ $bitmap$, el cual se encuentra completado
 todo el sector 0 del disco duro (al lado del FS header). Cada bit
-de esta porcion de memoria, indica si el bloque $i$ de la parte de
+de esta porción de memoria, indica si el bloque $i$ de la parte de
 archivos se encuentra ocupada o libre. De esta manera, reservar bloques
-siguie siendo de orden n pero con la importantisima diferencia que
+sigue siendo de orden n pero con la importantísima diferencia que
 solo se escribe cada sector a utilizar y no se lee mas que uno solo
-(para escribir el header del sector recien reservado).
+(para escribir el header del sector recién reservado).
 
 
 \subsection{Manejo en RAM}
 
 El manejo de inodos es ram es bastante sencillo, el $FS$ mantiene
 un vector con los últimos inodos consultados y ofrece la interfaz
-para el SO para la modificiacion y consulta de estos ulimos en disco.
-Cada vez que un nuevo inodo es consultado, se toma la siguiente posicion
+para el SO para la modificación y consulta de estos últimos en disco.
+Cada vez que un nuevo inodo es consultado, se toma la siguiente posición
 de vector y se carga allí la información de disco de este inodo para
 luego retornarla.
 
@@ -195,14 +237,14 @@ de disco ($diskCache$).
 \begin{itemize}
 \item Cada vez que se crea un nuevo archivo, el FSHeader es consultado y
 se incrementa el valor de la cantidad actual de inodos en el disco
-y se utiliza este nuevo valor para utizar la siguiente posicion del
+y se utiliza este nuevo valor para utizar la siguiente posición del
 vector de inodos (para el nuevo archivo). Se quiere aclarar que esta
 es una implementación que nos parece muy mala y se tiene planeado
 cambiarla por una en la que se utilize un bitmap, en donde el bit
 $i-esimo$ indicaría si el sector esta libre o no (mismo algoritmo
 utilizado para el manejo de espacio de archivos en el disco duro). 
-\item Queda a implemetar el comando borrar archivo, que esperamos este disponible
-para la póxima entrega.
+\item Queda a implementar el comando borrar archivo, que esperamos este disponible
+para la próxima entrega.
 \end{itemize}
 \item Otros
 
