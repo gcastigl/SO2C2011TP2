@@ -3,9 +3,46 @@
 %\usepackage[latin9]{inputenc}
 \usepackage[utf8]{inputenc}
 \usepackage{float}
+\usepackage{caratula}
 \usepackage{graphicx}
 \usepackage{babel}
+
+
+% Variables de Titulo
+\universidad{Instituto Tecnológico de Buenos Aires}
+\facultad{Ingeniería Informática}
+\departamento{Sistemas Operativos}
+\materia{Trabajo Práctico 2}
+\titulo{Multitasker}
+\integrante{Castiglione, Gonzalo}{Legajo: 49138}
+\integrante{Gomez, Horacio}{Legajo: 50825}
+\integrante{Orsay, Juan Pablo}{Legajo: 49373}
+\fecha{Segundo cuatrimestre de 2011}
+\footspace{3cm}
+
+% Otras Variables
+\newtheorem{hip}{Hipótesis}
+
+% Headers & Footers
+\usepackage{fancyhdr}
+\setlength{\headheight}{15pt} 
+\pagestyle{fancy}
+
+\fancyhead{} % Clear all header fields
+\fancyhead[RE,LO]{Trabajo Práctico 2 - 2do Cuatrimestre 2011}
+\fancyhead[LE,RO]{\includegraphics[height=13pt]{logop.jpg}}
+\fancyfoot{} % Clear all footer fields
+\fancyfoot[LE,RO]{\thepage\ de \pageref{LastPage}}
+
 \begin{document}
+
+\maketitle
+\newpage
+
+% Generar el indice
+\setcounter{page}{1} %Resetea el contador para que no cuente la hoja del titulo.
+\tableofcontents
+\newpage
 
 \section{Procesos}
 
@@ -226,7 +263,7 @@ el driver de disco ($diskCache$).
 
 \section{Permisos}
 
-\section{Alta-Baja-Modificación de Usuarios.}
+\subsection{Alta-Baja-Modificación de Usuarios.}
 El sistema posee de un array de usuarios que es cargado en el startup llamando a la función $user_init()$, el mismo se mantiene en memoria a lo largo de toda la ejecución del sistema. Inspirados en la implementación de Linux, los usuarios son parseados de un archivo localizado en /etc/passwd que contiene en cada línea un string de estas características:
 $$uid:gid:username:password$$
 Cada vez que se realiza un cambio en el array de usuarios, se llama a la función de flush para actualizar el archivo correspondiente con los cambios.
@@ -266,7 +303,7 @@ Las siguientes son las system-calls que se pueden utilizar para el manejo de gru
 \end{itemize}
 
  
-\subsection{Access}
+\subsection{Accesos}
 Una vez que se posee en memoria una base de datos de usuarios y grupos, junto con los datos del usuario que está logueado en la sesión se pueden realizar chequeos de acceso.
 
 \subsection {Permisos de File-System}
