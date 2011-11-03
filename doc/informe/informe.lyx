@@ -68,17 +68,17 @@ La implementación de driver
 \begin_inset Formula $ATA$
 \end_inset
 
- que se implementó en este 
+ que se utilizó en este 
 \begin_inset Formula $SO$
 \end_inset
 
  permite acceso a un sector con offset y tamaño arbitrario (tanto para lectura
  como para escritura).
- Si bien realizar esto, dificulto bastante la lógica del driver, permite
- tener una logica de programación mas simple en las capaz superiores ya
- que no es necesario leer un sector entero para lugego ir hasta el offset
- deseado y obtener de ahi los bytes necesarios (ni hablar si se quiere tomar
- informaciòn que se encuentra partida en varios sectores contiguos).
+ Si bien realizar esto, dificultó la programación del driver, permite tener
+ una lógica de programación mas simple en las capas superiores ya que no
+ es necesario leer un sector entero para lugego ir hasta el offset deseado
+ y obtener de ahi los bytes necesarios (ni hablar si se quiere tomar información
+ que se encuentra partida en varios sectores contiguos).
  Es por eso que el driver utilizado permite 
 \begin_inset Formula $"abstraerse"$
 \end_inset
@@ -88,23 +88,24 @@ La implementación de driver
 \end_layout
 
 \begin_layout Standard
-Además presenta otros métodos para detección de las propiedades de un disco
- (Si es removible, ATA, soporta DMA y LBA), no se pudo (por falta de tiempo)
- crear un comando para listar las cualidades de los discos conectados desde
- las consolas, pero se espera poder mostrarlos para la próxima entrega.
+La implementacion utilizada además presenta métodos para detección de las
+ propiedades de un disco (Si es removible, ATA, soporta DMA y LBA), no se
+ pudo (por falta de tiempo) crear un comando para listar las cualidades
+ de los discos conectados desde las consolas, pero se espera poder mostrarlos
+ para la próxima entrega.
 \end_layout
 
 \begin_layout Standard
 Un detalle a mencionar es que la escritura al disco con un offset es muy
- cara ya que ATA solo permite escribir un sector entero, por lo que para
- escribir un pedazo de uno de estos, primero hay que leerlo entero en un
+ cara ya que ATA solo permite escribir de un sector entero, por lo que para
+ escribir una prte de uno de estos, primero hay que leerlo entero en un
  buffer auxiliar, luego pisar los lugares a cambiar y luego guardarlos,
  lo que seria equivalente a dos accesos a disco solo para grabar una 
 \begin_inset Formula $x$
 \end_inset
 
  cantidad de bytes.
- Por lo que siempre se intenta grabar la mayor cantidad de bytes posibles
+ Por lo que siempre se intentará grabar la mayor cantidad de bytes posibles
  en cada acceso.
 \end_layout
 
@@ -120,7 +121,7 @@ Disk Cache
 \end_layout
 
 \begin_layout Standard
-Debido a los problemas de eficiencia mencionados en la seccion anterior,
+Debido a los problemas de eficiencia mencionados en la sección anterior,
  se decidió que seria una buena idea tener una estructura cache, que minimize
  los accesos a discos sin consumir mucha cantidad de memoria ni procesamiento.
  
@@ -145,7 +146,7 @@ El algoritmo de reemplazo elejido es el de LRU (es que menos accesos tuvo,
 
 \begin_layout Standard
 Un problema al implementar esta capa era que hacer con los sectores sucios
- ya que como se encuentran en RAM, hasta no ser guardados, la informacion
+ ya que como se encuentran en RAM, hasta no ser guardados, la información
  es propensa a perderse (ya sea por fallas del sistema, corte de luz, etc).
  Frente a esto se decidió que cada una cantidad fija de 
 \begin_inset Formula $ticks$
@@ -164,15 +165,11 @@ Un problema al implementar esta capa era que hacer con los sectores sucios
 
 \begin_layout Section
 File System
-\begin_inset Newline newline
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
 Nuestro File System se divide en dos partes, la primer parte es, el file
- system en si y la segunda es la administración de la infomacion en el disco
+ system en si y la segunda es la administración de la infomación en el disco
  duro (
 \begin_inset Formula $DiskManager$
 \end_inset
@@ -181,11 +178,8 @@ Nuestro File System se divide en dos partes, la primer parte es, el file
 \end_layout
 
 \begin_layout Standard
-Para el manejo de archivos en 
-\begin_inset Formula $RAM$
-\end_inset
-
- de decidió tomar la misma implementacion que usa Linux.
+Para el manejo de archivos se decidió tomar la misma implementacion que
+ usa Linux.
  Es decir, archivos regulares, directorios, symbolic links, etc son todos
  la misma estructura 
 \begin_inset Formula $fs$
@@ -201,7 +195,7 @@ _
 
  (en donde se define el tipo).
  Inicialmente se comenzó tratando a cada tipo de archivo como un tipo de
- estructura diferente, pero nos dimos cuenta que se volvía muy compleja
+ estructura diferente, pero terminamos conluyendo que se volvía muy compleja
  la logica de parseo de información en el disco.
 \end_layout
 
@@ -211,9 +205,9 @@ Manejo de disco
 
 \begin_layout Standard
 Debido a la notable lentitud que posee el acceso a disco frente el acceso
- a memoria, se diseñó el almacenamiento de la información teniendo siempre
- en cuenta la cantidad de accesos y no tanto la cantidad de bytes extras
- que se pueda llegar a desperdiciar por archivo.
+ a memoria, se diseñó el almacenamiento de la información dando mas importancia
+ siempre a la cantidad de accesos a disco por sobre cantidad de bytes desperdici
+ados por archivo.
 \end_layout
 
 \begin_layout Standard
@@ -226,9 +220,9 @@ Uno de los primeros problemas que se presentaron al comenzar a trabjar en
 \end_inset
 
  que sirve para la validacion de los campos a leer.
- En otras palabras, si el magic number coincide con el magic number definido
- en el SO, entonces exite una estructura valida almacendada en esa posición
- de memoria.
+ En otras palabras, si el magic number del header leido coincide con el
+ magic number definido en el SO, entonces exite una estructura valida almacendad
+a en esa posición de memoria.
  
 \begin_inset Newline newline
 \end_inset
@@ -245,7 +239,7 @@ File System header
 \end_layout
 
 \begin_layout Enumerate
-Memory bitmap
+Memory bitmap (bloques libres y ocupados en el disco)
 \end_layout
 
 \begin_layout Enumerate
@@ -302,7 +296,7 @@ Para el F.S.
 
 \begin_layout Standard
 Cuando el SO se inicializa, intenta leer este sector de memoria, si el magic
- number es valido, quiere decir que exite una particion valida y entonces
+ number es valido, quiere decir que exite una particón valida y entonces
  se intenta cargarla.
 \end_layout
 
@@ -317,24 +311,23 @@ En cuanto al vector de iNodos, se trata de un vector de
 \end_inset
 
  mediante una simple operacion matematica.
- En una de estas estructiras del vector, se tiene almacenda una estructura
+ En cada una de estas estructiras del vector, se tiene almacenda una estructura
  de tipo 
 \begin_inset Formula $DiskPage$
 \end_inset
 
- (parte tres del disco), para indicar en que bloque del disco puede la informaci
-on ser encontrada y dos enteros, para indicar la cantidad de bloques que
- esta página tiene reservada para su uso y otro para la cantiad de bytes
- utlizados por el contenido del usuario.
+, para indicar en que bloque del disco puede la informacion ser encontrada
+ y dos enteros: uno para indicar la cantidad de bloques que esta página
+ tiene reservada para su uso y otro para la cantiad de bytes utlizados por
+ el contenido del usuario.
 \end_layout
 
 \begin_layout Standard
 La parte del disco dedicada a archivos se encuentra dividida en bloques
  de tamaño fiijo definido por el SO.
  Lo mas importante para destacar en esta parte es la forma que se tiene
- para el almacenamiento de cada archivo.
- El formato elejido para el almacenamiento de la informacion es muy parecido
- al de una 
+ para el almacenamiento de cada archivo, el formato elejido para el almacenamien
+to de la información es muy parecido al de una 
 \begin_inset Formula $LinkedList$
 \end_inset
 
@@ -413,19 +406,17 @@ La estructura
 \end_layout
 
 \begin_layout Standard
-Para crear un nuevo archivo, debe reservarse una determianda cantidad de
- bloques.
- El primer algorimto que se utilizó para este trabajo consisitia en ir leyendo
- cada bloque del disco desde el principio y utilizar apartir de ahi los
- que necesito y esten diponibles.
- Inicialmente parecia funcionar bien (ya que no se tenias mas de 2 o 3 carpetas
- creadas), pero, a medida que se empezó a avanzar con el 
+El primer algorimto que se utilizó para reservar memoria para un archivo
+ consisitia en ir leyendo cada bloque del disco desde el principio y utilizar
+ apartir de ahi los que necesiten y esten diponibles.
+ Inicialmente parecia funcionar bien (ya que no se tenía mas de 2 o 3 archivos
+ creados), pero, a medida que se empezó a avanzar con el 
 \begin_inset Formula $SO$
 \end_inset
 
- y se requeria de mayor catidad de archivos y carpetas, se comenzaba a ver
- lo terriblemente lento que podia volverse este algoritmo.
- Es en esta parte donde entra en uso el sector de 
+ y se requeria de mayor catidad de archivos y carpetas, nos dimos cuenta
+ de lo terriblemente lento que se volvía este algoritmo.
+ Luego se lo reemplazo por uno que utiliza un 
 \begin_inset Formula $memory$
 \end_inset
 
@@ -433,16 +424,20 @@ Para crear un nuevo archivo, debe reservarse una determianda cantidad de
 \begin_inset Formula $bitmap$
 \end_inset
 
-, el cual se ecuentra complentado todo el sector 0 del disco duro (al lado
- del FS header).
- Cada bit de esta porcion de memoria, indica si el bloque 
+, el cual se encuentra junto al FS header completando todo el primer sector
+ del disco .
+ Cada bit de mapa, indica si el bloque 
 \begin_inset Formula $i$
 \end_inset
 
  de la parte de archivos se encuentra ocupada o libre.
- De esta manera, reservar bloques siguie siendo de orden n pero con la important
-isima diferencia que solo se escribe cada sector a utilizar y no se lee
- mas que uno solo (para escribir el header del sector recien reservado).
+ De esta manera, reservar bloques sigue siendo
+\begin_inset Formula $o(n)$
+\end_inset
+
+ pero con la importantisima diferencia que solo se escribe cada sector a
+ utilizar y no se lee solamente uno solo (para escribir el header del sector
+ recien reservado) contra todos del anterior algoritmo.
 \end_layout
 
 \begin_layout Subsection
@@ -451,23 +446,23 @@ Manejo en RAM
 
 \begin_layout Standard
 El manejo de inodos es ram es bastante sencillo, el 
-\begin_inset Formula $FS$
+\begin_inset Formula $F.S.$
 \end_inset
 
  mantiene un vector con los últimos inodos consultados y ofrece la interfaz
- para el SO para la modificiacion y consulta de estos ulimos en disco.
+ para el SO para la modificiacion y consulta de estos úlimos en disco.
  Cada vez que un nuevo inodo es consultado, se toma la siguiente posicion
  de vector y se carga allí la información de disco de este inodo para luego
  retornarla.
 \end_layout
 
 \begin_layout Standard
-Un detalle a tener en cuenta es que esta implementación de 
-\begin_inset Formula $FS$
+Un detalle a tener en sobre esta implementación de 
+\begin_inset Formula $F.S.$
 \end_inset
 
- no guarda ningún contenido de archivos (cache), ya que consideramos que
- eso debía que ser trabajo de una entre el 
+, es que no guarda ningún contenido de archivos (no cachea), ya que consideramos
+ que eso debe ser trabajo de una capa map entre el 
 \begin_inset Formula $diskManager$
 \end_inset
 

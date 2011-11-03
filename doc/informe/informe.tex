@@ -1,7 +1,3 @@
-% Preview source code
-
-%% LyX 2.0.0 created this file.  For more info, see http://www.lyx.org/.
-%% Do not edit unless you really know what you are doing.
 \documentclass[english]{article}
 \usepackage[T1]{fontenc}
 \usepackage[latin9]{inputenc}
@@ -12,38 +8,38 @@
 
 \section{Driver disco ATA}
 
-La implementación de driver $ATA$ que se implementó en este $SO$
-permite acceso a un sector con offset y tamaño arbitrario (tanto para
-lectura como para escritura). Si bien realizar esto, dificulto bastante
-la lógica del driver, permite tener una logica de programación mas
-simple en las capaz superiores ya que no es necesario leer un sector
-entero para lugego ir hasta el offset deseado y obtener de ahi los
-bytes necesarios (ni hablar si se quiere tomar informaciòn que se
-encuentra partida en varios sectores contiguos). Es por eso que el
-driver utilizado permite $"abstraerse"$ de esta división por sectores
-y poder acceder a disco a partir de un sector con cualquier offset
-y cualquier cantidad de bytes que se quiera leer.
+La implementación de driver $ATA$ que se utilizó en este $SO$ permite
+acceso a un sector con offset y tamaño arbitrario (tanto para lectura
+como para escritura). Si bien realizar esto, dificultó la programación
+del driver, permite tener una lógica de programación mas simple en
+las capas superiores ya que no es necesario leer un sector entero
+para lugego ir hasta el offset deseado y obtener de ahi los bytes
+necesarios (ni hablar si se quiere tomar información que se encuentra
+partida en varios sectores contiguos). Es por eso que el driver utilizado
+permite $"abstraerse"$ de esta división por sectores y poder acceder
+a disco a partir de un sector con cualquier offset y cualquier cantidad
+de bytes que se quiera leer.
 
-Además presenta otros métodos para detección de las propiedades de
-un disco (Si es removible, ATA, soporta DMA y LBA), no se pudo (por
-falta de tiempo) crear un comando para listar las cualidades de los
-discos conectados desde las consolas, pero se espera poder mostrarlos
-para la próxima entrega.
+La implementacion utilizada además presenta métodos para detección
+de las propiedades de un disco (Si es removible, ATA, soporta DMA
+y LBA), no se pudo (por falta de tiempo) crear un comando para listar
+las cualidades de los discos conectados desde las consolas, pero se
+espera poder mostrarlos para la próxima entrega.
 
 Un detalle a mencionar es que la escritura al disco con un offset
-es muy cara ya que ATA solo permite escribir un sector entero, por
-lo que para escribir un pedazo de uno de estos, primero hay que leerlo
-entero en un buffer auxiliar, luego pisar los lugares a cambiar y
-luego guardarlos, lo que seria equivalente a dos accesos a disco solo
-para grabar una $x$ cantidad de bytes. Por lo que siempre se intenta
-grabar la mayor cantidad de bytes posibles en cada acceso.
+es muy cara ya que ATA solo permite escribir de un sector entero,
+por lo que para escribir una prte de uno de estos, primero hay que
+leerlo entero en un buffer auxiliar, luego pisar los lugares a cambiar
+y luego guardarlos, lo que seria equivalente a dos accesos a disco
+solo para grabar una $x$ cantidad de bytes. Por lo que siempre se
+intentará grabar la mayor cantidad de bytes posibles en cada acceso.
 
 \pagebreak{}
 
 
 \section{Disk Cache}
 
-Debido a los problemas de eficiencia mencionados en la seccion anterior,
+Debido a los problemas de eficiencia mencionados en la sección anterior,
 se decidió que seria una buena idea tener una estructura cache, que
 minimize los accesos a discos sin consumir mucha cantidad de memoria
 ni procesamiento. 
@@ -58,50 +54,49 @@ tuvo, se reemplaza).
 
 Un problema al implementar esta capa era que hacer con los sectores
 sucios ya que como se encuentran en RAM, hasta no ser guardados, la
-informacion es propensa a perderse (ya sea por fallas del sistema,
+información es propensa a perderse (ya sea por fallas del sistema,
 corte de luz, etc). Frente a esto se decidió que cada una cantidad
 fija de $ticks$, todos los sectores sucios serian escritos a disco. 
 
 \pagebreak{}
 
 
-\section{File System\protect \\
-}
+\section{File System}
 
 Nuestro File System se divide en dos partes, la primer parte es, el
-file system en si y la segunda es la administración de la infomacion
+file system en si y la segunda es la administración de la infomación
 en el disco duro ($DiskManager$).
 
-Para el manejo de archivos en $RAM$ de decidió tomar la misma implementacion
+Para el manejo de archivos se decidió tomar la misma implementacion
 que usa Linux. Es decir, archivos regulares, directorios, symbolic
 links, etc son todos la misma estructura $fs$\_$node$ y lo único
 que los diferencia es su campo $mask$ (en donde se define el tipo).
 Inicialmente se comenzó tratando a cada tipo de archivo como un tipo
-de estructura diferente, pero nos dimos cuenta que se volvía muy compleja
-la logica de parseo de información en el disco.
+de estructura diferente, pero terminamos conluyendo que se volvía
+muy compleja la logica de parseo de información en el disco.
 
 
 \subsection{Manejo de disco}
 
 Debido a la notable lentitud que posee el acceso a disco frente el
-acceso a memoria, se diseñó el almacenamiento de la información teniendo
-siempre en cuenta la cantidad de accesos y no tanto la cantidad de
-bytes extras que se pueda llegar a desperdiciar por archivo.
+acceso a memoria, se diseñó el almacenamiento de la información dando
+mas importancia siempre a la cantidad de accesos a disco por sobre
+cantidad de bytes desperdiciados por archivo.
 
 Uno de los primeros problemas que se presentaron al comenzar a trabjar
 en disco, era como averiguar si un determinado sector de memoria era
 o no valido. Frente a esto, en cada Header (mas adelante se hablara
 mejor de estos) se agregó un campo $magic$ que sirve para la validacion
-de los campos a leer. En otras palabras, si el magic number coincide
-con el magic number definido en el SO, entonces exite una estructura
-valida almacendada en esa posición de memoria. \\
+de los campos a leer. En otras palabras, si el magic number del header
+leido coincide con el magic number definido en el SO, entonces exite
+una estructura valida almacendada en esa posición de memoria. \\
 
 
 El disco duro para este file system fue dividido basicamente en cuatro
 partes:
 \begin{enumerate}
 \item File System header
-\item Memory bitmap
+\item Memory bitmap (bloques libres y ocupados en el disco)
 \item Vector de iNodos
 \item Archivos
 \end{enumerate}
@@ -117,22 +112,22 @@ mas para indicar el tamaño máximo del vector de inodos y la cantidad
 actual de inodos que se tienen guardados.
 
 Cuando el SO se inicializa, intenta leer este sector de memoria, si
-el magic number es valido, quiere decir que exite una particion valida
+el magic number es valido, quiere decir que exite una particón valida
 y entonces se intenta cargarla.
 
 En cuanto al vector de iNodos, se trata de un vector de $N$ estructuras
 de tamaño fijo (muy importante!) ya que permite el acceso al elemento
-$i$ mediante una simple operacion matematica. En una de estas estructiras
-del vector, se tiene almacenda una estructura de tipo $DiskPage$
-(parte tres del disco), para indicar en que bloque del disco puede
-la informacion ser encontrada y dos enteros, para indicar la cantidad
-de bloques que esta página tiene reservada para su uso y otro para
-la cantiad de bytes utlizados por el contenido del usuario.
+$i$ mediante una simple operacion matematica. En cada una de estas
+estructiras del vector, se tiene almacenda una estructura de tipo
+$DiskPage$, para indicar en que bloque del disco puede la informacion
+ser encontrada y dos enteros: uno para indicar la cantidad de bloques
+que esta página tiene reservada para su uso y otro para la cantiad
+de bytes utlizados por el contenido del usuario.
 
 La parte del disco dedicada a archivos se encuentra dividida en bloques
 de tamaño fiijo definido por el SO. Lo mas importante para destacar
 en esta parte es la forma que se tiene para el almacenamiento de cada
-archivo. El formato elejido para el almacenamiento de la informacion
+archivo, el formato elejido para el almacenamiento de la información
 es muy parecido al de una $LinkedList$. Todo archivo en disco consiste
 de:
 \begin{enumerate}
@@ -154,36 +149,35 @@ y es la que posee el nombre, tipo, permisos y demás atributos que
 no son parte del contenido en si.\\
 
 
-Para crear un nuevo archivo, debe reservarse una determianda cantidad
-de bloques. El primer algorimto que se utilizó para este trabajo consisitia
-en ir leyendo cada bloque del disco desde el principio y utilizar
-apartir de ahi los que necesito y esten diponibles. Inicialmente parecia
-funcionar bien (ya que no se tenias mas de 2 o 3 carpetas creadas),
+El primer algorimto que se utilizó para reservar memoria para un archivo
+consisitia en ir leyendo cada bloque del disco desde el principio
+y utilizar apartir de ahi los que necesiten y esten diponibles. Inicialmente
+parecia funcionar bien (ya que no se tenía mas de 2 o 3 archivos creados),
 pero, a medida que se empezó a avanzar con el $SO$ y se requeria
-de mayor catidad de archivos y carpetas, se comenzaba a ver lo terriblemente
-lento que podia volverse este algoritmo. Es en esta parte donde entra
-en uso el sector de $memory$ $bitmap$, el cual se ecuentra complentado
-todo el sector 0 del disco duro (al lado del FS header). Cada bit
-de esta porcion de memoria, indica si el bloque $i$ de la parte de
-archivos se encuentra ocupada o libre. De esta manera, reservar bloques
-siguie siendo de orden n pero con la importantisima diferencia que
-solo se escribe cada sector a utilizar y no se lee mas que uno solo
-(para escribir el header del sector recien reservado).
+de mayor catidad de archivos y carpetas, nos dimos cuenta de lo terriblemente
+lento que se volvía este algoritmo. Luego se lo reemplazo por uno
+que utiliza un $memory$ $bitmap$, el cual se encuentra junto al
+FS header completando todo el primer sector del disco . Cada bit de
+mapa, indica si el bloque $i$ de la parte de archivos se encuentra
+ocupada o libre. De esta manera, reservar bloques sigue siendo$o(n)$
+pero con la importantisima diferencia que solo se escribe cada sector
+a utilizar y no se lee solamente uno solo (para escribir el header
+del sector recien reservado) contra todos del anterior algoritmo.
 
 
 \subsection{Manejo en RAM}
 
-El manejo de inodos es ram es bastante sencillo, el $FS$ mantiene
+El manejo de inodos es ram es bastante sencillo, el $F.S.$ mantiene
 un vector con los últimos inodos consultados y ofrece la interfaz
-para el SO para la modificiacion y consulta de estos ulimos en disco.
+para el SO para la modificiacion y consulta de estos úlimos en disco.
 Cada vez que un nuevo inodo es consultado, se toma la siguiente posicion
 de vector y se carga allí la información de disco de este inodo para
 luego retornarla.
 
-Un detalle a tener en cuenta es que esta implementación de $FS$ no
-guarda ningún contenido de archivos (cache), ya que consideramos que
-eso debía que ser trabajo de una entre el $diskManager$ y el driver
-de disco ($diskCache$).
+Un detalle a tener en sobre esta implementación de $F.S.$, es que
+no guarda ningún contenido de archivos (no cachea), ya que consideramos
+que eso debe ser trabajo de una capa map entre el $diskManager$ y
+el driver de disco ($diskCache$).
 
 \pagebreak{}
 
@@ -216,4 +210,3 @@ por falta de tiempo.\end{itemize}
 \end{itemize}
 
 \end{document}
-
