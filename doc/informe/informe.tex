@@ -1,10 +1,48 @@
 \documentclass[english]{article}
 \usepackage[T1]{fontenc}
-\usepackage[latin9]{inputenc}
+%\usepackage[latin9]{inputenc}
+\usepackage[utf8]{inputenc}
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{babel}
 \begin{document}
+
+\section{Procesos}
+
+Para implementar procesos inicialmente se decidió utilizar como base el código proveído por la cátedra. Luego de bastante tiempo sin llegar a nada, se decidió comenzar desde cero.
+
+Se realizó un diagrama del stack necesario para un proceso resultando en el siguiente:
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=5cm,height=2.5cm,keepaspectratio]{stack}
+
+\caption{Stack frame}
+\end{center}
+\end{figure}
+
+Una vez realizado ése diagrama, se procedió a armar manualmente el stack para correr el sistema operativo, haciendo que la función kmain sea solo una función dummy que llamase a una función de assembler para que crease dicho stack frame. Una vez construido éste, se cambió el ESP con otra función de assembler y el sistema siguió ejecutando en la función indicada por el stack frame.
+
+Luego de entender como funciona el stack para ejecutar una función determinada, pasandole ciertos argumentos y haciendo que en su retorno, vaya a otra función, se procedió a crear una función que agregase éstos "procesos" a una lista para que luego puedan ser procesados por el scheduler.
+
+\subsection{Scheduler}
+Se decidió implementar un scheduler con prioridad, y un scheduler de tipo Round Robin.
+Éste inicialmente se disparaba cada dos ticks, pero eso hacía el sistema muy lento.
+
+\subsubsection{Scheduler con prioridad}
+Al usar un scheduler con prioridad, los procesos pasan a ser más o menos importantes dependiendo de que prioridad se le asignó en su creación. Los procesos lanzados por el usuario mediante comandos en la consola son creados con una determinada prioridad. Hay un grupo de procesos que corre con prioridades especiales, uno de ellos el el proceso \emph{idle}.
+
+Éste corre con prioridad muy baja, dado que es el que se ejecuta cuando no hay ningún otro proceso listo para ejecutarse. Otro grupo de procesos que corre con proridad especial son las shells.
+
+Las shells no son bloqueantes, por lo que constantemente están polleando el tecleado para ver si hay nuevos caracteres que mostrar. Ésto hace que sea necesario hacer que las shells tengan distintas prioridades dependiendo de si están activas o no. La shell activa pasa a tener más de un 80\% del uso del procesador, y las restantes menos de un 5\%.
+
+\subsection{Estados}
+Cada proceso puede tener alguno de los siguientes estados:
+\begin{itemize}
+\item READY: El proceso está listo para ejecutarse
+\item RUNNING: El proceso está siendo ejecutado en ese momento
+\item CHILD\_WAIT: El proceso está bloqueado esperando que algún hijo finalice. Esto sucede cuando, por ejemplo, una consola ejecuta un proceso en \emph{foreground}.
+\end{itemize}
 
 \section{Driver disco ATA}
 
@@ -49,7 +87,7 @@ de $N$ estructuras en la que cada una tiene el contenido de un sector
 entero y campos para indicar si el sector se encuentra sucio (si tiene
 cambios con respecto al disco) y a que sector y disco corresponde.
 
-El algoritmo de reemplazo elejido es el de LRU (es que menos accesos
+El algoritmo de reemplazo elegido es el de LRU (es que menos accesos
 tuvo, se reemplaza). 
 
 Un problema al implementar esta capa era que hacer con los sectores
@@ -83,7 +121,7 @@ acceso a memoria, se diseñó el almacenamiento de la información dando
 mas importancia siempre a la cantidad de accesos a disco por sobre
 cantidad de bytes desperdiciados por archivo.
 
-Uno de los primeros problemas que se presentaron al comenzar a trabjar
+Uno de los primeros problemas que se presentaron al comenzar a trabajar
 en disco, era como averiguar si un determinado sector de memoria era
 o no valido. Frente a esto, en cada Header (mas adelante se hablara
 mejor de estos) se agregó un campo $magic$ que sirve para la validacion
@@ -92,7 +130,7 @@ leido coincide con el magic number definido en el SO, entonces exite
 una estructura valida almacendada en esa posición de memoria. \\
 
 
-El disco duro para este file system fue dividido basicamente en cuatro
+El disco duro para este file system fue dividido básicamente en cuatro
 partes:
 \begin{enumerate}
 \item File System header
@@ -100,10 +138,13 @@ partes:
 \item Vector de iNodos
 \item Archivos
 \end{enumerate}
+
 \begin{figure}[H]
+\begin{center}
 \includegraphics[width=10cm,height=5cm,keepaspectratio]{Imagen_disco}
 
-\caption{Imgen disco duro}
+\caption{Imágen disco duro}
+\end{center}
 \end{figure}
 
 
@@ -125,7 +166,7 @@ que esta página tiene reservada para su uso y otro para la cantiad
 de bytes utlizados por el contenido del usuario.
 
 La parte del disco dedicada a archivos se encuentra dividida en bloques
-de tamaño fiijo definido por el SO. Lo mas importante para destacar
+de tamaño fijo definido por el SO. Lo mas importante para destacar
 en esta parte es la forma que se tiene para el almacenamiento de cada
 archivo, el formato elejido para el almacenamiento de la información
 es muy parecido al de una $LinkedList$. Todo archivo en disco consiste
@@ -135,12 +176,13 @@ de:
 \item File Header
 \item Su contenido
 \end{enumerate}
+
 \begin{figure}[H]
+\begin{center}
 \includegraphics[width=10cm,height=7cm,keepaspectratio]{Archivo}
 
-\caption{Formato de almacentamiento de un archivo}
-
-
+\caption{Formato de almacenamiento de un archivo}
+\end{center}
 \end{figure}
 
 
@@ -171,7 +213,7 @@ El manejo de inodos es ram es bastante sencillo, el $F.S.$ mantiene
 un vector con los últimos inodos consultados y ofrece la interfaz
 para el SO para la modificiacion y consulta de estos úlimos en disco.
 Cada vez que un nuevo inodo es consultado, se toma la siguiente posicion
-de vector y se carga allí la información de disco de este inodo para
+del vector y se carga allí la información de disco de este inodo para
 luego retornarla.
 
 Un detalle a tener en sobre esta implementación de $F.S.$, es que
@@ -189,14 +231,14 @@ el driver de disco ($diskCache$).
 \begin{itemize}
 \item Cada vez que se crea un nuevo archivo, el FSHeader es consultado y
 se incrementa el valor de la cantidad actual de inodos en el disco
-y se utiliza este nuevo valor para utizar la siguiente posicion del
+y se utiliza este nuevo valor para utizar la siguiente posición del
 vector de inodos (para el nuevo archivo). Se quiere aclarar que esta
 es una implementación que nos parece muy mala y se tiene planeado
 cambiarla por una en la que se utilize un bitmap, en donde el bit
 $i-esimo$ indicaría si el sector esta libre o no (mismo algoritmo
 utilizado para el manejo de espacio de archivos en el disco duro). 
-\item Queda a implemetar el comando borrar archivo, que esperamos este disponible
-para la póxima entrega.
+\item Queda a implementar el comando borrar archivo, que esperamos este disponible
+para la próxima entrega.
 \end{itemize}
 \item Otros
 
