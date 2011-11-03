@@ -323,6 +323,7 @@ PUBLIC boolean do_useradd(char *userName, char *password) {
     user_add(uid);
     addOk = user_setUsername(uid, userName);
     addOk = user_setPassword(uid, password);
+    addOk = user_setGid(uid, session_getEgid());
     if (addOk) {
         addOk = createUserDir(uid);
     }
