@@ -249,7 +249,7 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 	char contents[length];
 	diskManager_readContents(node->inode, contents, length, 0);
 	u32int offset = 0, len, inodeNumber;
-	while (offset < inodes[node->inode].length) {
+	while (offset < length) {
 		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
 		offset += sizeof(u32int);					// skip inodeNumber
 		memcpy(&len, contents + offset, sizeof(u32int));
