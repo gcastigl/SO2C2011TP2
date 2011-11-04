@@ -279,7 +279,7 @@ PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffe
 	if (index == -1) {
 		index = _loadInode(node->inode);
 	}
-    iNode header = inodes[node->inode];
+    iNode header = inodes[index];
     //	log(L_DEBUG, "%d - %s => reading %d bytes from offset %d (inode length: %d)", node->inode, node->name, size, offset, header.length);
     if (offset > header.length) {
         return 0;

@@ -491,7 +491,6 @@ int cat_cmd(int argc, char **argv) {
         char* err = NULL;
         if (file == NULL) {
             err = "No such file or directory";
-            return 0;
         } else if ((file->mask&FS_DIRECTORY) == FS_DIRECTORY) {
             err = "Is a directory";
         }
