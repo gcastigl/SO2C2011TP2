@@ -6,7 +6,6 @@
 extern int end;
 
 int nf_address = (int) &end;
-heap_t *kheap=0;
 
 
 void* _malloc (int size, int align, u32int *phys) {

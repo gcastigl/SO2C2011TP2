@@ -12,7 +12,7 @@
 #define MAX_OPEN_FILES          60
 
 typedef struct {
-    char        name[MAX_NAME_SIZE];
+    char        name[MAX_NAME_LENGTH];
     u8int       permissions;
     u8int       inode;
     fs_node_t   *node;

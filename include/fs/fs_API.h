@@ -4,9 +4,6 @@
 #include <defs.h>
 #include <util/logger.h>
 
-#define MAX_NAME_SIZE	128
-
-
 
 //#define FS_FILE        0x01
 //#define FS_DIRECTORY   0x02
@@ -55,7 +52,7 @@ typedef struct fs_node * (*readdir_type_t)(struct fs_node*,u32int);
 typedef struct fs_node * (*finddir_type_t)(struct fs_node*,char *name);
 
 typedef struct fs_node {
-    char name[MAX_NAME_SIZE];     	// The filename.
+    char name[MAX_NAME_LENGTH];     // The filename.
     u32int mask;        			// The permissions mask.
     u32int uid;        				// The owning user.
     u32int gid;         			// The owning group.
@@ -72,7 +69,7 @@ typedef struct fs_node {
 } fs_node_t;
 
 struct dirent {
-    char name[MAX_NAME_SIZE]; 	// Filename.
+    char name[MAX_NAME_LENGTH]; 	// Filename.
     u32int ino;     			// Inode number. Required by POSIX.
 };
 

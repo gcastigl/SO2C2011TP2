@@ -11,6 +11,7 @@
 #define DISKCACHE_H_
 
 #include <driver/ata_disk.h>
+#include <lib/stdlib.h>
 
 #define TICKS_PER_FLUSH	100
 #define CACHE_SIZE		5

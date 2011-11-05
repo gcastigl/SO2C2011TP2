@@ -3,8 +3,8 @@
 
 #include <fs/diskCache.h>
 #include <driver/ata_disk.h>
+#include <lib/string.h>
 
-#define MAX_NAME_LENGTH					32
 #define MAGIC_NUMBER					123456
 #define FILE_BLOCK_OVERHEAD_SIZE_BYTES	(sizeof(DiskPage) + sizeof(FileHeader))
 

@@ -11,7 +11,6 @@
 #include <asm/libasm.h>
 #include <io.h>
 #include <lib/stdio.h>
-#include <process/task.h>
 #include <process/process.h>
 #include <command.h>
 #include <access/user.h>
