@@ -83,6 +83,11 @@ int diskManager_nextInode();
 void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name);
 
 /*
+ * Elimina del disco la informacion relacionada con el inode numero inode
+ */
+void diskManager_delete(u32int inode);
+
+/*
  + Carga del disco el inodo que este guardado como inodeNumber y lo guarda en inode. En caso de error, se setea errno con el valor inidicando el tipo de error que ocurrio.
  */
 void diskManager_readInode(iNode *inode, u32int inodeNumber);
@@ -115,21 +120,16 @@ u32int diskManager_size(u32int inodeNumber);
 /*
  * Setea el modo del file header
  */
-PUBLIC boolean diskManager_setFileMode(u32int inode, int newMode);
+boolean diskManager_setFileMode(u32int inode, int newMode);
 
 /*
  * Setea el uid del file header
  */
-PUBLIC boolean diskManager_setFileUid(u32int inode, int uid);
+boolean diskManager_setFileUid(u32int inode, int uid);
 
 /*
  * Setea el gid del file header
  */
-PUBLIC boolean diskManager_setFileGid(u32int inode, int gid);
-
-/*
- * Elimina del disco la informacion relacionada con el inode numero inode
- */
-PUBLIC void diskManager_delete(u32int inode);
+boolean diskManager_setFileGid(u32int inode, int gid);
 
 #endif

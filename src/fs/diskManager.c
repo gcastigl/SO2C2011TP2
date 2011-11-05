@@ -89,6 +89,16 @@ void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 		// log(L_DEBUG, "written inode header to: [%d, %d + %d]", newiNode.data.nextSector, newiNode.data.nextOffset, sizeof(DiskPage));
 }
 
+void diskManager_delete(u32int inodeNumber) {
+	iNodeDisk inode;
+	inode.usedBytes = 0;
+	inode.blocks = 0;
+	_setiNode(inodeNumber, &inode);
+	FileHeader header;
+	header.magic = 0;
+	_setFileheader(inodeNumber, &header);
+}
+
 void diskManager_readInode(iNode *inode, u32int inodeNumber) {
 	iNodeDisk inodeOnDisk;
 	_getiNode(inodeNumber, &inodeOnDisk);
@@ -497,15 +507,5 @@ u32int _availableMem(iNodeDisk* inode) {
 	total += DISK_BLOCK_SIZE_BYTES - (sizeof(DiskPage) + sizeof(FileHeader));
 	total += (inode->blocks - 1) * (DISK_BLOCK_SIZE_BYTES - sizeof(DiskPage));
 	return total;
-}
-
-void diskManager_delete(u32int inodeNumber) {
-	iNodeDisk inode;
-	inode.usedBytes = 0;
-	inode.blocks = 0;
-	_setiNode(inodeNumber, &inode);
-	FileHeader header;
-	header.magic = 0;
-	_setFileheader(inodeNumber, &header);
 }
 
