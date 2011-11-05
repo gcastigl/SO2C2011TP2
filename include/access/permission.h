@@ -28,7 +28,7 @@ PUBLIC boolean permission_group_isOwner(int gid);
 /**
  * Returns true if the currentUser is the owner of the file or root.
  */
-PUBLIC boolean permission_file_isOwner(fs_node_t node);
+PUBLIC boolean permission_file_isOwner(fs_node_t* node);
 
 /**
  * Returns true if the currentUser has the desired access or is root.

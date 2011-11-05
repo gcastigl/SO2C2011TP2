@@ -40,8 +40,8 @@ PUBLIC boolean permission_group_isOwner(int gid) {
     return (session_getEuid() == SUPER_USER || session_getEuid() == gid);
 }
 
-PUBLIC boolean permission_file_isOwner(fs_node_t node) {
-    return (session_getEuid() == SUPER_USER || session_getEuid() == node.uid);
+PUBLIC boolean permission_file_isOwner(fs_node_t* node) {
+    return (session_getEuid() == SUPER_USER || session_getEuid() == node->uid);
 }
 
 PUBLIC boolean permission_file_hasAccess(fs_node_t node, int access_desired) {

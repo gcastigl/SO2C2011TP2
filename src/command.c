@@ -539,7 +539,7 @@ int chmod_cmd(int argc, char **argv) {
             printf("chmod: No such file or directory %s.\n", argv[1]);
             return -1;
         }
-        if (!permission_file_isOwner(*file)) {
+        if (!permission_file_isOwner(file)) {
             printf("chmod: You are not the owner of %s.\n", argv[1]);
             return -2;
         }
@@ -567,7 +567,7 @@ int chown_cmd(int argc, char **argv) {
             kfree(file);
             return -1;
         }
-        if (!permission_file_isOwner(*file)) {
+        if (!permission_file_isOwner(file)) {
             printf("chown: You are not the owner of %s.\n", argv[1]);
             kfree(file);
             return -2;
@@ -603,7 +603,7 @@ int chgrp_cmd(int argc, char **argv) {
             kfree(file);
             return -1;
         }
-        if (!permission_file_isOwner(*file)) {
+        if (!permission_file_isOwner(file)) {
             printf("chown: You are not the owner of %s.\n", argv[1]);
             kfree(file);
             return -2;
