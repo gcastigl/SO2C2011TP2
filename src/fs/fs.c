@@ -144,7 +144,7 @@ PRIVATE void _loadDirectory(int inodeNumber) {
 u32int fs_createFile(u32int parentiNode, char* name, u32int type) {
 	fs_node_t node;
 	fs_getFsNode(&node, parentiNode);
-	if (!permission_file_hasAccess(node, W_BIT)) {
+	if (!permission_file_hasAccess(&node, W_BIT)) {
 	    errno = EACCES;
 	    return -1;
 	}

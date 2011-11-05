@@ -44,19 +44,19 @@ PUBLIC boolean permission_file_isOwner(fs_node_t* node) {
     return (session_getEuid() == SUPER_USER || session_getEuid() == node->uid);
 }
 
-PUBLIC boolean permission_file_hasAccess(fs_node_t node, int access_desired) {
+PUBLIC boolean permission_file_hasAccess(fs_node_t* node, int access_desired) {
     if (session_getEuid() == SUPER_USER) {
         return true;
     }
     user_t *user = user_get(session_getEuid());
 
-    if (session_getEuid() == node.uid) {
+    if (session_getEuid() == node->uid) {
         access_desired <<= 8; /* owner */
-    } else if (user->gid == node.gid) {
+    } else if (user->gid == node->gid) {
         access_desired <<= 4; /* group */
     } else {
         access_desired <<= 0; /* other */
     }
     //	log(L_DEBUG, "%x and %x", node.mask, access_desired);
-    return (node.mask & access_desired) == access_desired;
+    return (node->mask & access_desired) == access_desired;
 }

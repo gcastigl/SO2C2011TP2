@@ -317,7 +317,7 @@ int cd_cmd(int argc, char **argv) {
         fs_node_t current;
         fs_getFsNode(&current, currentiNode);
         fs_node_t *node = finddir_fs(&current, argv[0]);
-        if (!permission_file_hasAccess(*node, R_BIT)) {
+        if (!permission_file_hasAccess(node, R_BIT)) {
             printf("cd: You don't have read access to %s\n", argv[0]);
             return -1;
         }
@@ -406,7 +406,7 @@ int rm_cmd(int argc, char **argv) {
         fs_node_t current;
         fs_getFsNode(&current, currentiNode);
         fs_node_t *node = finddir_fs(&current, argv[0]);
-        if (!permission_file_hasAccess(*node, W_BIT)) {
+        if (!permission_file_hasAccess(node, W_BIT)) {
             printf("rm: You don't have write access to %s", argv[0]);
             return -1;
         }
@@ -503,7 +503,7 @@ int cat_cmd(int argc, char **argv) {
             printf("cat: %s: %s\n", argv[0], err);
             return 0;
         }
-        if (!permission_file_hasAccess(*file, R_BIT)) {
+        if (!permission_file_hasAccess(file, R_BIT)) {
             printf("cat: You don't have read access to %s", argv[0]);
             return -1;
         }
