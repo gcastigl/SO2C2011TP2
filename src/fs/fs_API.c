@@ -52,11 +52,19 @@ fs_node_t *readdir_fs(fs_node_t *node, u32int index) {
 
 fs_node_t *finddir_fs(fs_node_t *node, char *name) {
     // Is the node a directory, and does it have a callback?
-    if ( (node->mask&FS_DIRECTORY) == FS_DIRECTORY &&
-         node->finddir != 0 )
+    if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY && node->finddir != 0)
         return node->finddir(node, name);
     else {
     	log(L_ERROR, "%s does not have a callback for finddir_fs", node->name);
         return 0;
     }
+}
+
+u32int remove_fs(fs_node_t *node, u32int inode) {
+	if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY && node->remove != 0)
+		return node->remove(node, inode);
+	else {
+		log(L_ERROR, "%s does not have a callback for finddir_fs", node->name);
+		return 0;
+	}
 }

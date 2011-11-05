@@ -351,10 +351,16 @@ int ls_cmd(int argc, char **argv) {
     fs_getFsNode(&current, currentiNode);
     int i = 0;
     fs_node_t *node = NULL;
-    char perm[MASK_STRING_LEN] = "";
+    char perm[MASK_STRING_LEN];
     if (argc == 0) {
-        while ((node = readdir_fs(&current, i)) != 0) {                 // get directory i
+        while ((node = readdir_fs(&current, i)) != NULL) {                 // get directory i
             mask_string(node->mask, perm);
+            log(L_DEBUG, "%s\t%s\t%s\t%s%s\n",
+                    perm,
+                    user_getName(node->uid),
+                    group_getName(node->gid),
+                    node->name,
+                    ((node->mask&FS_DIRECTORY) == FS_DIRECTORY) ? "/": "");
             printf("%s\t%s\t%s\t%s%s\n",
                 perm,
                 user_getName(node->uid),
@@ -395,8 +401,6 @@ int mkdir_cmd(int argc, char **argv) {
 }
 
 int rm_cmd(int argc, char **argv) {
-	printf("Not finished yet... =/\n");
-	return -1;
 	if (argc == 1) {
         u32int currentiNode = tty_getCurrentTTY()->currDirectory;
         fs_node_t current;
@@ -406,7 +410,8 @@ int rm_cmd(int argc, char **argv) {
             printf("rm: You don't have write access to %s", argv[0]);
             return -1;
         }
-		fs_remove(node->inode);
+		int removed = remove_fs(&current, node->inode);
+        log(L_DEBUG, "rm: remove file returned: %d", removed);
 		kfree(node);
 	}
 	return 0;

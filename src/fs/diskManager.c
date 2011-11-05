@@ -3,10 +3,15 @@
 #define MIN(x,y)							(((x) < (y)) ? (x) : (y))
 #define BIT(n, i)							((n) & (1 << (i)))
 
-#define FILE_CONTENTS_INITAL_SECTOR			2
-#define FILE_CONTENTS_INITAL_OFFSET			maxIndes * sizeof(DiskPage)
-
-PRIVATE u32int maxIndes;					// Once setted this value, it should never be changed!!
+/*
+ * sector 0 => FSHeader - inodes bitmap
+ * sector 1 => inodes
+ * sector 10 => diskBitmap
+ * sector 11... =>  archivos...
+ */
+#define INODES_INITIAL_SECTOR			1
+#define FILES_BIT_MAP_SECTOR			10
+#define FILE_CONTENTS_INITAL_SECTOR		11
 
 PRIVATE void _getiNode(u32int inodeNumber, iNodeDisk *inode);
 PRIVATE void _setiNode(u32int inodeNumber, iNodeDisk *inode);
@@ -25,48 +30,58 @@ u32int _availableMem(iNodeDisk* inode);
 
 void diskManager_init(u32int maxNodes) {
 	log(L_DEBUG, "Using block size: %d", DISK_BLOCK_SIZE_BYTES);
+	log(L_DEBUG, "iNodeDisk size: %d", sizeof(iNodeDisk));
 	log(L_DEBUG, "DiskPage size: %d", sizeof(DiskPage));
-	log(L_DEBUG, "FileHeader size: %d", sizeof(FileHeader));
+	log(L_DEBUG, "FileHeader size: %d\n", sizeof(FileHeader));
 }
 
 boolean diskManager_validateHeader() {
 	FSHeader header;
 	diskCache_read(ATA0, &header, sizeof(FSHeader), 0, 0);
-	if (header.magic == MAGIC_NUMBER) {
-		maxIndes = header.maxNodes;
-	}
 		log(L_DEBUG, "Header for the OS is %svalid", header.magic == MAGIC_NUMBER ? "" : "NOT ");
 	return header.magic == MAGIC_NUMBER;
 }
 
-void diskManager_writeHeader(u32int maxNodes) {
+void diskManager_writeHeader() {
 	FSHeader header;
 	header.magic = MAGIC_NUMBER;
-	header.totalNodes = 0;
-	header.maxNodes = maxNodes;
-	maxIndes = maxNodes;
 		log(L_DEBUG, "Writing OS header");
 	diskCache_write(ATA0, &header, sizeof(FSHeader), 0, 0);
 	// Mark all sector as free sectors
-	int numberOfBlocks = SECTOR_SIZE - sizeof(FSHeader), i;
-	char block[numberOfBlocks];
-	for (i = 0; i < numberOfBlocks; i++) block[i] = 0;
-	diskCache_write(ATA0, block, numberOfBlocks, 0, sizeof(FSHeader));
+	char block[SECTOR_SIZE];
+	for (int i = 0; i < SECTOR_SIZE; i++) block[i] = 0;
+	// Fill sector 0 with 0s (inodes memory bitmap)
+	diskCache_write(ATA0, block, SECTOR_SIZE - sizeof(FSHeader), 0, sizeof(FSHeader));
+	// Fill sector 2 with 0s (file contents memory bitmap)
+	diskCache_write(ATA0, block, SECTOR_SIZE, 2, 0);
 }
 
 int diskManager_nextInode() {
-	FSHeader header;
-	diskCache_read(ATA0, &header, sizeof(FSHeader), 0, 0);
-	int nextiNode = header.totalNodes++;
-		log(L_DEBUG, "next inodeNumber to save in disk => %d", nextiNode);
-	diskCache_write(ATA0, &header, sizeof(FSHeader), 0, 0);			// Update totalNodes value
-	return nextiNode;
+	int numberOfBlocks = SECTOR_SIZE - sizeof(FSHeader);
+	char block[numberOfBlocks];
+	int next = -1;
+	diskCache_read(ATA0, block, numberOfBlocks, 0, sizeof(FSHeader));
+	for (int i = 0; i < numberOfBlocks && next == -1; i++) {
+		for (int j = 0; j < 8 && next == -1; j++) {
+			if (BIT(block[i], j) == 0) {
+				next = i * 8 + j;
+				block[i] |= (1 << j);
+			}
+		}
+	}
+	if (next == -1) {
+		errno = E_OUT_OF_MEMORY;
+		return -1;
+	}
+	diskCache_write(ATA0, block, numberOfBlocks, 0, sizeof(FSHeader));
+	//	log(L_DEBUG, "next inode to use: %d", next);
+	return next;
 }
 
 void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 	iNodeDisk newiNode;
 	int initialBlocks = 1;
-	int reserved = _reserveMemoryBitMap(&newiNode.data, initialBlocks, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
+	int reserved = _reserveMemoryBitMap(&newiNode.data, initialBlocks, FILE_CONTENTS_INITAL_SECTOR, 0);
 	if (reserved == -1) {	// Do not set errno because it should already be set
 		log(L_ERROR, "failed to reserve memory for inode %s (%d)", name, inodeNumber);
 		return;
@@ -74,9 +89,9 @@ void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 	newiNode.blocks = initialBlocks;
 	newiNode.usedBytes = 0;
 	_setiNode(inodeNumber, &newiNode);
-		log(L_DEBUG, "Create inode %s(%d) at [%d, %d], bytes used: %d, max bytes: %d, available %d", name, inodeNumber, 1, \
+		log(L_DEBUG, "Create inode %s(%d) at [%d, %d], bytes used: %d, max bytes: %d, available %d", name, inodeNumber, INODES_INITIAL_SECTOR, \
 				inodeNumber * sizeof(iNodeDisk), newiNode.usedBytes, newiNode.blocks * DISK_BLOCK_SIZE_BYTES, _availableMem(&newiNode));
-		log(L_DEBUG, "inode points to: [%d, %d]\n", newiNode.data.nextSector, newiNode.data.nextOffset);
+		//log(L_DEBUG, "inode points to: [%d, %d]\n", newiNode.data.nextSector, newiNode.data.nextOffset);
 	FileHeader header;
 	header.magic = MAGIC_NUMBER;
 	strcpy(header.name, name);
@@ -90,13 +105,34 @@ void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 }
 
 void diskManager_delete(u32int inodeNumber) {
-	iNodeDisk inode;
+	/*iNodeDisk inode;
 	inode.usedBytes = 0;
 	inode.blocks = 0;
-	_setiNode(inodeNumber, &inode);
+	_setiNode(inodeNumber, &inode);*/
+
+	// Delete header on disk
+	iNodeDisk inode;
+	_getiNode(inodeNumber, &inode);
+	log(L_DEBUG, "deleted inode header [%d, %d]", inode.data.nextSector, inode.data.nextOffset);
+	_freeMemory(&inode.data);
 	FileHeader header;
 	header.magic = 0;
 	_setFileheader(inodeNumber, &header);
+
+	// Mark the inode bit map @inodeNumber as empty
+	int numberOfInodes = SECTOR_SIZE - sizeof(FSHeader);
+	char inodes[numberOfInodes];
+	diskCache_read(ATA0, inodes, numberOfInodes, 0, sizeof(FSHeader));
+	int pos = inodeNumber / 8;
+	int bit = inodeNumber % 8;
+	inodes[pos] &= ~(1 << bit);
+	diskCache_write(ATA0, inodes, numberOfInodes, 0, sizeof(FSHeader));
+	log(L_DEBUG, "freed inode - pos: %d, bit: %d", pos, bit);
+	// Mark the disk block as empty
+	/*char block[SECTOR_SIZE];
+	diskCache_read(ATA0, block, SECTOR_SIZE, FILES_BIT_MAP_SECTOR, 0);
+
+	diskCache_write(ATA0, block, numberOfInodes, 0, sizeof(FSHeader));*/
 }
 
 void diskManager_readInode(iNode *inode, u32int inodeNumber) {
@@ -132,7 +168,7 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber) {
 int diskManager_writeContents(u32int inodeNumber, char *contents, u32int length, u32int offset) {
 	iNodeDisk inode;
 	_getiNode(inodeNumber, &inode);
-	//	log(L_DEBUG, "updating contents, %d bytes to inode: %d -> [%d, %d]", length, inodeNumber, inode.data.nextSector, inode.data.nextOffset);
+	//	log(L_DEBUG, "updating contents, %d + %d bytes to inode: %d -> [%d, %d]", offset, length, inodeNumber, inode.data.nextSector, inode.data.nextOffset);
 	//	log(L_DEBUG,"Contents[MAX: %d, used: %d], reserved blocks = %d", _availableMem(&inode), inode.usedBytes, inode.blocks);
 	if (inode.data.magic != MAGIC_NUMBER) {
 		log(L_ERROR, "Trying to write to a corrupted page!");
@@ -141,7 +177,7 @@ int diskManager_writeContents(u32int inodeNumber, char *contents, u32int length,
 	}
 	if (offset + length > _availableMem(&inode)) {
 		//	log(L_DEBUG, "%d -> Memory is not enough, have: %d, extending memory to %d bytes", inodeNumber, _availableMem(&inode), offset + length);
-		int extrablocks = _extendMemory(&inode.data, offset + length, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
+		int extrablocks = _extendMemory(&inode.data, offset + length, FILE_CONTENTS_INITAL_SECTOR, 0);
 		inode.blocks += extrablocks;
 	}
 	if (offset + length > inode.usedBytes) {
@@ -215,7 +251,7 @@ PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int off
 
 PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int offset) {
 	DiskPage currPage;
-		// log(L_DEBUG,"validating file page: [%d, %d]", page->nextSector, page->nextOffset);
+	//	log(L_DEBUG,"validating file page: [%d, %d]", page->nextSector, page->nextOffset);
 	diskCache_read(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
 	if (currPage.magic != MAGIC_NUMBER) {
 		log(L_ERROR,"CORRUPTED FILE PAGE! [%d, %d]",  page->nextSector, page->nextOffset);
@@ -224,7 +260,8 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 	}
 
 	int bytesFromContent;
-	if (offset < (currPage.usedBytes - FILE_BLOCK_OVERHEAD_SIZE_BYTES)) {
+	//	log(L_DEBUG, "offset: %d <? usedBytes: %d- overhead: %d", offset, currPage.totalLength, FILE_BLOCK_OVERHEAD_SIZE_BYTES);
+	if (offset < (currPage.totalLength - FILE_BLOCK_OVERHEAD_SIZE_BYTES)) {
 		// Start reading from current page
 		bytesFromContent = MIN(currPage.totalLength - offset - FILE_BLOCK_OVERHEAD_SIZE_BYTES, length);
 		length -= bytesFromContent;
@@ -234,7 +271,7 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 
 		if (FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset + bytesFromContent > currPage.usedBytes) {
 			currPage.usedBytes = FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset + bytesFromContent;
-		//	log(L_DEBUG, "updating DiskPage, usedBytes = %d + %d + %d", FILE_BLOCK_OVERHEAD_SIZE_BYTES, offset, bytesFromContent);
+			//	log(L_DEBUG, "updating DiskPage, usedBytes = %d + %d + %d", FILE_BLOCK_OVERHEAD_SIZE_BYTES, offset, bytesFromContent);
 			diskCache_write(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
 		}
 		offset = 0;
@@ -278,16 +315,17 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 	return 0;
 }
 
+
 PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSector, u32int initialOffset) {
 		log(L_DEBUG, "\nReserving %d blocks....", blocks);
 	_cli();
 	DiskPage currPage;
 	int previousSector, previousOffset, currSector, currOffset;
 	int disk = ATA0;
-	int numberOfblocks = SECTOR_SIZE - sizeof(FSHeader);	// Use all remaining bits until the end of the first sector
+	int numberOfblocks = SECTOR_SIZE;		// Use complete sector for the bitmap
 
 	char block[numberOfblocks];
-	diskCache_read(disk, block, numberOfblocks, 0, sizeof(FSHeader));
+	diskCache_read(disk, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
 
 	int reservedBlocks = 0;
 
@@ -333,7 +371,7 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSecto
 		}
 	}
 	// Update bit map information
-	diskCache_write(disk, block, numberOfblocks, 0, sizeof(FSHeader));
+	diskCache_write(disk, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
 	if (reservedBlocks < blocks) {			// Reached end of space available and the recolected space is not enought
 		log(L_ERROR, "DISK OUT OF MEMORY!");
 		page->totalLength = 0;
@@ -348,23 +386,24 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSecto
 }
 
 PRIVATE void _freeMemory(DiskPage* page) {
-	int numberOfblocks = 512 - sizeof(FSHeader);
+	int numberOfblocks = SECTOR_SIZE;
 	char block[numberOfblocks];
-	diskCache_read(page->disk, block, numberOfblocks, 0, sizeof(FSHeader));
+	diskCache_read(page->disk, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
 	// char j, bit i ==> ((i * 8) + j) * DISK_BLOCK_SIZE_BYTES; (sector)
 	do {
 		int sector = page->nextSector;
 		int offset = page->nextOffset;
-		if (sector % DISK_BLOCK_SIZE_BYTES != 0) {
+		/*if (offset % DISK_BLOCK_SIZE_BYTES != 0) {
 			log(L_ERROR, "Trying to free an invalid page at [%d, %d]", sector, offset);
-		}
+		}*/
+			log(L_DEBUG, "Freeing memory, [%d, %d]", sector, offset);
 		offset /= DISK_BLOCK_SIZE_BYTES;
 		int charPos = offset / 8;
 		int bit = offset % 8;
-		block[charPos] |= 1 << bit;
-		log(L_DEBUG, "Freeing memory, [%d, %d], char: %d, bit: %d",charPos, bit);
+		block[charPos] &= ~(1 << bit);
+			log(L_DEBUG, "char: %d, bit: %d", charPos, bit);
 	} while (page->hasNextPage);
-	diskCache_read(page->disk, block, numberOfblocks, 0, sizeof(FSHeader));
+	diskCache_write(page->disk, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
 }
 
 PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {
@@ -406,11 +445,11 @@ PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int
 
 PRIVATE void _setiNode(u32int inodeNumber, iNodeDisk *inode) {
 	// log(L_DEBUG, "_setiNode %d node: [%d, %d], size: %d\n", inode, sector, inode * sizeof(FilePage), sizeof(FilePage));
-	diskCache_write(ATA0, inode, sizeof(iNodeDisk), 1, inodeNumber * sizeof(iNodeDisk));
+	diskCache_write(ATA0, inode, sizeof(iNodeDisk), INODES_INITIAL_SECTOR, inodeNumber * sizeof(iNodeDisk));
 }
 
 PRIVATE void _getiNode(u32int inodeNumber, iNodeDisk *inode) {
-	diskCache_read(ATA0, inode, sizeof(iNodeDisk), 1, inodeNumber * sizeof(iNodeDisk));
+	diskCache_read(ATA0, inode, sizeof(iNodeDisk), INODES_INITIAL_SECTOR, inodeNumber * sizeof(iNodeDisk));
 }
 
 

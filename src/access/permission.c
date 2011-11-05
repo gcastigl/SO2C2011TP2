@@ -57,6 +57,6 @@ PUBLIC boolean permission_file_hasAccess(fs_node_t node, int access_desired) {
     } else {
         access_desired <<= 0; /* other */
     }
-    log(L_DEBUG, "%x and %x", node.mask, access_desired);
+    //	log(L_DEBUG, "%x and %x", node.mask, access_desired);
     return (node.mask & access_desired) == access_desired;
 }

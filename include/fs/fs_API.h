@@ -50,6 +50,7 @@ typedef void (*open_type_t)(struct fs_node*);
 typedef void (*close_type_t)(struct fs_node*);
 typedef struct fs_node * (*readdir_type_t)(struct fs_node*,u32int);
 typedef struct fs_node * (*finddir_type_t)(struct fs_node*,char *name);
+typedef u32int (*remove_type_t)(struct fs_node*,u32int inode);
 
 typedef struct fs_node {
     char name[MAX_NAME_LENGTH];     // The filename.
@@ -65,15 +66,13 @@ typedef struct fs_node {
     close_type_t close;
     readdir_type_t readdir;
     finddir_type_t finddir;
-    struct fs_node *ptr; 			// Used by mountpoints and symlinks.
+    remove_type_t remove;
 } fs_node_t;
 
 struct dirent {
     char name[MAX_NAME_LENGTH]; 	// Filename.
     u32int ino;     			// Inode number. Required by POSIX.
 };
-
-extern fs_node_t *fs_root; // The root of the filesystem.
 
 // Standard read/write/open/close functions. Note that these are all suffixed with
 // _fs to distinguish them from the read/write/open/close which deal with file descriptors
@@ -89,5 +88,7 @@ void close_fs(fs_node_t *node);
 fs_node_t *readdir_fs(fs_node_t *node, u32int index);
 
 fs_node_t *finddir_fs(fs_node_t *node, char *name);
+
+u32int remove_fs(fs_node_t *node, u32int inode);
 
 #endif

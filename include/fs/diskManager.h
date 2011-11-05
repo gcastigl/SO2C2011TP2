@@ -10,7 +10,6 @@
 
 #define DISK_BLOCK_SIZE_BYTES			256
 
-
 typedef struct {
 	// fields required by posix, this is still missing some fields
 	u32int sector;
@@ -27,7 +26,6 @@ typedef struct {
 
 typedef struct {
 	u32int magic;
-	u32int totalNodes;
 	u32int maxNodes;
 } FSHeader;
 

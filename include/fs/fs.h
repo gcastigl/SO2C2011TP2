@@ -5,7 +5,7 @@
 #include <fs/fs_API.h>
 #include <fs/diskManager.h>
 
-#define INODES					50
+#define INODES			25
 
 /*
  * inicializa el file system
@@ -42,10 +42,5 @@ PUBLIC void fs_setFileUid(u32int inode, int uid);
  * Setea el gid del inodo
  */
 PUBLIC void fs_setFileGid(u32int inode, int gid);
-
-/*
- * Elimina del disco la informacion relacionada con el inode numero inode
- */
-PUBLIC void fs_remove(u32int inode);
 
 #endif

@@ -23,10 +23,10 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name);
 
 PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
 PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
+PRIVATE u32int fs_remove(fs_node_t *node, u32int inode);
 
 PRIVATE void fs_open(fs_node_t *node);
 PRIVATE void fs_close(fs_node_t *node);
-
 
 PRIVATE int _indexOf(u32int inode);
 PRIVATE int _loadInode(u32int inode);
@@ -55,9 +55,9 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	// log(L_DEBUG, "loading %d node from memory", inodeNumber);
 	int index =  _indexOf(inodeNumber);
 	if (index == -1) {
-		index = _loadInode(inodeNumber);
+		log(L_ERROR, "could not load inode: %d", inodeNumber);
+		return;
 	}
-	
 	iNode* inode = &inodes[index];
 	memcpy(fsNode->name, inode->name, strlen(inode->name) + 1);
 	fsNode->flags = inode->flags;
@@ -74,6 +74,7 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	if ((inode->mask&FS_DIRECTORY) == FS_DIRECTORY) {
 		fsNode->finddir = fs_finddir;
 		fsNode->readdir = fs_readdir;
+		fsNode->remove = fs_remove;
 	} else {
 		fsNode->finddir = NULL;
 		fsNode->readdir = NULL;
@@ -88,12 +89,12 @@ PRIVATE int _indexOf(u32int inode) {
 			return i;
 		}
 	}
-	return -1;
+	return _loadInode(inode);
 }
 
 PRIVATE int _loadInode(u32int inode) {
-	errno = 0;
 	//	log(L_DEBUG, "loading inode %d from memory", inode);
+	errno = 0;
 	diskManager_readInode(&inodes[nextToFree], inode);
 	if (errno != 0) {
 		log(L_ERROR, "error loading fsNode, errno is now: %d", errno);
@@ -105,7 +106,7 @@ PRIVATE int _loadInode(u32int inode) {
 }
 
 PRIVATE void fs_create() {
-	diskManager_writeHeader(INODES);				// Save header for the next time the system starts...
+	diskManager_writeHeader();				// Save header for the next time the system starts...
 	// Initialize root directory
 	int rootInode = diskManager_nextInode();
 	_initInode_dir(rootInode, "/", rootInode);
@@ -197,16 +198,23 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 		return;
 	}
 	int contentsLength = diskManager_size(dirInodeNumber);
-	// log(L_DEBUG, "_appendFile: int contLen = %d, appending %s", contentsLength, name);
 	char content[contentsLength + sizeof(u32int) + MAX_NAME_LENGTH];
 	diskManager_readContents(dirInodeNumber, content, contentsLength, 0);
-
-	int offset = contentsLength;
-
+	int offset = 0;
+	while (offset < contentsLength) {		// Try to use a logically deleted file
+		if ((int) *(content + offset) == -1) {
+			memcpy(content + offset, &fileInodeNumber, sizeof(u32int));
+			memcpy(content + offset + sizeof(u32int), fileName, MAX_NAME_LENGTH);
+			diskManager_writeContents(dirInodeNumber, content, contentsLength, 0);
+			return;
+		}
+		offset += sizeof(u32int) + MAX_NAME_LENGTH;
+	}
+	offset = contentsLength;
 	memcpy(content + offset, &fileInodeNumber, sizeof(u32int));	offset += sizeof(u32int);
-	memcpy(content + offset, fileName, MAX_NAME_LENGTH); 				offset += MAX_NAME_LENGTH;
+	memcpy(content + offset, fileName, MAX_NAME_LENGTH); 		offset += MAX_NAME_LENGTH;
 	inodes[dirInodeNumber].length = offset;
-		// log(L_DEBUG, "_appendFile: final contLen = %d, appending %s", offset, name);
+	// log(L_DEBUG, "_appendFile: final contLen = %d, appending %s", offset, name);
 	diskManager_writeContents(dirInodeNumber, content, offset, 0);
 }
 
@@ -220,20 +228,22 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 	int length = diskManager_size(node->inode);
 	char contents[length];
 	diskManager_readContents(node->inode, contents, length, 0);
-	u32int i = 0, offset = 0;
+	u32int i, offset, inodeNumber = -1;
 
-	// + 2 = skip "." and ".."
-	while (i < index + 2 && offset < length) {
-		offset += sizeof(u32int);				// skip inodeNumber
-			// log(L_DEBUG, "file: %s - %d\n", contents + offset, len);
-		offset += MAX_NAME_LENGTH;				// skip fileName
-		i++;
+	i = 0;
+	offset = 2 * (sizeof(u32int) + MAX_NAME_LENGTH); // skip "." and ".."
+	while (i <= index && offset < length) {
+		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
+		//	log(L_DEBUG, "file: %s - %d", contents + offset + sizeof(u32int), inodeNumber);
+		offset += sizeof(u32int) + MAX_NAME_LENGTH;
+		if (inodeNumber != -1) { // inodeNumber == -1 mens it was removed and the slot is free
+			i++;
+		}
 	}
 	fs_node_t* fsNode = NULL;
-	if (offset < length) {
-		int inodeNumber;
-		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
-		// log(L_DEBUG, "directory %d... inode: %d\n", i, inodeNumber);
+	//	log(L_DEBUG, "inode: %d, idnex: %d, i: %d", inodeNumber, index, i);
+	if (i - 1 == index) {
+		//	log(L_DEBUG, "directory %d... inode: %d\n", i, inodeNumber);
 		fsNode = kmalloc(sizeof(fs_node_t));
 		fs_getFsNode(fsNode, inodeNumber);
 	}
@@ -248,7 +258,7 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 	while (offset < length) {
 		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
 		offset += sizeof(u32int);					// skip inodeNumber
-		if (strcmp(name, contents + offset) == 0) {
+		if (inodeNumber != -1 && strcmp(name, contents + offset) == 0) {
 			fs_node_t* fsnode = kmalloc(sizeof(fs_node_t));
 			fs_getFsNode(fsnode, inodeNumber);
 			return fsnode;
@@ -271,7 +281,8 @@ u32int fs_size(fs_node_t *node) {
 PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 	int index =  _indexOf(node->inode);
 	if (index == -1) {
-		index = _loadInode(node->inode);
+		log(L_ERROR, "could not load inode: %d", node->inode);
+		return 0;
 	}
     iNode header = inodes[index];
     //	log(L_DEBUG, "%d - %s => reading %d bytes from offset %d (inode length: %d)", node->inode, node->name, size, offset, header.length);
@@ -289,7 +300,8 @@ PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buff
     //	log(L_DEBUG, "%d - %s => writing %d bytes from offset %d", node->inode, node->name, size, offset);
     int index = _indexOf(node->inode);
 	if (index == -1) {
-		index = _loadInode(node->inode);
+		log(L_ERROR, "could not load inode: %d", node->inode);
+		return 0;
 	}
 	inodes[index].length = MAX(inodes[index].length, offset + size);
     diskManager_writeContents(node->inode, (char*) buffer, size, offset);
@@ -325,7 +337,8 @@ PUBLIC void fs_setFileMode(u32int inode, int mode) {
 PUBLIC void fs_setFileUid(u32int inode, int uid) {
     int index = _indexOf(inode);
     if (index == -1) {
-        index = _loadInode(inode);
+    	log(L_ERROR, "could not load inode: %d", inode);
+    	return;
     }
     if (diskManager_setFileUid(inode, uid)) {
         inodes[index].uid = uid;
@@ -335,18 +348,39 @@ PUBLIC void fs_setFileUid(u32int inode, int uid) {
 PUBLIC void fs_setFileGid(u32int inode, int gid) {
     int index = _indexOf(inode);
     if (index == -1) {
-        index = _loadInode(inode);
+    	log(L_ERROR, "could not load inode: %d", inode);
+    	return;
     }
     if (diskManager_setFileGid(inode, gid)) {
         inodes[index].gid = gid;
     }
 }
 
-PUBLIC void fs_remove(u32int inode) {
-	int index = _indexOf(inode);
-	if (index != -1) {
-		inodes[index].inodeId = -1;
+PRIVATE u32int fs_remove(fs_node_t* node, u32int inode) {
+	int index = _indexOf(node->inode);
+	if (index == -1) {
+    	log(L_ERROR, "could not load inode: %d", node->inode);
+    	return E_ACCESS;
 	}
-	diskManager_delete(inode);
+	// inodes[inode].length = diskManager_size(inode);
+		log(L_DEBUG, "removing inode: %d, length: %d", inode, inodes[index].length);
+	char contents[inodes[index].length];
+	diskManager_readContents(node->inode, contents, inodes[index].length, 0);
+	int offset = 0, readinode;
+	while (offset < inodes[index].length) {
+		memcpy(&readinode, contents + offset, sizeof(u32int));
+		//	log(L_DEBUG, "delete: read inode %d - %s", readinode, contents + offset + sizeof(u32int));
+		if (readinode == inode) {
+			readinode = -1;
+			memcpy(contents + offset, &readinode, sizeof(u32int));
+				log(L_DEBUG, "%d was removed succesfully!", inode);
+			// FIXME: his could be more officient by only saving the recently modified bytes!!
+			diskManager_writeContents(node->inode, contents, inodes[index].length, 0);
+			diskManager_delete(inode);
+			return 0;
+		}
+		offset += sizeof(u32int) + MAX_NAME_LENGTH;
+	}
+	return E_FILE_NOT_EXISTS;
 }
 
