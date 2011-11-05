@@ -198,15 +198,13 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 	}
 	int contentsLength = diskManager_size(dirInodeNumber);
 	// log(L_DEBUG, "_appendFile: int contLen = %d, appending %s", contentsLength, name);
-	int nameLen = strlen(fileName) + 1;
-	char content[contentsLength + 2 * sizeof(u32int) + nameLen];
+	char content[contentsLength + sizeof(u32int) + MAX_NAME_LENGTH];
 	diskManager_readContents(dirInodeNumber, content, contentsLength, 0);
 
 	int offset = contentsLength;
 
 	memcpy(content + offset, &fileInodeNumber, sizeof(u32int));	offset += sizeof(u32int);
-	memcpy(content + offset, &nameLen, sizeof(u32int));			offset += sizeof(u32int);
-	memcpy(content + offset, fileName, nameLen); 				offset += nameLen;
+	memcpy(content + offset, fileName, MAX_NAME_LENGTH); 				offset += MAX_NAME_LENGTH;
 	inodes[dirInodeNumber].length = offset;
 		// log(L_DEBUG, "_appendFile: final contLen = %d, appending %s", offset, name);
 	diskManager_writeContents(dirInodeNumber, content, offset, 0);
@@ -222,15 +220,13 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 	int length = diskManager_size(node->inode);
 	char contents[length];
 	diskManager_readContents(node->inode, contents, length, 0);
-	u32int i = 0, offset = 0, len;
+	u32int i = 0, offset = 0;
 
 	// + 2 = skip "." and ".."
 	while (i < index + 2 && offset < length) {
-		offset += sizeof(u32int);					// skip inodeNumber
-		memcpy(&len, contents + offset, sizeof(u32int));
-		offset += sizeof(u32int);					// skip strlen
+		offset += sizeof(u32int);				// skip inodeNumber
 			// log(L_DEBUG, "file: %s - %d\n", contents + offset, len);
-		offset += len;								// skip fileName
+		offset += MAX_NAME_LENGTH;				// skip fileName
 		i++;
 	}
 	fs_node_t* fsNode = NULL;
@@ -248,18 +244,16 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 	int length = diskManager_size(node->inode);
 	char contents[length];
 	diskManager_readContents(node->inode, contents, length, 0);
-	u32int offset = 0, len, inodeNumber;
+	u32int offset = 0, inodeNumber;
 	while (offset < length) {
 		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
 		offset += sizeof(u32int);					// skip inodeNumber
-		memcpy(&len, contents + offset, sizeof(u32int));
-		offset += sizeof(u32int);					// skip strlen
 		if (strcmp(name, contents + offset) == 0) {
 			fs_node_t* fsnode = kmalloc(sizeof(fs_node_t));
 			fs_getFsNode(fsnode, inodeNumber);
 			return fsnode;
 		}
-		offset += len;								// skip fileName
+		offset += MAX_NAME_LENGTH;					// skip fileName
 	}
 	return NULL;
 }
