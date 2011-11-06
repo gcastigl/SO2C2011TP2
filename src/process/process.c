@@ -2,7 +2,6 @@
 #include <session.h>
 
 extern PROCESS process[];
-extern int nextPID;
 extern int currentPID;
 int count100;
 int firstTime = true;

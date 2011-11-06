@@ -1,6 +1,5 @@
 #include <fs/fs_API.h>
-
-fs_node_t *fs_root = 0; // The root of the filesystem.
+#include <util/logger.h>
 
 u32int read_fs(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
     // Has the node got a read callback?

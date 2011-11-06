@@ -2,16 +2,7 @@
 #define FS_H
 
 #include <defs.h>
-#include <util/logger.h>
 
-
-//#define FS_FILE        0x01
-//#define FS_DIRECTORY   0x02
-//#define FS_CHARDEVICE  0x03
-//#define FS_BLOCKDEVICE 0x04
-//#define FS_PIPE        0x05
-//#define FS_SYMLINK     0x06
-//#define FS_MOUNTPOINT  0x08 // Is the file an active mountpoint?
 #define FS_TYPE        0xF000
 #define FS_PIPE        0x1000
 #define FS_CHARDEVICE  0x2000
@@ -68,11 +59,6 @@ typedef struct fs_node {
     finddir_type_t finddir;
     removedir_type_t removedir;
 } fs_node_t;
-
-struct dirent {
-    char name[MAX_NAME_LENGTH]; 	// Filename.
-    u32int ino;     			// Inode number. Required by POSIX.
-};
 
 // Standard read/write/open/close functions. Note that these are all suffixed with
 // _fs to distinguish them from the read/write/open/close which deal with file descriptors
