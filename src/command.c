@@ -323,12 +323,10 @@ int cd_cmd(int argc, char **argv) {
         }
         if (node != NULL) {
         	if ((node->mask&FS_SYMLINK) == FS_SYMLINK) {
-        		int link;
-        		read_fs(node, 0, sizeof(u32int), (u8int*) &link);
-        		fs_node_t target;
-        		fs_getFsNode(&target, link);
-        		char* name = target.name;
-        		cd_cmd(1, (char**) &name);
+        		char name[MAX_NAME_LENGTH];
+        		read_fs(node, 0, MAX_NAME_LENGTH, (u8int*) name);
+        		char* n = name;
+        		cd_cmd(1, (char**) &n);
         		return 0;
         	}
             if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY) {
