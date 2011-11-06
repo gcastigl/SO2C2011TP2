@@ -20,10 +20,10 @@ PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent);
 
 PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index);
 PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name);
+PRIVATE u32int fs_removedir(fs_node_t *node, u32int inode);
 
 PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
 PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
-PRIVATE u32int fs_remove(fs_node_t *node, u32int inode);
 
 PRIVATE void fs_open(fs_node_t *node);
 PRIVATE void fs_close(fs_node_t *node);
@@ -74,7 +74,7 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	if ((inode->mask&FS_DIRECTORY) == FS_DIRECTORY) {
 		fsNode->finddir = fs_finddir;
 		fsNode->readdir = fs_readdir;
-		fsNode->remove = fs_remove;
+		fsNode->removedir = fs_removedir;
 	} else {
 		fsNode->finddir = NULL;
 		fsNode->readdir = NULL;
@@ -356,7 +356,7 @@ PUBLIC void fs_setFileGid(u32int inode, int gid) {
     }
 }
 
-PRIVATE u32int fs_remove(fs_node_t* node, u32int inode) {
+PRIVATE u32int fs_removedir(fs_node_t* node, u32int inode) {
 	int index = _indexOf(node->inode);
 	if (index == -1) {
     	log(L_ERROR, "could not load inode: %d", node->inode);

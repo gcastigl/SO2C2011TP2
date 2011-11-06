@@ -50,7 +50,7 @@ typedef void (*open_type_t)(struct fs_node*);
 typedef void (*close_type_t)(struct fs_node*);
 typedef struct fs_node * (*readdir_type_t)(struct fs_node*,u32int);
 typedef struct fs_node * (*finddir_type_t)(struct fs_node*,char *name);
-typedef u32int (*remove_type_t)(struct fs_node*,u32int inode);
+typedef u32int (*removedir_type_t)(struct fs_node*,u32int inode);
 
 typedef struct fs_node {
     char name[MAX_NAME_LENGTH];     // The filename.
@@ -66,7 +66,7 @@ typedef struct fs_node {
     close_type_t close;
     readdir_type_t readdir;
     finddir_type_t finddir;
-    remove_type_t remove;
+    removedir_type_t removedir;
 } fs_node_t;
 
 struct dirent {
@@ -89,6 +89,6 @@ fs_node_t *readdir_fs(fs_node_t *node, u32int index);
 
 fs_node_t *finddir_fs(fs_node_t *node, char *name);
 
-u32int remove_fs(fs_node_t *node, u32int inode);
+u32int removedir_fs(fs_node_t *node, u32int inode);
 
 #endif

@@ -60,9 +60,9 @@ fs_node_t *finddir_fs(fs_node_t *node, char *name) {
     }
 }
 
-u32int remove_fs(fs_node_t *node, u32int inode) {
-	if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY && node->remove != 0)
-		return node->remove(node, inode);
+u32int removedir_fs(fs_node_t *node, u32int inode) {
+	if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY && node->removedir != 0)
+		return node->removedir(node, inode);
 	else {
 		log(L_ERROR, "%s does not have a callback for finddir_fs", node->name);
 		return 0;

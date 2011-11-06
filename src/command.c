@@ -410,7 +410,7 @@ int rm_cmd(int argc, char **argv) {
             printf("rm: You don't have write access to %s", argv[0]);
             return -1;
         }
-		int removed = remove_fs(&current, node->inode);
+		int removed = removedir_fs(&current, node->inode);
         log(L_DEBUG, "rm: remove file returned: %d", removed);
 		kfree(node);
 	}
