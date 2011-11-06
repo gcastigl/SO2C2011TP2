@@ -283,7 +283,9 @@ I will give you sucking-pig and kasha. We will have dinner with some brendy and 
 
 // TODO: finish this funcion!
 int diskManagerTest(int argc, char **argv) {
-	int inodeNumber = fs_createFile(0, "longText.txt", FS_FILE);
+	fs_node_t root;
+	fs_getRoot(&root);
+	int inodeNumber = createdir_fs(&root, "longText.txt", FS_FILE);
 	fs_node_t node;
 	fs_getFsNode(&node, inodeNumber);
 	u8int* contents = (u8int*) longText;
@@ -377,7 +379,9 @@ int mkdir_cmd(int argc, char **argv) {
         printf("mkdir: missing operand\n");
     } else {
         errno = 0;
-        fs_createFile(tty_getCurrentTTY()->currDirectory, argv[0], FS_DIRECTORY);
+        fs_node_t current;
+        fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
+        createdir_fs(&current, argv[0], FS_DIRECTORY);
         char* err = NULL;
         switch(errno) {
             case OK:
@@ -405,7 +409,7 @@ int rm_cmd(int argc, char **argv) {
         fs_getFsNode(&current, currentiNode);
         fs_node_t *node = finddir_fs(&current, argv[0]);
         if (!permission_file_hasAccess(node, W_BIT)) {
-            printf("rm: You don't have write access to %s", argv[0]);
+            printf("rm: You don't have write access to %s\n", argv[0]);
             return -1;
         }
 		int removed = removedir_fs(&current, node->inode);
@@ -425,8 +429,9 @@ int touch_cmd(int argc, char **argv) {
         printf("touch: missing operand\n");
     } else {
         errno = 0;
-        //u32int parentiNode, char* name, u32int type
-        fs_createFile(tty_getCurrentTTY()->currDirectory, argv[0], FS_FILE);
+        fs_node_t current;
+		fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
+        createdir_fs(&current, argv[0], FS_FILE);
         char* err = NULL;
         switch(errno) {
             case OK:
@@ -471,7 +476,7 @@ int ln_cmd(int argc, char **argv) {
         return -1;
     }
     // create sym link
-    u32int symLinkiNode = fs_createFile(currentiNode, argv[1], FS_SYMLINK);
+    u32int symLinkiNode = createdir_fs(&currentFsNode, argv[1], FS_SYMLINK);
     if (symLinkiNode == E_FILE_EXISTS) {
         printf("ln: accessing \"%s\": File exists\n", argv[1]);
         return -1;

@@ -60,10 +60,28 @@ fs_node_t *finddir_fs(fs_node_t *node, char *name) {
 }
 
 u32int removedir_fs(fs_node_t *node, u32int inode) {
-	if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY && node->removedir != 0)
+	if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY && node->removedir != NULL)
 		return node->removedir(node, inode);
 	else {
 		log(L_ERROR, "%s does not have a callback for finddir_fs", node->name);
-		return 0;
+		return -1;
+	}
+}
+
+u32int createdir_fs(fs_node_t* node, char* name, u32int type) {
+	if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY && node->createdir != NULL)
+		return node->createdir(node, name, type);
+	else {
+		log(L_ERROR, "%s does not have a callback for createdir_fs", node->name);
+		return -1;
+	}
+}
+
+u32int size_fs(fs_node_t* node) {
+	if (node->size != NULL)
+		return node->size(node);
+	else {
+		log(L_ERROR, "%s does not have a callback for size_fs", node->name);
+		return -1;
 	}
 }

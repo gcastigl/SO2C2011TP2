@@ -44,6 +44,8 @@ int lseek(int fildes, int offset, int oflag) {
 }
 
 int mkfifo(char *name, int mode) {
-    fs_createFile(tty_getCurrentTTY()->currDirectory, name, FS_PIPE);
+    fs_node_t current;
+    fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
+    createdir_fs(&current, name, FS_PIPE);
     return 0;
 }

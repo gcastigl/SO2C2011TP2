@@ -20,6 +20,7 @@ PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent);
 
 PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index);
 PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name);
+PRIVATE u32int fs_createdir(fs_node_t* node, char* name, u32int type);
 PRIVATE u32int fs_removedir(fs_node_t *node, u32int inode);
 
 PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
@@ -27,6 +28,8 @@ PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buff
 
 PRIVATE void fs_open(fs_node_t *node);
 PRIVATE void fs_close(fs_node_t *node);
+
+PRIVATE u32int fs_size(fs_node_t *node);
 
 PRIVATE int _indexOf(u32int inode);
 PRIVATE int _loadInode(u32int inode);
@@ -71,13 +74,17 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	fsNode->write = fs_write;
 	fsNode->open = fs_open;
 	fsNode->close = fs_close;
+	fsNode->size = fs_size;
 	if ((inode->mask&FS_DIRECTORY) == FS_DIRECTORY) {
 		fsNode->finddir = fs_finddir;
 		fsNode->readdir = fs_readdir;
 		fsNode->removedir = fs_removedir;
+		fsNode->createdir = fs_createdir;
 	} else {
 		fsNode->finddir = NULL;
 		fsNode->readdir = NULL;
+		fsNode->removedir = NULL;
+		fsNode->createdir = NULL;
 	}
 }
 
@@ -106,26 +113,18 @@ PRIVATE int _loadInode(u32int inode) {
 }
 
 PRIVATE void fs_create() {
-	diskManager_writeHeader();				// Save header for the next time the system starts...
+	// Save header for the next time the system starts
+	diskManager_writeHeader();
 	// Initialize root directory
 	int rootInode = diskManager_nextInode();
 	_initInode_dir(rootInode, "/", rootInode);
 	fs_setFileMode(rootInode, 0x777);
-
-	int devInode = diskManager_nextInode();
-	_initInode_dir(devInode, "dev", rootInode);
-
-	int homeInode = diskManager_nextInode();
-	_initInode_dir(homeInode, "home", rootInode);
-	fs_setFileMode(homeInode, 0x777);
-
-	int etcInode = diskManager_nextInode();
-	_initInode_dir(etcInode, "etc", rootInode);
-
-	// Add dev as sub-directory of root
-	_appendFile(rootInode, devInode, NULL);
-	_appendFile(rootInode, homeInode, NULL);
-	_appendFile(rootInode, etcInode, NULL);
+	// Create initial directories
+	fs_node_t root;
+	fs_getRoot(&root);
+	fs_createdir(&root, "dev", FS_DIRECTORY);
+	fs_createdir(&root, "home", FS_DIRECTORY);
+	fs_createdir(&root, "etc", FS_DIRECTORY);
 }
 
 PRIVATE void fs_load() {
@@ -139,27 +138,6 @@ PRIVATE void _loadDirectory(int inodeNumber) {
 	fs_getFsNode(&curr, inodeNumber);
 	while(fs_readdir(&curr, i++) != NULL)
 		;
-}
-
-u32int fs_createFile(u32int parentiNode, char* name, u32int type) {
-	fs_node_t node;
-	fs_getFsNode(&node, parentiNode);
-	if (!permission_file_hasAccess(&node, W_BIT)) {
-	    errno = EACCES;
-	    return -1;
-	}
-	if (fs_finddir(&node, name) != NULL) {
-		errno = E_FILE_EXISTS;
-		return -1;
-	}
-	int inode = diskManager_nextInode();
-	if (type == FS_DIRECTORY) {
-		_initInode_dir(inode, name, parentiNode);
-	} else {
-		_initInode(inode, name, type | DEF_PERM);
-	}
-	_appendFile(parentiNode, inode, NULL);
-	return inode;
 }
 
 PRIVATE void _initInode(u32int inodeNumber, char* name, u32int mask) {
@@ -215,6 +193,7 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 	memcpy(content + offset, fileName, MAX_NAME_LENGTH); 		offset += MAX_NAME_LENGTH;
 	inodes[dirInodeNumber].length = offset;
 	// log(L_DEBUG, "_appendFile: final contLen = %d, appending %s", offset, name);
+	// FIXME: write last part instead of the whole contents again
 	diskManager_writeContents(dirInodeNumber, content, offset, 0);
 }
 
@@ -268,8 +247,53 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 	return NULL;
 }
 
+PRIVATE u32int fs_createdir(fs_node_t* node, char* name, u32int type) {
+	if (!permission_file_hasAccess(node, W_BIT)) {
+	    errno = EACCES;
+	    return -1;
+	}
+	if (fs_finddir(node, name) != NULL) {
+		errno = E_FILE_EXISTS;
+		return -1;
+	}
+	int inode = diskManager_nextInode();
+	if (type == FS_DIRECTORY) {
+		_initInode_dir(inode, name, node->inode);
+	} else {
+		_initInode(inode, name, type | DEF_PERM);
+	}
+	_appendFile(node->inode, inode, NULL);
+	return inode;
+}
 
-u32int fs_size(fs_node_t *node) {
+PRIVATE u32int fs_removedir(fs_node_t* node, u32int inode) {
+	int index = _indexOf(node->inode);
+	if (index == -1) {
+    	log(L_ERROR, "could not load inode: %d", node->inode);
+    	return E_ACCESS;
+	}
+	// inodes[inode].length = diskManager_size(inode);
+		log(L_DEBUG, "removing inode: %d, length: %d", inode, inodes[index].length);
+	char contents[inodes[index].length];
+	diskManager_readContents(node->inode, contents, inodes[index].length, 0);
+	int offset = 0, readinode;
+	while (offset < inodes[index].length) {
+		memcpy(&readinode, contents + offset, sizeof(u32int));
+		//	log(L_DEBUG, "delete: read inode %d - %s", readinode, contents + offset + sizeof(u32int));
+		if (readinode == inode) {
+			readinode = -1;
+			memcpy(contents + offset, &readinode, sizeof(u32int));
+				log(L_DEBUG, "%d was removed succesfully!", inode);
+			diskManager_writeContents(node->inode, contents + offset, sizeof(u32int), offset);
+			diskManager_delete(inode);
+			return 0;
+		}
+		offset += sizeof(u32int) + MAX_NAME_LENGTH;
+	}
+	return E_FILE_NOT_EXISTS;
+}
+
+PRIVATE u32int fs_size(fs_node_t *node) {
 	int index =  _indexOf(node->inode);
 	if (index != -1) {
 		return inodes[index].length;
@@ -356,30 +380,4 @@ PUBLIC void fs_setFileGid(u32int inode, int gid) {
     }
 }
 
-PRIVATE u32int fs_removedir(fs_node_t* node, u32int inode) {
-	int index = _indexOf(node->inode);
-	if (index == -1) {
-    	log(L_ERROR, "could not load inode: %d", node->inode);
-    	return E_ACCESS;
-	}
-	// inodes[inode].length = diskManager_size(inode);
-		log(L_DEBUG, "removing inode: %d, length: %d", inode, inodes[index].length);
-	char contents[inodes[index].length];
-	diskManager_readContents(node->inode, contents, inodes[index].length, 0);
-	int offset = 0, readinode;
-	while (offset < inodes[index].length) {
-		memcpy(&readinode, contents + offset, sizeof(u32int));
-		//	log(L_DEBUG, "delete: read inode %d - %s", readinode, contents + offset + sizeof(u32int));
-		if (readinode == inode) {
-			readinode = -1;
-			memcpy(contents + offset, &readinode, sizeof(u32int));
-				log(L_DEBUG, "%d was removed succesfully!", inode);
-			diskManager_writeContents(node->inode, contents + offset, sizeof(u32int), offset);
-			diskManager_delete(inode);
-			return 0;
-		}
-		offset += sizeof(u32int) + MAX_NAME_LENGTH;
-	}
-	return E_FILE_NOT_EXISTS;
-}
 

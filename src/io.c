@@ -45,16 +45,14 @@ int sysOpen(char* fileName, int oflags, int cflags) {
     int i;
     if (oflags & O_CREAT) {
         // FIXME: SHOULD CONSIDER CFLAGS
-        inode = fs_createFile(tty_getCurrentTTY()->currDirectory, fileName, FS_FILE);
+        fs_node_t current;
+        fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
+        inode = createdir_fs(&current, fileName, FS_FILE);
         if ((oflags & O_EXCL) && (inode == E_FILE_EXISTS)) {
             return ERROR;
         }
     }
     if (nextFreeFd < MAX_OPEN_FILES) {
-        TTY* tty = tty_getCurrentTTY();
-    	u32int currentiNode = tty->currDirectory;
-    	fs_node_t current;
-    	fs_getFsNode(&current, currentiNode);
         for (i = 0; i < MAX_OPEN_FILES; i++) {
             if (strcmp(fileName, openFiles[i].name) == 0) {
                 break;
@@ -64,6 +62,8 @@ int sysOpen(char* fileName, int oflags, int cflags) {
             fd = i + FD_OFFSET;
         }
         if (fd == 0) {
+        	fs_node_t current;
+        	fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
             fs_node_t *node = finddir_fs(&current, fileName);
             FILE *file = &openFiles[nextFreeFd - FD_OFFSET];
             strcpy(file->name, fileName);

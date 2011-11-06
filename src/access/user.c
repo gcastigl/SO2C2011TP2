@@ -178,8 +178,8 @@ PUBLIC void user_init() {
     fs_node_t root;
     fs_getRoot(&root);
     homeInode = finddir_fs(&root, "home");
-    fs_node_t *etcInode = finddir_fs(&root, "etc");
-    passwd = finddir_fs(etcInode, "passwd");
+    fs_node_t *etcnode = finddir_fs(&root, "etc");
+    passwd = finddir_fs(etcnode, "passwd");
     user_parse("0:0:root:pass\n");
     user_parse("10:0:qcho:x\n");
     user_parse("11:11:qcho1:pass1\n");
@@ -187,7 +187,7 @@ PUBLIC void user_init() {
     do_useradd("a", "a");
     do_useradd("guest", "");
     if (passwd == NULL) {
-        fs_getFsNode(passwd, fs_createFile(etcInode->inode, "passwd", FS_FILE));
+        fs_getFsNode(passwd, createdir_fs(etcnode, "passwd", FS_FILE));
         flushList();
     } else {
         loadList();
@@ -198,7 +198,7 @@ PUBLIC void user_init() {
         log(L_DEBUG, "user %d: %s", i, userstring);
     }
 
-    kfree(etcInode);
+    kfree(etcnode);
 }
 
 PRIVATE void loadList() {
@@ -300,7 +300,7 @@ PRIVATE boolean createUserDir(int uid) {
         return false;
     }
     errno = OK;
-    int inode = fs_createFile(homeInode->inode, user->userName, FS_DIRECTORY);
+    int inode = createdir_fs(homeInode, user->userName, FS_DIRECTORY);
     if (inode == -1 && errno == E_FILE_EXISTS) {
         return true;
     } else if (errno == OK) {

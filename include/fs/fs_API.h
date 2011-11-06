@@ -35,13 +35,18 @@ struct fs_node;
 
 // These typedefs define the type of callbacks - called when read/write/open/close
 // are called.
-typedef u32int (*read_type_t)(struct fs_node*,u32int,u32int,u8int*);
-typedef u32int (*write_type_t)(struct fs_node*,u32int,u32int,u8int*);
 typedef void (*open_type_t)(struct fs_node*);
 typedef void (*close_type_t)(struct fs_node*);
+
+typedef u32int (*read_type_t)(struct fs_node*,u32int,u32int,u8int*);
+typedef u32int (*write_type_t)(struct fs_node*,u32int,u32int,u8int*);
+
+typedef u32int (*size_type_t)(struct fs_node*);
+
 typedef struct fs_node * (*readdir_type_t)(struct fs_node*,u32int);
 typedef struct fs_node * (*finddir_type_t)(struct fs_node*,char *name);
 typedef u32int (*removedir_type_t)(struct fs_node*,u32int inode);
+typedef u32int (*createdir_type_t)(struct fs_node*, char* name, u32int type);
 
 typedef struct fs_node {
     char name[MAX_NAME_LENGTH];     // The filename.
@@ -51,13 +56,15 @@ typedef struct fs_node {
     u32int flags;       			// Includes the node type. See #defines above.
     u32int inode;       			// This is device-specific - provides a way for a filesystem to identify files.
     u32int impl;        			// An implementation-defined number.
-    read_type_t read;
-    write_type_t write;
     open_type_t open;
     close_type_t close;
+    read_type_t read;
+    write_type_t write;
+    size_type_t size;
     readdir_type_t readdir;
     finddir_type_t finddir;
     removedir_type_t removedir;
+    createdir_type_t createdir;
 } fs_node_t;
 
 // Standard read/write/open/close functions. Note that these are all suffixed with
@@ -76,5 +83,9 @@ fs_node_t *readdir_fs(fs_node_t *node, u32int index);
 fs_node_t *finddir_fs(fs_node_t *node, char *name);
 
 u32int removedir_fs(fs_node_t *node, u32int inode);
+
+u32int createdir_fs(fs_node_t* node, char* name, u32int type);
+
+u32int size_fs(fs_node_t* node);
 
 #endif
