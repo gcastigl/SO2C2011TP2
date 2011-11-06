@@ -374,8 +374,7 @@ PRIVATE u32int fs_removedir(fs_node_t* node, u32int inode) {
 			readinode = -1;
 			memcpy(contents + offset, &readinode, sizeof(u32int));
 				log(L_DEBUG, "%d was removed succesfully!", inode);
-			// FIXME: his could be more officient by only saving the recently modified bytes!!
-			diskManager_writeContents(node->inode, contents, inodes[index].length, 0);
+			diskManager_writeContents(node->inode, contents + offset, sizeof(u32int), offset);
 			diskManager_delete(inode);
 			return 0;
 		}
