@@ -481,7 +481,8 @@ int ln_cmd(int argc, char **argv) {
     fs_node_t symLink;
     fs_getFsNode(&symLink, symLinkiNode);
     // add contents to sym link
-    write_fs(&symLink, 0, sizeof(u32int), (u8int*) &target->inode);
+    //write_fs(&symLink, 0, sizeof(u32int), (u8int*) &target->inode);
+    write_fs(&symLink, 0, MAX_NAME_LENGTH, (u8int*) target->name);
     kfree(target);
     return 0;
 }
@@ -508,13 +509,10 @@ int cat_cmd(int argc, char **argv) {
             return -1;
         }
         if ((file->mask&FS_SYMLINK) == FS_SYMLINK) {
-        	int link;
-        	read_fs(file, 0, sizeof(u32int), (u8int*) &link);
-        	fs_node_t target;
-        	fs_getFsNode(&target, link);
-        	char* name = target.name;
-        	cat_cmd(1, (char**) &name);
-        	return 0;
+        	char name[MAX_NAME_LENGTH];
+        	read_fs(file, 0, MAX_NAME_LENGTH, (u8int*) name);
+        	char* n = name;
+        	return cat_cmd(1, &n);
         }
         u8int buff[512];
         int offset = 0;
