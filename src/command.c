@@ -1,6 +1,8 @@
 #include <command.h>
 extern PROCESS process[];
 
+PRIVATE char* _ls_cmd_EndingString(u32int fileType);
+
 int echo_cmd(int argc, char **argv) {
 	if (argc > 0) {
 		for(int i = 0; i < argc; i++) {
@@ -366,12 +368,25 @@ int ls_cmd(int argc, char **argv) {
                 user_getName(node->uid),
                 group_getName(node->gid),
                 node->name,
-                ((node->mask&FS_DIRECTORY) == FS_DIRECTORY) ? "/": ""
+                _ls_cmd_EndingString(node->mask)
             );
             i++;
         }
     }
     return 0;
+}
+
+PRIVATE char* _ls_cmd_EndingString(u32int fileType) {
+	if ((fileType&FS_DIRECTORY) == FS_DIRECTORY) {
+		return "/";
+	}
+	if ((fileType&FS_SYMLINK) == FS_SYMLINK) {
+		return "@";
+	}
+	if ((fileType&FS_PIPE) == FS_PIPE) {
+		return "|";
+	}
+	return "";
 }
 
 int mkdir_cmd(int argc, char **argv) {
