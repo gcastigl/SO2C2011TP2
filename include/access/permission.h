@@ -8,7 +8,7 @@
 #include <fs/fs_API.h>
 #include <session.h>
 
-#define MASK_STRING_LEN 10+1
+#define MASK_STRING_LEN	11
 
 /**
  * Writes in string the file mask. Must have MASK_STRING_LEN allocated.

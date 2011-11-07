@@ -82,6 +82,7 @@ typedef void*           type_t;
 #define E_INVALID_ARG		-6
 #define E_ACCESS			-7
 #define E_FILE_NOT_EXISTS	-8
+#define E_MAX_FS_REACHED	-9
 
 #define MAX_NAME_LENGTH		32
 
