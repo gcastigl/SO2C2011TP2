@@ -54,6 +54,7 @@ cmd_table_entry cmd_table[] = {
 	{"chown", 			"usage: USERNAME FILE", chown_cmd},
 	{"chgrp", 			"usage: GROUPNAME FILE", chgrp_cmd},
 	{"cache", 			"prints the fs cache status", cacheStatus_cmd},
+	{"pfiles", 			"prints the files opened by the current process", pfiles},
 	{"", "", NULL}
 };
 

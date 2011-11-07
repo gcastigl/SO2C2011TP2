@@ -664,3 +664,20 @@ int cacheStatus_cmd(int argc, char **argv) {
 	return 0;
 }
 
+int pfiles(int argc, char **argv) {
+	PROCESS* p = getCurrentProcess();
+	printf("Files opened by process: %s (PID: %d)\n", p->name, p->pid);
+	printf("inode\t|\tmode\n");
+	boolean hasOpenedFiles = false;
+	for (int i = 0; i < MAX_FILES_PER_PROCESS; i++) {
+		if (p->fd_table[i].mask != 0) {
+			printf("%d\t\t|\t%x\n", p->fd_table[i].inode, p->fd_table[i].mode);
+			hasOpenedFiles = true;
+		}
+	}
+	if (!hasOpenedFiles) {
+		printf("(none)\n");
+	}
+	printf("\n");
+	return 0;
+}
