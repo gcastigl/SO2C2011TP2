@@ -3,6 +3,8 @@ extern PROCESS process[];
 
 PRIVATE char* _ls_cmd_EndingString(u32int fileType);
 
+// REALLY BIG FIXME: ALL this funcions should be doing a system call!!
+
 int echo_cmd(int argc, char **argv) {
 	if (argc > 0) {
 		for(int i = 0; i < argc; i++) {
@@ -92,9 +94,8 @@ int getCPUspeed_cmd(int argc, char **argv) {
 
 
 int random_cmd(int argc, char **argv) {
-	int rand = random();
-	printf("%d\n", rand);
-	return rand;
+	printf("%d\n", random());
+	return 0;
 }
 
 int getchar_cmd(int argc, char **argv) {
@@ -553,6 +554,32 @@ int cat_cmd(int argc, char **argv) {
     return 0;
 }
 
+int mkfifo_cmd(int argc, char **argv) {
+	if (argc == 2) {
+		if (argv[1][0] == 'w') {
+			mkfifo(argv[0], O_WRONLY | O_CREAT);
+		} else if (argv[1][0] == 'r') {
+			mkfifo(argv[0], O_WRONLY | O_CREAT);
+		}
+	} else if(argc == 3) {
+		fs_node_t current, *fifo;
+		fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
+		fifo = finddir_fs(&current, argv[1]);
+		char *err = NULL;
+		if (fifo == NULL) {
+			err = "file does not exist";
+		} else if (FILE_TYPE(fifo->mask) != FS_PIPE) {
+			err = "the file is not a pipe";
+		}
+		if (err != NULL) {
+			printf("mkfifo: can't write to %s: %s\n", argv[1], err);
+			return -1;
+		}
+		write_fs(fifo, 0, strlen(argv[2]), (u8int*) argv[2]);
+	}
+	return 0;
+}
+
 int chmod_cmd(int argc, char **argv) {
     if (argc == 2) {
         TTY* tty = tty_getCurrentTTY();
@@ -661,6 +688,9 @@ int cacheStatus_cmd(int argc, char **argv) {
 		disk = cache.disk == ATA0 ? 0 : 1;
 		printf("\t%d\t%d\t\t%d\t\t%d\t\t%d\n", i, disk, cache.sector, cache.accessCount, cache.dirty);
 	}
+	// FIXME: because printf has no option to limit the number of digits of a float,
+	// a horrible extra validation was added to simulate it.
+	printf("Memory usage: %d%s Kb\n\n", (SECTOR_SIZE * CACHE_SIZE) / 1024, (CACHE_SIZE%2 == 0) ? "" : ",5");
 	return 0;
 }
 

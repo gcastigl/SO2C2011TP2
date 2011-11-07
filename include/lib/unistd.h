@@ -44,4 +44,5 @@ int lseek(int fildes, int offset, int oflag);
 * Crea un named pipe en el directorio actual
 **/
 int mkfifo(char *name, int mode);
+
 #endif

@@ -33,6 +33,7 @@ cmd_table_entry cmd_table[] = {
 	{"cd", 				"switch current directory", cd_cmd},
 	{"ls", 				"List information about the FILEs (the current directory by default).", ls_cmd},
 	{"mkdir", 			"Create the DIRECTORY(ies), if they do not already exist.", mkdir_cmd},
+	{"mkfifo", 			"Create named pipes (FIFOs) with the given NAMEs.", mkfifo_cmd},
 	{"pwd",				"Show current user path", pwd_cmd},
 	{"touch",			"Creates a new empty file", touch_cmd},
 	{"cat",				"Shows the content for a specified filename", cat_cmd},
