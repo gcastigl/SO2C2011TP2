@@ -7,17 +7,8 @@ PRIVATE iNode inodes[INODES];				// List of file nodes.
 PRIVATE u32int nextToFree = 0;
 
 PRIVATE void fs_create();
-PRIVATE void fs_load();
-
-PRIVATE void _loadDirectory(int inodeNumber);
-
-PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* name);
-
-PRIVATE void _initInode(u32int inodeNumber, char* name, u32int flags);
-PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent);
 
 // callbacks function declarations
-
 PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index);
 PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name);
 PRIVATE u32int fs_createdir(fs_node_t* node, char* name, u32int type);
@@ -31,6 +22,10 @@ PRIVATE void fs_close(fs_node_t *node);
 
 PRIVATE u32int fs_size(fs_node_t *node);
 
+// Auxiliary funcions
+PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* name);
+PRIVATE void _initInode(u32int inodeNumber, char* name, u32int flags);
+PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent);
 PRIVATE int _indexOf(u32int inode);
 PRIVATE int _loadInode(u32int inode);
 
@@ -42,10 +37,7 @@ void fs_init() {
 		inodes[i].inodeId = -1;
 		inodes[i].length = 0;
 	}
-	
-	if (diskManager_validateHeader()) {
-		fs_load();
-	} else {
+	if (!diskManager_validateHeader()) {
 		fs_create();
 	}
 }
@@ -125,19 +117,6 @@ PRIVATE void fs_create() {
 	fs_createdir(&root, "dev", FS_DIRECTORY);
 	fs_createdir(&root, "home", FS_DIRECTORY);
 	fs_createdir(&root, "etc", FS_DIRECTORY);
-}
-
-PRIVATE void fs_load() {
-	log(L_DEBUG, "loding OS from root...");
-	_loadDirectory(0);			// Initialize root
-}
-
-PRIVATE void _loadDirectory(int inodeNumber) {
-	int i = 0;
-	fs_node_t curr;
-	fs_getFsNode(&curr, inodeNumber);
-	while(fs_readdir(&curr, i++) != NULL)
-		;
 }
 
 PRIVATE void _initInode(u32int inodeNumber, char* name, u32int mask) {
@@ -345,7 +324,8 @@ PUBLIC void fs_setFileMode(u32int inode, int mode) {
     mode &= (S_IRWXU | S_IRWXG | S_IRWXO);
     int index = _indexOf(inode);
     if (index == -1) {
-        index = _loadInode(inode);
+    	log(L_ERROR, "Unable to load inode: %d", inode);
+        return;
     }
     int newMode = FILE_TYPE(inodes[index].mask) | mode;
     log(L_DEBUG, "changing inode %d to %x mode [old: %x]",

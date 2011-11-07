@@ -38,7 +38,6 @@ cmd_table_entry cmd_table[] = {
 	{"cat",				"Shows the content for a specified filename", cat_cmd},
     {"ln",              "make links between files", ln_cmd},
     {"rm",              "Removes the file specified by the parameter", rm_cmd},
-	//{"format",			"Formats disk ATA0!", format},
 	{"DMtest", 			"disk manager test", diskManagerTest},
 	{"logout", 			"Logout current user\n", logout},
 	{"top", 			"Shows the current running processes", top_cmd},
