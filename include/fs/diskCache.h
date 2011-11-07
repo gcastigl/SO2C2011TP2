@@ -29,4 +29,6 @@ void diskCache_read(int disk, void* msg, int bytes, unsigned short sector, int o
 
 void cache_flush();
 
+void cache_get(int index, cachedSector* cache);
+
 #endif

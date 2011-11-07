@@ -125,3 +125,14 @@ void cache_flush() {
 	}
 }
 
+void cache_get(int index, cachedSector* cache) {
+	if (index >= CACHE_SIZE) {
+		errno = E_INVALID_ARG;
+		return;
+	}
+	cachedSector* from = &cachedData[index];
+	cache->accessCount = from->accessCount;
+	cache->dirty = from->dirty;
+	cache->sector = from->sector;
+	cache->disk = from->disk;
+}
