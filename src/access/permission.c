@@ -2,19 +2,20 @@
 
 PUBLIC void mask_string(int mask, char *string) {
     char type;
-    if ((mask & FS_SOCKET) == FS_SOCKET) {
+    // FIXME: this could look better is a switch
+    if (FILE_TYPE(mask) == FS_SOCKET) {
         type = 's';
-    } else if ((mask & FS_SYMLINK) == FS_SYMLINK) {
+    } else if (FILE_TYPE(mask) == FS_SYMLINK) {
         type = 'l';
-    } else if ((mask & FS_FILE) == FS_FILE) {
+    } else if (FILE_TYPE(mask) == FS_FILE) {
         type = '-';
-    } else if ((mask & FS_BLOCKDEVICE) == FS_BLOCKDEVICE) {
+    } else if (FILE_TYPE(mask) == FS_BLOCKDEVICE) {
         type = 'b';
-    } else if ((mask & FS_DIRECTORY) == FS_DIRECTORY) {
+    } else if (FILE_TYPE(mask) == FS_DIRECTORY) {
         type = 'd';
-    } else if ((mask & FS_CHARDEVICE) == FS_CHARDEVICE) {
+    } else if (FILE_TYPE(mask) == FS_CHARDEVICE) {
         type = 'c';
-    } else if ((mask & FS_PIPE) == FS_PIPE) {
+    } else if (FILE_TYPE(mask) == FS_PIPE) {
         type = 'p';
     } else {
         type = 'u'; // Desconocido
