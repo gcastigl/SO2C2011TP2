@@ -54,6 +54,7 @@ cmd_table_entry cmd_table[] = {
 	{"chmod", 			"usage: OCTALMODE FILE", chmod_cmd},
 	{"chown", 			"usage: USERNAME FILE", chown_cmd},
 	{"chgrp", 			"usage: GROUPNAME FILE", chgrp_cmd},
+	{"cache", 			"prints the fs cache status", cacheStatus_cmd},
 	{"", "", NULL}
 };
 

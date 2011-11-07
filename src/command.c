@@ -650,3 +650,16 @@ int chgrp_cmd(int argc, char **argv) {
     }
     return 0;
 }
+
+int cacheStatus_cmd(int argc, char **argv) {
+	cachedSector cache;
+	int disk;
+	printf("Index\tDisk\tSector\tCountDirty\t\n");
+	for(int i = 0; i < CACHE_SIZE; i++) {
+		cache_get(i, &cache);
+		disk = cache.disk == ATA0 ? 0 : 1;
+		printf("\t%d\t%d\t\t%d\t\t%d\t\t%d\n", i, disk, cache.sector, cache.accessCount, cache.dirty);
+	}
+	return 0;
+}
+

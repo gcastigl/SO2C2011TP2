@@ -281,6 +281,8 @@ int shell_groupdel(int argc, char **argv);
 **/
 int shell_grouplist(int argc, char **argv);
 
+int cacheStatus_cmd(int argc, char **argv);
+
 int cd_cmd(int argc, char **argv);
 int ls_cmd(int argc, char **argv);
 int mkdir_cmd(int argc, char **argv);
