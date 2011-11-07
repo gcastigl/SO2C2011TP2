@@ -13,13 +13,10 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index);
 PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name);
 PRIVATE u32int fs_createdir(fs_node_t* node, char* name, u32int type);
 PRIVATE u32int fs_removedir(fs_node_t *node, u32int inode);
-
 PRIVATE u32int fs_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
 PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
-
 PRIVATE void fs_open(fs_node_t *node);
 PRIVATE void fs_close(fs_node_t *node);
-
 PRIVATE u32int fs_size(fs_node_t *node);
 
 // Auxiliary funcions
@@ -313,12 +310,35 @@ PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buff
 
 
 PRIVATE void fs_open(fs_node_t *node) {
-
+	log(L_DEBUG, "fs_open...");
+	PROCESS* p = getCurrentProcess();
+	log(L_DEBUG, "opening file %s, process: %d", node->name, p);
+	boolean fileOpened = false;
+	for(int i = 0; i < MAX_FILES_PER_PROCESS && !fileOpened; i++) {
+		if (p->fd_table[i].mask == 0) {
+			log(L_DEBUG, "using index %d to open file: %s, mode: %d", node->name, node->flags);
+			p->fd_table[i].mask = FILE_TYPE(node->mask);
+			p->fd_table[i].mode = node->flags;
+			p->fd_table[i].inode = node->inode;
+			p->fd_table[i].count = 1;
+			fileOpened = true;
+		}
+	}
+	log(L_DEBUG, "node opened? => %d", fileOpened);
+	if (!fileOpened) {
+		errno = E_MAX_FS_REACHED;
+	}
 }
 
 PRIVATE void fs_close(fs_node_t *node) {
-
+	PROCESS* p = getCurrentProcess();
+	for(int i = 0; i < MAX_FILES_PER_PROCESS; i++) {
+		if (p->fd_table[i].inode == node->inode) {
+			p->fd_table[i].mask = 0;
+		}
+	}
 }
+
 
 PUBLIC void fs_setFileMode(u32int inode, int mode) {
     mode &= (S_IRWXU | S_IRWXG | S_IRWXO);
