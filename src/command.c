@@ -33,12 +33,20 @@ int help_cmd(int argc, char **argv) {
 			printf("\nCommand not found\n");
 		}
 	} else if (argc == 0) {
+		int len;
 		printf("\nAvailable commands:\n\n");
-		for(int i = 0; shell_getCmdsTable()[i].func != NULL; i++) {
-			printf("\t%s\n", shell_getCmdsTable()[i].name);
+		cmd_table_entry* commands = shell_getCmdsTable();
+		for(int i = 0; commands[i].func != NULL; i++) {
+			len = strlen(commands[i].name);
+			if (i%2 == 0) {
+				printf("\t%s", commands[i].name);
+				while(len++ < 12) printf(" ");
+				printf("|");
+			} else {
+				printf("\t%s\n", commands[i].name);
+			}
 		}
-		printf("\nType in help \"cmdName\" to see the help menu for that \
-command.\n");
+		printf("\n\nType help \"cmdName\" to see the help menu for that command.\n");
 	}
 	return 0;
 }

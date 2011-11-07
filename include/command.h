@@ -91,16 +91,6 @@ int getCPUspeed_cmd(int argc, char **argv);
 **/
 int random_cmd(int argc, char **argv);
 
-/* setAppearance_cmd
-*
-* Recibe como parametros:
-* - Cantidad de Argumentos
-* - Argumentos
-*
-* Cambia los colores de la terminal actual
-**/
-int setAppearance_cmd(int argc, char **argv);
-
 /* getchar_cmd
 *
 * Recibe como parametros:
