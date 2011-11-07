@@ -3,7 +3,6 @@
 
 #include <defs.h>
 
-#define FS_TYPE        0xF000
 #define FS_PIPE        0x1000
 #define FS_CHARDEVICE  0x2000
 #define FS_DIRECTORY   0x4000
@@ -30,6 +29,9 @@
 #define S_IROTH 0x0004 //Others R
 #define S_IWOTH 0x0002 //Others W
 #define S_IXOTH 0x0001 //Others X
+
+#define FILE_TYPE(type)		((type)&0xF000)
+#define FILE_PERMS(type)	((type)&0x0FFF)
 
 struct fs_node;
 

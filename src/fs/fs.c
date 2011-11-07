@@ -75,7 +75,7 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	fsNode->open = fs_open;
 	fsNode->close = fs_close;
 	fsNode->size = fs_size;
-	if ((inode->mask&FS_DIRECTORY) == FS_DIRECTORY) {
+	if (FILE_TYPE(inode->mask) == FS_DIRECTORY) {
 		fsNode->finddir = fs_finddir;
 		fsNode->readdir = fs_readdir;
 		fsNode->removedir = fs_removedir;
@@ -170,7 +170,7 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 	} else {
 		strcpy(fileName, name);
 	}
-	if ((inodes[dirInodeNumber].mask&FS_DIRECTORY) != FS_DIRECTORY) {
+	if (FILE_TYPE(inodes[dirInodeNumber].mask) != FS_DIRECTORY) {
 		log(L_ERROR, "Trying to add file %s to a non dir!\n\n", name);
 		errno = E_INVALID_ARG;
 		return;
@@ -347,7 +347,7 @@ PUBLIC void fs_setFileMode(u32int inode, int mode) {
     if (index == -1) {
         index = _loadInode(inode);
     }
-    int newMode = (inodes[index].mask & FS_TYPE) | mode;
+    int newMode = FILE_TYPE(inodes[index].mask) | mode;
     log(L_DEBUG, "changing inode %d to %x mode [old: %x]",
             inode,
             newMode,

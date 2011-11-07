@@ -334,14 +334,14 @@ int cd_cmd(int argc, char **argv) {
             return -1;
         }
         if (node != NULL) {
-        	if ((node->mask&FS_SYMLINK) == FS_SYMLINK) {
+        	if (FILE_TYPE(node->mask) == FS_SYMLINK) {
         		char name[MAX_NAME_LENGTH];
         		read_fs(node, 0, MAX_NAME_LENGTH, (u8int*) name);
         		char* n = name;
         		cd_cmd(1, (char**) &n);
         		return 0;
         	}
-            if ((node->mask&FS_DIRECTORY) == FS_DIRECTORY) {
+            if (FILE_TYPE(node->mask) == FS_DIRECTORY) {
                 tty->currDirectory = node->inode;
                 memcpy(tty->currPath, node->name, strlen(node->name) + 1);
             } else {
@@ -370,13 +370,13 @@ int ls_cmd(int argc, char **argv) {
                     user_getName(node->uid),
                     group_getName(node->gid),
                     node->name,
-                    ((node->mask&FS_DIRECTORY) == FS_DIRECTORY) ? "/": "");
+                    (FILE_TYPE(node->mask) == FS_DIRECTORY) ? "/": "");
             printf("%s\t%s\t%s\t%s%s\n",
                 perm,
                 user_getName(node->uid),
                 group_getName(node->gid),
                 node->name,
-                _ls_cmd_EndingString(node->mask)
+                _ls_cmd_EndingString(FILE_TYPE(node->mask))
             );
             i++;
         }
@@ -385,13 +385,14 @@ int ls_cmd(int argc, char **argv) {
 }
 
 PRIVATE char* _ls_cmd_EndingString(u32int fileType) {
-	if ((fileType&FS_DIRECTORY) == FS_DIRECTORY) {
+	log(L_DEBUG, "%x - %x", fileType, FS_DIRECTORY);
+	if (fileType == FS_DIRECTORY) {
 		return "/";
 	}
-	if ((fileType&FS_SYMLINK) == FS_SYMLINK) {
+	if (fileType == FS_SYMLINK) {
 		return "@";
 	}
-	if ((fileType&FS_PIPE) == FS_PIPE) {
+	if (fileType == FS_PIPE) {
 		return "|";
 	}
 	return "";
@@ -523,7 +524,7 @@ int cat_cmd(int argc, char **argv) {
         char* err = NULL;
         if (file == NULL) {
             err = "No such file or directory";
-        } else if ((file->mask&FS_DIRECTORY) == FS_DIRECTORY) {
+        } else if (FILE_TYPE(file->mask) == FS_DIRECTORY) {
             err = "Is a directory";
         }
         if (err != NULL) {
@@ -534,7 +535,7 @@ int cat_cmd(int argc, char **argv) {
             printf("cat: You don't have read access to %s", argv[0]);
             return -1;
         }
-        if ((file->mask&FS_SYMLINK) == FS_SYMLINK) {
+        if (FILE_TYPE(file->mask) == FS_SYMLINK) {
         	char name[MAX_NAME_LENGTH];
         	read_fs(file, 0, MAX_NAME_LENGTH, (u8int*) name);
         	char* n = name;
