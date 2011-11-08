@@ -35,19 +35,21 @@ void diskManager_init(u32int strategyType) {
 	log(L_DEBUG, "iNodeDisk size: %d", sizeof(iNodeDisk));
 	log(L_DEBUG, "DiskPage size: %d", sizeof(DiskPage));
 	log(L_DEBUG, "FileHeader size: %d\n", sizeof(FileHeader));
-
 	switch(strategyType) {
 		case S_DIRECT_ACCESS:
 			strategy.write = ata_write;
 			strategy.read = ata_read;
+			log(L_DEBUG, "Strategy: Direct disk access\n");
 			break;
 		case S_LRU_CACHE:
 			strategy.write = diskCache_write;
 			strategy.read = diskCache_read;
+			log(L_DEBUG, "Strategy: LRU Cache\n");
 			break;
 		default:
 			strategy.write = ata_write;
 			strategy.read = ata_read;
+			log(L_DEBUG, "Strategy: Direct disk access\n");
 			break;
 	}
 }
