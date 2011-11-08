@@ -10,6 +10,10 @@
 
 #define DISK_BLOCK_SIZE_BYTES			256
 
+// Available strategies for disk accesing
+#define S_DIRECT_ACCESS		0
+#define S_LRU_CACHE			1
+
 typedef struct {
 	// fields required by posix, this is still missing some fields
 	u32int sector;
@@ -55,10 +59,17 @@ typedef struct {
     u32int impl;        			// An implementation-defined number.
 } FileHeader;
 
+typedef void (*disk_access_t)(int disk, void* msg, int bytes, unsigned short sector, int offset);
+
+typedef struct {
+	disk_access_t write;
+	disk_access_t read;
+} disk_strategy;
+
 /*
  + Inicializa al diskManager
  */
-void diskManager_init();
+void diskManager_init(u32int strategyType);
 
 /*
  + Intenta leer del sector 0 del disco, una estructura de tipo FSHeader y valida su magic number. En casoo de macheo, retorna true.
