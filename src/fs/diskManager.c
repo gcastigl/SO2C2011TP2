@@ -68,11 +68,11 @@ void diskManager_writeHeader() {
 	strategy.write(ATA0, &header, sizeof(FSHeader), 0, 0);
 	// Mark all sector as free sectors
 	char block[SECTOR_SIZE];
-	for (int i = 0; i < SECTOR_SIZE; i++) block[i] = 0;
+	for (int i = 0; i < SECTOR_SIZE; i++) block[i] = '\0';
 	// Fill sector 0 with 0s (inodes memory bitmap)
 	strategy.write(ATA0, block, SECTOR_SIZE - sizeof(FSHeader), 0, sizeof(FSHeader));
-	// Fill sector 2 with 0s (file contents memory bitmap)
-	strategy.write(ATA0, block, SECTOR_SIZE, 2, 0);
+	// Fill sector FILES_BIT_MAP_SECTOR with 0s (file contents memory bitmap)
+	strategy.write(ATA0, block, SECTOR_SIZE, FILES_BIT_MAP_SECTOR, 0);
 }
 
 int diskManager_nextInode() {
@@ -124,16 +124,13 @@ void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 }
 
 void diskManager_delete(u32int inodeNumber) {
-	/*iNodeDisk inode;
-	inode.usedBytes = 0;
-	inode.blocks = 0;
-	_setiNode(inodeNumber, &inode);*/
-
-	// Delete header on disk
+	// Free used memory by inode
 	iNodeDisk inode;
 	_getiNode(inodeNumber, &inode);
-	log(L_DEBUG, "deleted inode header [%d, %d]", inode.data.nextSector, inode.data.nextOffset);
+	log(L_DEBUG, "deleted inode header [%d, %d]", inode.data.nextSector, inode.data.nextOffset + sizeof(DiskPage));
 	_freeMemory(&inode.data);
+
+	// Delete header (to avoid errors)
 	FileHeader header;
 	header.magic = 0;
 	_setFileheader(inodeNumber, &header);
@@ -146,12 +143,6 @@ void diskManager_delete(u32int inodeNumber) {
 	int bit = inodeNumber % 8;
 	inodes[pos] &= ~(1 << bit);
 	strategy.write(ATA0, inodes, numberOfInodes, 0, sizeof(FSHeader));
-	log(L_DEBUG, "freed inode - pos: %d, bit: %d", pos, bit);
-	// Mark the disk block as empty
-	/*char block[SECTOR_SIZE];
-	strategy.read(ATA0, block, SECTOR_SIZE, FILES_BIT_MAP_SECTOR, 0);
-
-	strategy.write(ATA0, block, numberOfInodes, 0, sizeof(FSHeader));*/
 }
 
 void diskManager_readInode(iNode *inode, u32int inodeNumber) {
@@ -407,22 +398,25 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSecto
 PRIVATE void _freeMemory(DiskPage* page) {
 	int numberOfblocks = SECTOR_SIZE;
 	char block[numberOfblocks];
-	strategy.read(page->disk, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
+	strategy.read(ATA0, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
 	// char j, bit i ==> ((i * 8) + j) * DISK_BLOCK_SIZE_BYTES; (sector)
+	DiskPage curr;
+	curr.disk = page->disk;
+	curr.nextOffset = page->nextOffset;
+	curr.nextSector = page->nextSector;
+	int currPageSector, currPageoffset;
 	do {
-		int sector = page->nextSector;
-		int offset = page->nextOffset;
-		/*if (offset % DISK_BLOCK_SIZE_BYTES != 0) {
-			log(L_ERROR, "Trying to free an invalid page at [%d, %d]", sector, offset);
-		}*/
-			log(L_DEBUG, "Freeing memory, [%d, %d]", sector, offset);
-		offset /= DISK_BLOCK_SIZE_BYTES;
-		int charPos = offset / 8;
-		int bit = offset % 8;
+		currPageSector = curr.nextSector;
+		currPageoffset = curr.nextOffset;
+		strategy.read(curr.disk, &curr, sizeof(DiskPage), curr.nextSector, curr.nextOffset);
+			log(L_DEBUG, "Freeing memory, [%d, %d]", currPageSector, currPageoffset);
+			currPageoffset /= DISK_BLOCK_SIZE_BYTES;
+		int charPos = currPageoffset / 8;
+		int bit = currPageoffset % 8;
 		block[charPos] &= ~(1 << bit);
 			log(L_DEBUG, "char: %d, bit: %d", charPos, bit);
-	} while (page->hasNextPage);
-	strategy.write(page->disk, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
+	} while (curr.hasNextPage);
+	strategy.write(ATA0, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
 }
 
 PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {
