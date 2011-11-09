@@ -91,16 +91,6 @@ int getCPUspeed_cmd(int argc, char **argv);
 **/
 int random_cmd(int argc, char **argv);
 
-/* setAppearance_cmd
-*
-* Recibe como parametros:
-* - Cantidad de Argumentos
-* - Argumentos
-*
-* Cambia los colores de la terminal actual
-**/
-int setAppearance_cmd(int argc, char **argv);
-
 /* getchar_cmd
 *
 * Recibe como parametros:
@@ -291,6 +281,14 @@ int shell_groupdel(int argc, char **argv);
 **/
 int shell_grouplist(int argc, char **argv);
 
+int cacheStatus_cmd(int argc, char **argv);
+
+/* pfiles
+ * Lista los archivos por el proceso actual
+ */
+int pfiles(int argc, char **argv);
+
+
 int cd_cmd(int argc, char **argv);
 int ls_cmd(int argc, char **argv);
 int mkdir_cmd(int argc, char **argv);
@@ -299,6 +297,7 @@ int touch_cmd(int argc, char **argv);
 int cat_cmd(int argc, char **argv);
 int ln_cmd(int argc, char **argv);
 int rm_cmd(int argc, char **argv);
+int mkfifo_cmd(int argc, char **argv);
 
 int chmod_cmd(int argc, char **argv);
 int chown_cmd(int argc, char **argv);

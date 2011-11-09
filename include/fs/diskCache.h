@@ -3,24 +3,24 @@
  * Siempre que se consulte un archivo, este es buscado en la lista de sectores cacheados,
  * Si existe => se copia los contenidos
  * Si No exite, => se lo cachea y se copian los contenidos.
- * Guarda hasta 5 sectores. 
- * Es thread safe 
- * 1 escritor y n lectores, NO es simultaneo.
  */
 #ifndef DISKCACHE_H_
 #define DISKCACHE_H_
 
 #include <driver/ata_disk.h>
+#include <lib/stdlib.h>
 
 #define TICKS_PER_FLUSH	100
-#define CACHE_SIZE		5
+#define CACHE_SIZE		10
+#define MAX_AGE			30
 
 typedef struct {
 	int disk;
 	u16int sector;
-	u8int contents[512];
+	u8int contents[SECTOR_SIZE];
 	boolean dirty;
 	int accessCount;
+	int age;
 } cachedSector;
 
 void diskCache_init();
@@ -30,5 +30,7 @@ void diskCache_write(int disk, void* msg, int bytes, unsigned short sector, int 
 void diskCache_read(int disk, void* msg, int bytes, unsigned short sector, int offset);
 
 void cache_flush();
+
+void cache_get(int index, cachedSector* cache);
 
 #endif

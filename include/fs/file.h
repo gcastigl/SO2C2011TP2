@@ -12,7 +12,7 @@
 #define MAX_OPEN_FILES          60
 
 typedef struct {
-    char        name[MAX_NAME_SIZE];
+    char        name[MAX_NAME_LENGTH];
     u8int       permissions;
     u8int       inode;
     fs_node_t   *node;
@@ -24,14 +24,14 @@ FILE openFiles[MAX_OPEN_FILES];
 
 #define FD_OFFSET (MAX_TTYs + 3)
 
-#define O_RDONLY    1
-#define O_WRONLY    2
-#define O_RDWR      3
+#define O_RDONLY    0x0001
+#define O_WRONLY    0x0010
+#define O_APPEND    0x0020
+#define O_CREAT     0x0040
+#define O_EXCL      0x0080
+#define O_NOFOLLOW  0x0100
+#define O_TRUNC     0x0200
 
-#define O_APPEND    (1 << 0)
-#define O_CREAT     (1 << 1)
-#define O_EXCL      (1 << 2)
-#define O_NOFOLLOW  (1 << 3)
-#define O_TRUNC     (1 << 4)
+#define O_RDWR      O_RDONLY | O_WRONLY
 
 #endif

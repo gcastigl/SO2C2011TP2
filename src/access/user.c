@@ -1,4 +1,5 @@
 #include <access/user.h>
+#include <access/permission.h>
 
 PRIVATE user_t users[USER_MAX];
 PRIVATE fs_node_t *homeInode = NULL;
@@ -177,8 +178,8 @@ PUBLIC void user_init() {
     fs_node_t root;
     fs_getRoot(&root);
     homeInode = finddir_fs(&root, "home");
-    fs_node_t *etcInode = finddir_fs(&root, "etc");
-    passwd = finddir_fs(etcInode, "passwd");
+    fs_node_t *etcnode = finddir_fs(&root, "etc");
+    passwd = finddir_fs(etcnode, "passwd");
     user_parse("0:0:root:pass\n");
     user_parse("10:0:qcho:x\n");
     user_parse("11:11:qcho1:pass1\n");
@@ -186,7 +187,7 @@ PUBLIC void user_init() {
     do_useradd("a", "a");
     do_useradd("guest", "");
     if (passwd == NULL) {
-        fs_getFsNode(passwd, fs_createFile(etcInode->inode, "passwd", FS_FILE));
+        fs_getFsNode(passwd, createdir_fs(etcnode, "passwd", FS_FILE));
         flushList();
     } else {
         loadList();
@@ -197,7 +198,7 @@ PUBLIC void user_init() {
         log(L_DEBUG, "user %d: %s", i, userstring);
     }
 
-    kfree(etcInode);
+    kfree(etcnode);
 }
 
 PRIVATE void loadList() {
@@ -299,7 +300,7 @@ PRIVATE boolean createUserDir(int uid) {
         return false;
     }
     errno = OK;
-    int inode = fs_createFile(homeInode->inode, user->userName, FS_DIRECTORY);
+    int inode = createdir_fs(homeInode, user->userName, FS_DIRECTORY);
     if (inode == -1 && errno == E_FILE_EXISTS) {
         return true;
     } else if (errno == OK) {
@@ -322,6 +323,7 @@ PUBLIC boolean do_useradd(char *userName, char *password) {
     user_add(uid);
     addOk = user_setUsername(uid, userName);
     addOk = user_setPassword(uid, password);
+    addOk = user_setGid(uid, session_getEgid());
     if (addOk) {
         addOk = createUserDir(uid);
     }
@@ -332,7 +334,25 @@ PUBLIC boolean do_useradd(char *userName, char *password) {
 }
 
 PUBLIC boolean do_userdel(char *userName) {
-    return user_del(user_find(userName));
+    int uid = user_find(userName);
+    if (uid == NO_USER) {
+        printf("No user exists with %s username.\n", userName);
+        errno = INVALID_INPUT;
+        return false;
+    }
+    user_t *user = user_get(uid);
+    if (session_getEuid() == uid) {
+        printf("You can't delete your own user.\n");
+        errno = INVALID_INPUT;
+        return false;
+    }
+    if (permission_user_isOwner(uid) || permission_group_isOwner(user->gid)) {
+        return user_del(uid);
+    } else {
+        printf("Access denied.\n");
+        errno = EACCES;
+        return false;
+    }
 }
 
 PUBLIC char *user_getName(int uid) {

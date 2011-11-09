@@ -80,38 +80,17 @@ typedef void*           type_t;
 #define E_OUT_OF_MEMORY		-4
 #define E_CORRUPTED_FILE	-5
 #define E_INVALID_ARG		-6
+#define E_ACCESS			-7
+#define E_FILE_NOT_EXISTS	-8
+#define E_MAX_FS_REACHED	-9
 
-// FIXME: this should not be here!!
-typedef struct page
-{
-  int present	: 1; //	Pagina presente en memoria
-  int rw	: 1; // Read-Only si esta apagado o bien Read-Write 
-  int user	: 1; // si esta apagado nivel de Supervisor
-  int accessed	: 1; // indica si la pagina ha sido accedida desde el ultimo refresco 
-  int dirty	: 1; // indica si la pagina ha sido escrita desde el ultimo refresco 
-  int unused	: 7; // bits reservados
-  int frame	: 20;// Frame Address ( corridos 12 bits hacia la derecha )
-} page_t;
-
-// Estructura de tabla de paginas
-
-typedef struct page_table
-{
-   page_t pages[1024];
-} page_table_t;
-
-// Estructura de pagina de directorios
-
-typedef struct page_dir
-{
-    page_table_t *tables[1024]; // punteros a las tablas de paginas
-    int tablesPhysical[1024];   // direcciones físicas de las tablas de paginas
-} page_directory_t;
+#define MAX_NAME_LENGTH		24
 
 int errno;
 
 #define OK 0
 #define EACCES	(-13)  /* permission denied */
+#define INVALID_INPUT  (-20)
 
 #pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */
 

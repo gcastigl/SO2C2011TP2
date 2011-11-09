@@ -2,7 +2,6 @@
 #include <session.h>
 
 extern PROCESS process[];
-extern int nextPID;
 extern int currentPID;
 int count100;
 int firstTime = true;
@@ -73,6 +72,10 @@ void createProcess(char* name, int(*processFunc)(int, char**), int argc,
     newProcess->parent = currentPID;
     newProcess->status = status;
 
+	log(L_DEBUG, "Creating new process: %s - PID: %d\n", name, newProcess->pid);
+    for (i = 0; i < MAX_FILES_PER_PROCESS; i++) {
+    	newProcess->fd_table[i].mask = 0;
+    }
     if (groundness == FOREGROUND) {
         PROCESS *p;
         p = getProcessByPID(currentPID);
@@ -154,6 +157,7 @@ PROCESS *getCurrentProcess(void) {
 }
 
 void killChildren(int pid) {
+	log(L_DEBUG, "killing child process PID: %d", pid);
     int i;
     for (i = 0; i < MAX_PROCESSES; i++) {
         if (process[i].slotStatus == OCCUPIED) {
@@ -168,6 +172,7 @@ void kill(int pid) {
     int i;
     PROCESS *p = NULL;
     PROCESS *parent;
+    log(L_DEBUG, "killing process PID: %d", pid);
     if (pid < MAX_TTYs) {
         return;
     }

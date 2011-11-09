@@ -16,6 +16,17 @@ enum {OCCUPIED = 0, FREE};
 enum {PNONE, VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SHELL_HIGH = 15};
 
 #define MAX_PRIORITY HIGH
+#define MAX_FILES_PER_PROCESS	10
+
+typedef struct {
+	u32int mask;	// inode type
+	u32int count;	// number of links
+	u32int inode;	// inode number
+	u32int mode;
+	//u32int pos;
+	//u32int op;
+} file_descriptor_entry;
+
 typedef struct {
 	int ownerUid;
 	int pid;
@@ -33,6 +44,7 @@ typedef struct {
 	int stacksize;
 	int argc;
 	char *argv[MAX_ARG];
+	file_descriptor_entry fd_table[MAX_FILES_PER_PROCESS];
 } PROCESS;
 
 /*
@@ -122,4 +134,5 @@ PROCESS *getCurrentProcess(void);
 * Setea una nueva prioridad para el pid dado
 **/
 void setPriority(int pid, int newPriority);
+
 #endif

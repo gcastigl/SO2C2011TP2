@@ -3,10 +3,15 @@
 #define MIN(x,y)							(((x) < (y)) ? (x) : (y))
 #define BIT(n, i)							((n) & (1 << (i)))
 
-#define FILE_CONTENTS_INITAL_SECTOR			2
-#define FILE_CONTENTS_INITAL_OFFSET			maxIndes * sizeof(DiskPage)
-
-PRIVATE u32int maxIndes;					// Once setted this value, it should never be changed!!
+/*
+ * sector 0 => FSHeader - inodes bitmap
+ * sector 1 => inodes
+ * sector 10 => diskBitmap
+ * sector 11... =>  archivos...
+ */
+#define INODES_INITIAL_SECTOR			1
+#define FILES_BIT_MAP_SECTOR			10
+#define FILE_CONTENTS_INITAL_SECTOR		11
 
 PRIVATE void _getiNode(u32int inodeNumber, iNodeDisk *inode);
 PRIVATE void _setiNode(u32int inodeNumber, iNodeDisk *inode);
@@ -23,50 +28,79 @@ void _getFileheader(u32int inodeNumber, FileHeader *header);
 
 u32int _availableMem(iNodeDisk* inode);
 
-void diskManager_init(u32int maxNodes) {
+PRIVATE disk_strategy strategy;
+
+void diskManager_init(u32int strategyType) {
 	log(L_DEBUG, "Using block size: %d", DISK_BLOCK_SIZE_BYTES);
+	log(L_DEBUG, "iNodeDisk size: %d", sizeof(iNodeDisk));
 	log(L_DEBUG, "DiskPage size: %d", sizeof(DiskPage));
-	log(L_DEBUG, "FileHeader size: %d", sizeof(FileHeader));
+	log(L_DEBUG, "FileHeader size: %d\n", sizeof(FileHeader));
+	switch(strategyType) {
+		case S_DIRECT_ACCESS:
+			strategy.write = ata_write;
+			strategy.read = ata_read;
+			log(L_DEBUG, "Strategy: Direct disk access\n");
+			break;
+		case S_LRU_CACHE:
+			strategy.write = diskCache_write;
+			strategy.read = diskCache_read;
+			log(L_DEBUG, "Strategy: LRU Cache\n");
+			break;
+		default:
+			strategy.write = ata_write;
+			strategy.read = ata_read;
+			log(L_DEBUG, "Strategy: Direct disk access\n");
+			break;
+	}
 }
 
 boolean diskManager_validateHeader() {
 	FSHeader header;
-	diskCache_read(ATA0, &header, sizeof(FSHeader), 0, 0);
-	if (header.magic == MAGIC_NUMBER) {
-		maxIndes = header.maxNodes;
-	}
+	strategy.read(ATA0, &header, sizeof(FSHeader), 0, 0);
 		log(L_DEBUG, "Header for the OS is %svalid", header.magic == MAGIC_NUMBER ? "" : "NOT ");
 	return header.magic == MAGIC_NUMBER;
 }
 
-void diskManager_writeHeader(u32int maxNodes) {
+void diskManager_writeHeader() {
 	FSHeader header;
 	header.magic = MAGIC_NUMBER;
-	header.totalNodes = 0;
-	header.maxNodes = maxNodes;
-	maxIndes = maxNodes;
 		log(L_DEBUG, "Writing OS header");
-	diskCache_write(ATA0, &header, sizeof(FSHeader), 0, 0);
+	strategy.write(ATA0, &header, sizeof(FSHeader), 0, 0);
 	// Mark all sector as free sectors
-	int numberOfBlocks = SECTOR_SIZE - sizeof(FSHeader), i;
-	char block[numberOfBlocks];
-	for (i = 0; i < numberOfBlocks; i++) block[i] = 0;
-	diskCache_write(ATA0, block, numberOfBlocks, 0, sizeof(FSHeader));
+	char block[SECTOR_SIZE];
+	for (int i = 0; i < SECTOR_SIZE; i++) block[i] = '\0';
+	// Fill sector 0 with 0s (inodes memory bitmap)
+	strategy.write(ATA0, block, SECTOR_SIZE - sizeof(FSHeader), 0, sizeof(FSHeader));
+	// Fill sector FILES_BIT_MAP_SECTOR with 0s (file contents memory bitmap)
+	strategy.write(ATA0, block, SECTOR_SIZE, FILES_BIT_MAP_SECTOR, 0);
 }
 
 int diskManager_nextInode() {
-	FSHeader header;
-	diskCache_read(ATA0, &header, sizeof(FSHeader), 0, 0);
-	int nextiNode = header.totalNodes++;
-		log(L_DEBUG, "next inodeNumber to save in disk => %d", nextiNode);
-	diskCache_write(ATA0, &header, sizeof(FSHeader), 0, 0);			// Update totalNodes value
-	return nextiNode;
+	int numberOfBlocks = SECTOR_SIZE - sizeof(FSHeader);
+	char block[numberOfBlocks];
+	int next = -1;
+	strategy.read(ATA0, block, numberOfBlocks, 0, sizeof(FSHeader));
+	for (int i = 0; i < numberOfBlocks && next == -1; i++) {
+		for (int j = 0; j < 8 && next == -1; j++) {
+			if (BIT(block[i], j) == 0) {
+				next = i * 8 + j;
+				block[i] |= (1 << j);
+			}
+		}
+	}
+	if (next == -1) {
+		errno = E_OUT_OF_MEMORY;
+		return -1;
+	}
+	strategy.write(ATA0, block, numberOfBlocks, 0, sizeof(FSHeader));
+	//	log(L_DEBUG, "next inode to use: %d", next);
+	return next;
 }
 
 void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 	iNodeDisk newiNode;
 	int initialBlocks = 1;
-	int reserved = _reserveMemoryBitMap(&newiNode.data, initialBlocks, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
+	int reserved = _reserveMemoryBitMap(&newiNode.data, initialBlocks, FILE_CONTENTS_INITAL_SECTOR, 0);
 	if (reserved == -1) {	// Do not set errno because it should already be set
 		log(L_ERROR, "failed to reserve memory for inode %s (%d)", name, inodeNumber);
 		return;
@@ -74,9 +108,9 @@ void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 	newiNode.blocks = initialBlocks;
 	newiNode.usedBytes = 0;
 	_setiNode(inodeNumber, &newiNode);
-		log(L_DEBUG, "Create inode %s(%d) at [%d, %d], bytes used: %d, max bytes: %d, available %d", name, inodeNumber, 1, \
+		log(L_DEBUG, "Create inode %s(%d) at [%d, %d], bytes used: %d, max bytes: %d, available %d", name, inodeNumber, INODES_INITIAL_SECTOR, \
 				inodeNumber * sizeof(iNodeDisk), newiNode.usedBytes, newiNode.blocks * DISK_BLOCK_SIZE_BYTES, _availableMem(&newiNode));
-		log(L_DEBUG, "inode points to: [%d, %d]\n", newiNode.data.nextSector, newiNode.data.nextOffset);
+		//log(L_DEBUG, "inode points to: [%d, %d]\n", newiNode.data.nextSector, newiNode.data.nextOffset);
 	FileHeader header;
 	header.magic = MAGIC_NUMBER;
 	strcpy(header.name, name);
@@ -85,8 +119,30 @@ void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name) {
 	header.flags = inode->flags;
 	header.impl = inode->impl;
 	header.mask = inode->mask;
-	diskCache_write(newiNode.data.disk, &header, sizeof(FileHeader), newiNode.data.nextSector, newiNode.data.nextOffset + sizeof(DiskPage));
+	strategy.write(newiNode.data.disk, &header, sizeof(FileHeader), newiNode.data.nextSector, newiNode.data.nextOffset + sizeof(DiskPage));
 		// log(L_DEBUG, "written inode header to: [%d, %d + %d]", newiNode.data.nextSector, newiNode.data.nextOffset, sizeof(DiskPage));
+}
+
+void diskManager_delete(u32int inodeNumber) {
+	// Free used memory by inode
+	iNodeDisk inode;
+	_getiNode(inodeNumber, &inode);
+	log(L_DEBUG, "deleted inode header [%d, %d]", inode.data.nextSector, inode.data.nextOffset + sizeof(DiskPage));
+	_freeMemory(&inode.data);
+
+	// Delete header (to avoid errors)
+	FileHeader header;
+	header.magic = 0;
+	_setFileheader(inodeNumber, &header);
+
+	// Mark the inode bit map @inodeNumber as empty
+	int numberOfInodes = SECTOR_SIZE - sizeof(FSHeader);
+	char inodes[numberOfInodes];
+	strategy.read(ATA0, inodes, numberOfInodes, 0, sizeof(FSHeader));
+	int pos = inodeNumber / 8;
+	int bit = inodeNumber % 8;
+	inodes[pos] &= ~(1 << bit);
+	strategy.write(ATA0, inodes, numberOfInodes, 0, sizeof(FSHeader));
 }
 
 void diskManager_readInode(iNode *inode, u32int inodeNumber) {
@@ -99,7 +155,7 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber) {
 		return;
 	}
 	FileHeader header;
-	diskCache_read(inodeOnDisk.data.disk, &header, sizeof(FileHeader), inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset + sizeof(DiskPage));
+	strategy.read(inodeOnDisk.data.disk, &header, sizeof(FileHeader), inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset + sizeof(DiskPage));
 	if (header.magic != MAGIC_NUMBER) {
 			log(L_ERROR, "Can't read file header (%d) - Corrupted->[%d, %d]", inodeNumber, inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset);
 		errno = E_CORRUPTED_FILE;
@@ -122,7 +178,7 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber) {
 int diskManager_writeContents(u32int inodeNumber, char *contents, u32int length, u32int offset) {
 	iNodeDisk inode;
 	_getiNode(inodeNumber, &inode);
-	//	log(L_DEBUG, "updating contents, %d bytes to inode: %d -> [%d, %d]", length, inodeNumber, inode.data.nextSector, inode.data.nextOffset);
+	//	log(L_DEBUG, "updating contents, %d + %d bytes to inode: %d -> [%d, %d]", offset, length, inodeNumber, inode.data.nextSector, inode.data.nextOffset);
 	//	log(L_DEBUG,"Contents[MAX: %d, used: %d], reserved blocks = %d", _availableMem(&inode), inode.usedBytes, inode.blocks);
 	if (inode.data.magic != MAGIC_NUMBER) {
 		log(L_ERROR, "Trying to write to a corrupted page!");
@@ -131,7 +187,7 @@ int diskManager_writeContents(u32int inodeNumber, char *contents, u32int length,
 	}
 	if (offset + length > _availableMem(&inode)) {
 		//	log(L_DEBUG, "%d -> Memory is not enough, have: %d, extending memory to %d bytes", inodeNumber, _availableMem(&inode), offset + length);
-		int extrablocks = _extendMemory(&inode.data, offset + length, FILE_CONTENTS_INITAL_SECTOR, FILE_CONTENTS_INITAL_OFFSET);
+		int extrablocks = _extendMemory(&inode.data, offset + length, FILE_CONTENTS_INITAL_SECTOR, 0);
 		inode.blocks += extrablocks;
 	}
 	if (offset + length > inode.usedBytes) {
@@ -163,7 +219,7 @@ PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int off
 	// Read FilePage
 	DiskPage currPage;
 		// log(L_DEBUG,"reding file page: [%d, %d]\n", page->nextSector, page->nextOffset);
-	diskCache_read(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
+	strategy.read(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
 	if (currPage.magic != MAGIC_NUMBER) {
 		log(L_ERROR,"CORRUPTED FILE PAGE! [%d, %d]\n",  page->nextSector, page->nextOffset);
 		errno = E_CORRUPTED_FILE;
@@ -176,7 +232,7 @@ PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int off
 		bytesFromContent = MIN(currPage.totalLength - FILE_BLOCK_OVERHEAD_SIZE_BYTES - offset, length);
 		length -= bytesFromContent;
 			// log(L_DEBUG, "reading contents, %d bytes from [%d, %d]", bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
-		diskCache_read(page->disk, contents, bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
+		strategy.read(page->disk, contents, bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
 		contents += bytesFromContent;
 		offset = 0;
 	} else
@@ -189,11 +245,11 @@ PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int off
 		int currPageSector = currPage.nextSector;
 		int currPageOffset = currPage.nextOffset;
 			//log(L_DEBUG, "reading next page [%d, %d]", currPage.nextSector, currPage.nextOffset);
-		diskCache_read(currPage.disk, &currPage, sizeof(DiskPage), currPage.nextSector, currPage.nextOffset);
+		strategy.read(currPage.disk, &currPage, sizeof(DiskPage), currPage.nextSector, currPage.nextOffset);
 		if (offset < currPage.usedBytes - sizeof(DiskPage)) {			// Read from beginning
 			bytesFromContent = MIN(currPage.usedBytes - sizeof(DiskPage) - offset, length);
 				// log(L_DEBUG, "reading %d bytes from [%d, %d]", bytesFromContent, currPageSector, currPageOffset + sizeof(DiskPage) + offset);
-			diskCache_read(page->disk, contents, bytesFromContent, currPageSector, currPageOffset + sizeof(DiskPage) + offset);
+			strategy.read(page->disk, contents, bytesFromContent, currPageSector, currPageOffset + sizeof(DiskPage) + offset);
 			contents += bytesFromContent;
 			length -= bytesFromContent;
 			offset = 0;
@@ -205,8 +261,8 @@ PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int off
 
 PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int offset) {
 	DiskPage currPage;
-		// log(L_DEBUG,"validating file page: [%d, %d]", page->nextSector, page->nextOffset);
-	diskCache_read(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
+	//	log(L_DEBUG,"validating file page: [%d, %d]", page->nextSector, page->nextOffset);
+	strategy.read(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
 	if (currPage.magic != MAGIC_NUMBER) {
 		log(L_ERROR,"CORRUPTED FILE PAGE! [%d, %d]",  page->nextSector, page->nextOffset);
 		errno = E_CORRUPTED_FILE;
@@ -214,18 +270,19 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 	}
 
 	int bytesFromContent;
-	if (offset < (currPage.usedBytes - FILE_BLOCK_OVERHEAD_SIZE_BYTES)) {
+	//	log(L_DEBUG, "offset: %d <? usedBytes: %d- overhead: %d", offset, currPage.totalLength, FILE_BLOCK_OVERHEAD_SIZE_BYTES);
+	if (offset < (currPage.totalLength - FILE_BLOCK_OVERHEAD_SIZE_BYTES)) {
 		// Start reading from current page
 		bytesFromContent = MIN(currPage.totalLength - offset - FILE_BLOCK_OVERHEAD_SIZE_BYTES, length);
 		length -= bytesFromContent;
 		//	log(L_DEBUG, "writing contents, %d bytes to [%d, %d]", bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
-		diskCache_write(page->disk, contents, bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
+		strategy.write(page->disk, contents, bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
 		contents += bytesFromContent;
 
 		if (FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset + bytesFromContent > currPage.usedBytes) {
 			currPage.usedBytes = FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset + bytesFromContent;
-		//	log(L_DEBUG, "updating DiskPage, usedBytes = %d + %d + %d", FILE_BLOCK_OVERHEAD_SIZE_BYTES, offset, bytesFromContent);
-			diskCache_write(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
+			//	log(L_DEBUG, "updating DiskPage, usedBytes = %d + %d + %d", FILE_BLOCK_OVERHEAD_SIZE_BYTES, offset, bytesFromContent);
+			strategy.write(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
 		}
 		offset = 0;
 	} else
@@ -242,7 +299,7 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 			return -1;
 		}
 		//	log(L_DEBUG, "reading next page [%d, %d] - bytes left: %d", currPage.nextSector, currPage.nextOffset, length);
-		diskCache_read(currPage.disk, &currPage, sizeof(DiskPage), currPage.nextSector, currPage.nextOffset);
+		strategy.read(currPage.disk, &currPage, sizeof(DiskPage), currPage.nextSector, currPage.nextOffset);
 		if (currPage.magic != MAGIC_NUMBER) {
 			log(L_ERROR, "CORRUPTED file at [%d, %d]", pageSector, pageOffset);
 			errno = E_CORRUPTED_FILE;
@@ -253,13 +310,13 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 			bytesFromContent = MIN(currPage.totalLength - sizeof(DiskPage), length);
 			length -= bytesFromContent;
 			//	log(L_DEBUG, "writing contents, %d bytes to [%d, %d]", bytesFromContent, page->nextSector, page->nextOffset + sizeof(DiskPage) + offset);
-			diskCache_write(page->disk, contents, bytesFromContent, pageSector, pageOffset + sizeof(DiskPage) + offset);
+			strategy.write(page->disk, contents, bytesFromContent, pageSector, pageOffset + sizeof(DiskPage) + offset);
 			contents += bytesFromContent;
 
 			if (sizeof(DiskPage) + offset + bytesFromContent > currPage.usedBytes) {
 				currPage.usedBytes = sizeof(DiskPage) + offset + bytesFromContent;
 				//	log(L_DEBUG, "updating DiskPage, bytes used is now: %d + %d + %d", sizeof(DiskPage), offset, bytesFromContent);
-				diskCache_write(page->disk, &currPage, sizeof(DiskPage), pageSector, pageOffset);
+				strategy.write(page->disk, &currPage, sizeof(DiskPage), pageSector, pageOffset);
 			}
 			offset = 0;
 		} else
@@ -268,16 +325,17 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 	return 0;
 }
 
+
 PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSector, u32int initialOffset) {
 		log(L_DEBUG, "\nReserving %d blocks....", blocks);
 	_cli();
 	DiskPage currPage;
 	int previousSector, previousOffset, currSector, currOffset;
 	int disk = ATA0;
-	int numberOfblocks = SECTOR_SIZE - sizeof(FSHeader);	// Use all remaining bits until the end of the first sector
+	int numberOfblocks = SECTOR_SIZE;		// Use complete sector for the bitmap
 
 	char block[numberOfblocks];
-	diskCache_read(disk, block, numberOfblocks, 0, sizeof(FSHeader));
+	strategy.read(disk, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
 
 	int reservedBlocks = 0;
 
@@ -298,14 +356,14 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSecto
 				if (reservedBlocks == blocks) {
 					currPage.hasNextPage = false;
 					//	log(L_DEBUG, "using [%d, %d] - %d", currSector, currOffset, reservedBlocks);
-					diskCache_write(currPage.disk, &currPage, sizeof(DiskPage), currSector, currOffset);
+					strategy.write(currPage.disk, &currPage, sizeof(DiskPage), currSector, currOffset);
 				}
 				if (reservedBlocks > 1) {
 					currPage.hasNextPage = true;
 					currPage.nextSector = currSector;
 					currPage.nextOffset = currOffset;
 					//	log(L_DEBUG, "prev - using [%d, %d] - %d", previousSector, previousOffset, reservedBlocks);
-					diskCache_write(currPage.disk, &currPage, sizeof(DiskPage), previousSector, previousOffset);
+					strategy.write(currPage.disk, &currPage, sizeof(DiskPage), previousSector, previousOffset);
 				}
 				if (reservedBlocks == 1) {		// set up first reserved page info to caller function
 					page->disk = ATA0;
@@ -323,7 +381,7 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSecto
 		}
 	}
 	// Update bit map information
-	diskCache_write(disk, block, numberOfblocks, 0, sizeof(FSHeader));
+	strategy.write(disk, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
 	if (reservedBlocks < blocks) {			// Reached end of space available and the recolected space is not enought
 		log(L_ERROR, "DISK OUT OF MEMORY!");
 		page->totalLength = 0;
@@ -338,23 +396,27 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSecto
 }
 
 PRIVATE void _freeMemory(DiskPage* page) {
-	int numberOfblocks = 512 - sizeof(FSHeader);
+	int numberOfblocks = SECTOR_SIZE;
 	char block[numberOfblocks];
-	diskCache_read(page->disk, block, numberOfblocks, 0, sizeof(FSHeader));
+	strategy.read(ATA0, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
 	// char j, bit i ==> ((i * 8) + j) * DISK_BLOCK_SIZE_BYTES; (sector)
+	DiskPage curr;
+	curr.disk = page->disk;
+	curr.nextOffset = page->nextOffset;
+	curr.nextSector = page->nextSector;
+	int currPageSector, currPageoffset;
 	do {
-		int sector = page->nextSector;
-		int offset = page->nextOffset;
-		if (sector % DISK_BLOCK_SIZE_BYTES != 0) {
-			log(L_ERROR, "Trying to free an invalid page at [%d, %d]", sector, offset);
-		}
-		offset /= DISK_BLOCK_SIZE_BYTES;
-		int charPos = offset / 8;
-		int bit = offset % 8;
-		block[charPos] |= 1 << bit;
-		log(L_DEBUG, "Freeing memory, [%d, %d], char: %d, bit: %d",charPos, bit);
-	} while (page->hasNextPage);
-	diskCache_read(page->disk, block, numberOfblocks, 0, sizeof(FSHeader));
+		currPageSector = curr.nextSector;
+		currPageoffset = curr.nextOffset;
+		strategy.read(curr.disk, &curr, sizeof(DiskPage), curr.nextSector, curr.nextOffset);
+			log(L_DEBUG, "Freeing memory, [%d, %d]", currPageSector, currPageoffset);
+			currPageoffset /= DISK_BLOCK_SIZE_BYTES;
+		int charPos = currPageoffset / 8;
+		int bit = currPageoffset % 8;
+		block[charPos] &= ~(1 << bit);
+			log(L_DEBUG, "char: %d, bit: %d", charPos, bit);
+	} while (curr.hasNextPage);
+	strategy.write(ATA0, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
 }
 
 PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {
@@ -369,7 +431,7 @@ PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int
 		lastPageSector = lastPage.nextSector;
 		lastPageOffset = lastPage.nextOffset;
 			// log(L_DEBUG, "reading from [%d, %d]", lastPage.nextSector, lastPage.nextOffset);
-		diskCache_read(disk, &lastPage, sizeof(DiskPage), lastPage.nextSector, lastPage.nextOffset);
+		strategy.read(disk, &lastPage, sizeof(DiskPage), lastPage.nextSector, lastPage.nextOffset);
 	}
 
 	int neededBlocks = (size / (DISK_BLOCK_SIZE_BYTES + 1)) + 1;
@@ -389,18 +451,18 @@ PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int
 	lastPage.nextOffset = cont.nextOffset;
 	//	log(L_DEBUG, "saving new DiskPage to: [%d, %d, %d]", disk, lastPageSector, lastPageOffset);
 	//	log(L_DEBUG, "new DiskPage points to: [%d, %d, %d]", disk, lastPage.nextSector, lastPage.nextOffset);
-	diskCache_write(disk, &lastPage, sizeof(DiskPage), lastPageSector, lastPageOffset);
+	strategy.write(disk, &lastPage, sizeof(DiskPage), lastPageSector, lastPageOffset);
 	return neededBlocks;
 }
 
 
 PRIVATE void _setiNode(u32int inodeNumber, iNodeDisk *inode) {
 	// log(L_DEBUG, "_setiNode %d node: [%d, %d], size: %d\n", inode, sector, inode * sizeof(FilePage), sizeof(FilePage));
-	diskCache_write(ATA0, inode, sizeof(iNodeDisk), 1, inodeNumber * sizeof(iNodeDisk));
+	strategy.write(ATA0, inode, sizeof(iNodeDisk), INODES_INITIAL_SECTOR, inodeNumber * sizeof(iNodeDisk));
 }
 
 PRIVATE void _getiNode(u32int inodeNumber, iNodeDisk *inode) {
-	diskCache_read(ATA0, inode, sizeof(iNodeDisk), 1, inodeNumber * sizeof(iNodeDisk));
+	strategy.read(ATA0, inode, sizeof(iNodeDisk), INODES_INITIAL_SECTOR, inodeNumber * sizeof(iNodeDisk));
 }
 
 
@@ -468,7 +530,7 @@ void _getFileheader(u32int inodeNumber, FileHeader *header) {
 		return;
 	}
 		// log(L_DEBUG, "Reading header from: [%d, %d]", inode.data.nextSector, inode.data.nextOffset + sizeof(DiskPage));
-	diskCache_read(inode.data.disk, header, sizeof(FileHeader), inode.data.nextSector, inode.data.nextOffset + sizeof(DiskPage));
+	strategy.read(inode.data.disk, header, sizeof(FileHeader), inode.data.nextSector, inode.data.nextOffset + sizeof(DiskPage));
 }
 
 void _setFileheader(u32int inodeNumber, FileHeader *header) {
@@ -478,7 +540,7 @@ void _setFileheader(u32int inodeNumber, FileHeader *header) {
 		errno = E_CORRUPTED_FILE;
 		return;
 	}
-	diskCache_write(inode.data.disk, header, sizeof(FileHeader), inode.data.nextSector, inode.data.nextOffset + sizeof(DiskPage));
+	strategy.write(inode.data.disk, header, sizeof(FileHeader), inode.data.nextSector, inode.data.nextOffset + sizeof(DiskPage));
 }
 
 
@@ -497,15 +559,5 @@ u32int _availableMem(iNodeDisk* inode) {
 	total += DISK_BLOCK_SIZE_BYTES - (sizeof(DiskPage) + sizeof(FileHeader));
 	total += (inode->blocks - 1) * (DISK_BLOCK_SIZE_BYTES - sizeof(DiskPage));
 	return total;
-}
-
-void diskManager_delete(u32int inodeNumber) {
-	iNodeDisk inode;
-	inode.usedBytes = 0;
-	inode.blocks = 0;
-	_setiNode(inodeNumber, &inode);
-	FileHeader header;
-	header.magic = 0;
-	_setFileheader(inodeNumber, &header);
 }
 

@@ -3,7 +3,6 @@
 int currentPID = -1;
 static int nextPID = 0;
 PROCESS process[MAX_PROCESSES];
-extern int nf_address;
 u32int initial_esp; // New global variable.
 
 int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
@@ -13,7 +12,6 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
         _mascaraPIC1(0xFC);
         _mascaraPIC2(0xFF);
         port_serial_init();
-        //initialize_paging();
         keyboard_init();
         video_init();
         setFD(STD_OUT);

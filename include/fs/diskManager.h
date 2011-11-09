@@ -3,13 +3,16 @@
 
 #include <fs/diskCache.h>
 #include <driver/ata_disk.h>
+#include <lib/string.h>
 
-#define MAX_NAME_LENGTH					32
 #define MAGIC_NUMBER					123456
 #define FILE_BLOCK_OVERHEAD_SIZE_BYTES	(sizeof(DiskPage) + sizeof(FileHeader))
 
 #define DISK_BLOCK_SIZE_BYTES			256
 
+// Available strategies for disk accesing
+#define S_DIRECT_ACCESS		0
+#define S_LRU_CACHE			1
 
 typedef struct {
 	// fields required by posix, this is still missing some fields
@@ -27,7 +30,6 @@ typedef struct {
 
 typedef struct {
 	u32int magic;
-	u32int totalNodes;
 	u32int maxNodes;
 } FSHeader;
 
@@ -57,10 +59,17 @@ typedef struct {
     u32int impl;        			// An implementation-defined number.
 } FileHeader;
 
+typedef void (*disk_access_t)(int disk, void* msg, int bytes, unsigned short sector, int offset);
+
+typedef struct {
+	disk_access_t write;
+	disk_access_t read;
+} disk_strategy;
+
 /*
  + Inicializa al diskManager
  */
-void diskManager_init();
+void diskManager_init(u32int strategyType);
 
 /*
  + Intenta leer del sector 0 del disco, una estructura de tipo FSHeader y valida su magic number. En casoo de macheo, retorna true.
@@ -81,6 +90,11 @@ int diskManager_nextInode();
  + Guarda en disco ek iNode resivido en el primer parametros con nombre name como numero de inodo iNodeNumber.
  */
 void diskManager_createInode(iNode* inode, u32int inodeNumber, char* name);
+
+/*
+ * Elimina del disco la informacion relacionada con el inode numero inode
+ */
+void diskManager_delete(u32int inode);
 
 /*
  + Carga del disco el inodo que este guardado como inodeNumber y lo guarda en inode. En caso de error, se setea errno con el valor inidicando el tipo de error que ocurrio.
@@ -115,21 +129,16 @@ u32int diskManager_size(u32int inodeNumber);
 /*
  * Setea el modo del file header
  */
-PUBLIC boolean diskManager_setFileMode(u32int inode, int newMode);
+boolean diskManager_setFileMode(u32int inode, int newMode);
 
 /*
  * Setea el uid del file header
  */
-PUBLIC boolean diskManager_setFileUid(u32int inode, int uid);
+boolean diskManager_setFileUid(u32int inode, int uid);
 
 /*
  * Setea el gid del file header
  */
-PUBLIC boolean diskManager_setFileGid(u32int inode, int gid);
-
-/*
- * Elimina del disco la informacion relacionada con el inode numero inode
- */
-PUBLIC void diskManager_delete(u32int inode);
+boolean diskManager_setFileGid(u32int inode, int gid);
 
 #endif
