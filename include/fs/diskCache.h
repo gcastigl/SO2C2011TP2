@@ -12,13 +12,15 @@
 
 #define TICKS_PER_FLUSH	100
 #define CACHE_SIZE		10
+#define MAX_AGE			30
 
 typedef struct {
 	int disk;
 	u16int sector;
-	u8int contents[512];
+	u8int contents[SECTOR_SIZE];
 	boolean dirty;
 	int accessCount;
+	int age;
 } cachedSector;
 
 void diskCache_init();
