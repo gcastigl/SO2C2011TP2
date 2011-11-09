@@ -341,12 +341,18 @@ int rm_cmd(int argc, char **argv) {
         fs_node_t current;
         fs_getFsNode(&current, currentiNode);
         fs_node_t *node = finddir_fs(&current, argv[0]);
-        if (!permission_file_hasAccess(node, W_BIT)) {
-            printf("rm: You don't have write access to %s\n", argv[0]);
+        char* err = NULL;
+        if (node == NULL) {
+        	err = "No such file or directory";
+        } else if (!permission_file_hasAccess(node, W_BIT)){
+        	err = "Don't have write access";
+        }
+        if (err != NULL) {
+			printf("rm: cannot remove \"%s\": %s\n", argv[0], err);
             return -1;
         }
 		int removed = removedir_fs(&current, node->inode);
-        log(L_DEBUG, "rm: remove file returned: %d", removed);
+        	log(L_DEBUG, "rm: remove file returned: %d", removed);
 		kfree(node);
 	}
 	return 0;
