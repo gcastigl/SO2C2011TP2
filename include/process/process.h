@@ -10,7 +10,7 @@
 #define MAX_ARG             32
 #define P_RATIO             2
 
-enum {READY, CHILD_WAIT, RUNNING};
+enum {READY, BLOCKED, RUNNING};
 enum {BACKGROUND, FOREGROUND};
 enum {OCCUPIED = 0, FREE};
 enum {PNONE, VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SHELL_HIGH = 15};

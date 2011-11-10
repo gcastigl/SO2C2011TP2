@@ -47,23 +47,20 @@ void createProcess(char* name, int(*processFunc)(int, char**), int argc,
     }
 
     if (i == MAX_PROCESSES) {
+    	log(L_ERROR, "Could not create proces %s, max process running", name);
         return;
     }
-
     newProcess = &process[i];
-
     for (i = 0; i < argc; i++) {
         newProcess->argv[i] = (char*) kmalloc(strlen(argv[i])+1);
         strcpy(newProcess->argv[i], argv[i]);
     }
-
     memcpy(newProcess->name, name, strlen(name) + 1);
     newProcess->ownerUid = session_getEuid();
     newProcess->pid = getNextPID();
     newProcess->stacksize = stacklength;
     newProcess->stackstart = (int) stack + stacklength - 1;
-    newProcess->ESP = loadStackFrame(processFunc, newProcess->stackstart, argc,
-            newProcess->argv, cleaner);
+    newProcess->ESP = loadStackFrame(processFunc, newProcess->stackstart, argc, newProcess->argv, cleaner);
     newProcess->tty = tty;
     newProcess->lastCalled = 0;
     newProcess->priority = priority;
@@ -80,7 +77,7 @@ void createProcess(char* name, int(*processFunc)(int, char**), int argc,
         PROCESS *p;
         p = getProcessByPID(currentPID);
         if (p != NULL) {
-            p->status = CHILD_WAIT;
+            p->status = BLOCKED;
             p->lastCalled = 0;
             switchProcess();
         }
@@ -94,10 +91,9 @@ PROCESS* getNextTask(int withPriority) {
     int nextReady = 0;
     int temp, bestScore = 0;
     PROCESS *proc;
-
     for (i = 1; i < MAX_PROCESSES; i++) {
         proc=&process[i];
-        if ((proc->slotStatus != FREE) && (proc->status != CHILD_WAIT)) {
+        if ((proc->slotStatus != FREE) && (proc->status != BLOCKED)) {
             proc->lastCalled++;
             if (withPriority == true) {
                 temp = proc->priority * P_RATIO + proc->lastCalled;
@@ -190,18 +186,15 @@ void kill(int pid) {
             }
         }
     }
-
     if (p == NULL) {
         printf("PID is not valid\n");
         return;
     }
-
     killChildren(pid);
-
     p->slotStatus = FREE;
     parent = getProcessByPID(p->parent);
     if (parent) {
-        if (parent->status == CHILD_WAIT) {
+        if (parent->status == BLOCKED) {
             parent->status = READY;
         }
     }
@@ -211,25 +204,28 @@ void kill(int pid) {
 
 void setPriority(int pid, int newPriority) {
     PROCESS *p = getProcessByPID(pid);
+    if (p == NULL) {
+    	log(L_ERROR, "could not set priority %d to pid %d", newPriority, pid);
+    	return;
+    }
     p->priority = newPriority;
 }
 
 void clean(void) {
-
     PROCESS *temp;
     int i;
     temp = getProcessByPID(currentPID);
     temp->slotStatus = FREE;
     temp = getProcessByPID(temp->parent);
     if (temp != NULL) {
-        if (temp->status == CHILD_WAIT) {
+        if (temp->status == BLOCKED) {
             temp->status = READY;
         }
     }
     activeProcesses--;
     kfree((void*) temp->stackstart - temp->stacksize + 1);
-
-    for (i = 0; i < temp->argc; i++)
+    for (i = 0; i < temp->argc; i++) {
         kfree((void*) temp->argv[i]);
+    }
     switchProcess();
 }
