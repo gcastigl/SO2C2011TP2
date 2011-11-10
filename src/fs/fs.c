@@ -58,9 +58,13 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	fsNode->impl = inode->impl;
 	fsNode->mask = inode->mask;
 	fsNode->inode = inodeNumber;
-	//POSSIBLE FIXME: this function assignments could be different(depending of the flags maybe?)
-	fsNode->read = fs_read;
-	fsNode->write = fs_write;
+	if (FILE_TYPE(inode->mask) == FS_PIPE) {
+		fsNode->read = fifo_read;
+		fsNode->write = fifo_write;
+	} else {
+		fsNode->read = fs_read;
+		fsNode->write = fs_write;
+	}
 	fsNode->open = fs_open;
 	fsNode->close = fs_close;
 	fsNode->size = fs_size;
@@ -312,6 +316,10 @@ PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buff
 PRIVATE void fs_open(fs_node_t *node) {
 	log(L_DEBUG, "fs_open...");
 	PROCESS* p = getCurrentProcess();
+	if (p == NULL) {
+		log(L_ERROR, "current process is null!");
+		return;
+	}
 	log(L_DEBUG, "opening file %s, process: %d", node->name, p);
 	boolean fileOpened = false;
 	for(int i = 0; i < MAX_FILES_PER_PROCESS && !fileOpened; i++) {
@@ -326,7 +334,7 @@ PRIVATE void fs_open(fs_node_t *node) {
 	}
 	log(L_DEBUG, "node opened? => %d", fileOpened);
 	if (!fileOpened) {
-		errno = E_MAX_FS_REACHED;
+		errno = E_MAX_FD_REACHED;
 	}
 }
 

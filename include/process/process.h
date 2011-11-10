@@ -19,11 +19,12 @@ enum {PNONE, VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SHELL_HIGH = 15};
 #define MAX_FILES_PER_PROCESS	10
 
 typedef struct {
+	char name[MAX_NAME_LENGTH];
 	u32int mask;	// inode type
 	u32int count;	// number of links
 	u32int inode;	// inode number
 	u32int mode;
-	//u32int pos;
+	u32int offset;
 	//u32int op;
 } file_descriptor_entry;
 

@@ -1,7 +1,8 @@
 #include <io.h>
 
 int isTTY(int fd);
-PRIVATE int nextFreeFd = FD_OFFSET;
+PRIVATE fs_node_t* getFile(char* fileName);
+PRIVATE int nextFreeIndex(file_descriptor_entry* files);
 
 void sysRead(int fd, void * buffer, u32int count) {
 	int i;
@@ -15,8 +16,10 @@ void sysRead(int fd, void * buffer, u32int count) {
 			*(aux+i) = c;
 		}
 	} else if (fd >= FD_OFFSET) {
-	    FILE *file = &openFiles[fd - FD_OFFSET];
-        int read = read_fs(file->node, file->offset, count, buffer);
+		fs_node_t node;
+		file_descriptor_entry* file = &(getCurrentProcess()->fd_table[fd - FD_OFFSET]);
+		fs_getFsNode(&node, file->inode);
+        int read = read_fs(&node, file->offset, count, buffer);
         file->offset += read;
 	}
 }
@@ -33,48 +36,61 @@ void sysWrite(int fd, void * buffer, u32int count) {
     	video_setOffset(0);
     	video_write(tty->terminal, tty->offset + 1);
     } else {
-        FILE *file = &openFiles[fd - FD_OFFSET];
-        int written = write_fs(file->node, file->offset, count, buffer);
+    	fs_node_t node;
+    	printf("opening descriptor: %d", fd - FD_OFFSET);
+    	file_descriptor_entry* file = &(getCurrentProcess()->fd_table[fd - FD_OFFSET]);
+    	fs_getFsNode(&node, file->inode);
+        int written = write_fs(&node, file->offset, count, buffer);
         file->offset += written;
     }
 }
 
 int sysOpen(char* fileName, int oflags, int cflags) {
-    int inode;
     int fd = 0;
-    int i;
-    if (oflags & O_CREAT) {
+    /*if (oflags & O_CREAT) {
+    	errno = 0;
         // FIXME: SHOULD CONSIDER CFLAGS
         fs_node_t current;
         fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
         inode = createdir_fs(&current, fileName, FS_FILE);
-        if ((oflags & O_EXCL) && (inode == E_FILE_EXISTS)) {
+        if ((oflags & O_EXCL) && (errno == E_FILE_EXISTS)) {
             return ERROR;
         }
+    }*/
+    file_descriptor_entry* files = getCurrentProcess()->fd_table;
+    int next = nextFreeIndex(files);
+    if (next != -1) {							// Check if process has available slot to open a file
+    	fs_node_t* node = getFile(fileName);		// Get file to be opened
+    	if (node == NULL) {
+    		errno = E_FILE_NOT_EXISTS;
+			return -1;
+		}
+    	fd = next;
+		file_descriptor_entry *file = &files[next];
+		strcpy(file->name, fileName);
+		file->inode = node->inode;
+		file->mode = oflags;
+		file->mask = FILE_TYPE(node->mask);		// POSSIBLE FIXME HERE!
+		file->count = 0;
+		file->offset = 0;
     }
-    if (nextFreeFd < MAX_OPEN_FILES) {
-        for (i = 0; i < MAX_OPEN_FILES; i++) {
-            if (strcmp(fileName, openFiles[i].name) == 0) {
-                break;
-            }
-        }
-        if (i != MAX_OPEN_FILES) {
-            fd = i + FD_OFFSET;
-        }
-        if (fd == 0) {
-        	fs_node_t current;
-        	fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
-            fs_node_t *node = finddir_fs(&current, fileName);
-            FILE *file = &openFiles[nextFreeFd - FD_OFFSET];
-            strcpy(file->name, fileName);
-            file->node = node;
-            file->flags &= oflags;
-            fd = nextFreeFd++;
-        }
-    }
-    return fd;
+    return fd + FD_OFFSET;
 }
 
+PRIVATE int nextFreeIndex(file_descriptor_entry* files) {
+	for (int i = 0; i < MAX_FILES_PER_PROCESS; i++) {
+		if (files[i].mask == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+PRIVATE fs_node_t* getFile(char* fileName) {
+	fs_node_t current;
+	fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
+	return finddir_fs(&current, fileName);
+}
 
 int isTTY(int fd) {
 	return 3 <= fd && fd < MAX_TTYs + 3;

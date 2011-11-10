@@ -469,27 +469,8 @@ int cat_cmd(int argc, char **argv) {
 }
 
 int mkfifo_cmd(int argc, char **argv) {
-	if (argc == 2) {
-		if (argv[1][0] == 'w') {
-			mkfifo(argv[0], O_WRONLY | O_CREAT);
-		} else if (argv[1][0] == 'r') {
-			mkfifo(argv[0], O_WRONLY | O_CREAT);
-		}
-	} else if(argc == 3) {
-		fs_node_t current, *fifo;
-		fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
-		fifo = finddir_fs(&current, argv[1]);
-		char *err = NULL;
-		if (fifo == NULL) {
-			err = "file does not exist";
-		} else if (FILE_TYPE(fifo->mask) != FS_PIPE) {
-			err = "the file is not a pipe";
-		}
-		if (err != NULL) {
-			printf("mkfifo: can't write to %s: %s\n", argv[1], err);
-			return -1;
-		}
-		write_fs(fifo, 0, strlen(argv[2]), (u8int*) argv[2]);
+	if (argc == 1) {
+		mkfifo(argv[0], O_RDWR | O_CREAT);
 	}
 	return 0;
 }
@@ -609,7 +590,12 @@ int cacheStatus_cmd(int argc, char **argv) {
 }
 
 int pfiles(int argc, char **argv) {
-	PROCESS* p = getCurrentProcess();
+	PROCESS* p;
+	if (argc == 1) {
+		p = getProcessByPID((int) argv[0]);
+	} else {
+		p = getCurrentProcess();
+	}
 	printf("Files opened by process: %s (PID: %d)\n", p->name, p->pid);
 	printf("inode\t|\tmode\n");
 	boolean hasOpenedFiles = false;
@@ -620,7 +606,7 @@ int pfiles(int argc, char **argv) {
 		}
 	}
 	if (!hasOpenedFiles) {
-		printf("(none)\n");
+		printf("[none]\n");
 	}
 	printf("\n");
 	return 0;

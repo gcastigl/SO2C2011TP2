@@ -9,7 +9,6 @@
 #include <fs/diskManager.h>
 #include <lib/stdlib.h>
 
-#define MAX_OPEN_FILES          60
 
 typedef struct {
     char        name[MAX_NAME_LENGTH];
@@ -19,8 +18,6 @@ typedef struct {
     u8int       flags;
     u32int      offset;
 } FILE;
-
-FILE openFiles[MAX_OPEN_FILES];
 
 #define FD_OFFSET (MAX_TTYs + 3)
 

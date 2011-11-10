@@ -3,6 +3,7 @@
 
 #include <defs.h>
 #include <fs/fs_API.h>
+#include <lib/fifo.h>
 #include <fs/diskManager.h>
 
 #define INODES			25
