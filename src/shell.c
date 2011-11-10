@@ -28,7 +28,6 @@ cmd_table_entry cmd_table[] = {
 	{"restart", 		HELP_RESTART, restart_cmd},
 	{"clear", 			HELP_CLEAR, clear_cmd},
 	{"getCPUspeed", 	HELP_GETCPUSPEED, getCPUspeed_cmd},
-	{"random", 			HELP_RANDOM, random_cmd},
 	{"echo", 			HELP_ECHO, echo_cmd},
 	{"cd", 				"switch current directory", cd_cmd},
 	{"ls", 				"List information about the FILEs (the current directory by default).", ls_cmd},
@@ -39,7 +38,6 @@ cmd_table_entry cmd_table[] = {
 	{"cat",				"Shows the content for a specified filename", cat_cmd},
     {"ln",              "make links between files", ln_cmd},
     {"rm",              "Removes the file specified by the parameter", rm_cmd},
-	{"DMtest", 			"disk manager test", diskManagerTest},
 	{"logout", 			"Logout current user\n", logout},
 	{"top", 			"Shows the current running processes", top_cmd},
 	{"kill", 			"Kills process with given PID", kill_cmd},
@@ -55,7 +53,10 @@ cmd_table_entry cmd_table[] = {
 	{"chown", 			"usage: USERNAME FILE", chown_cmd},
 	{"chgrp", 			"usage: GROUPNAME FILE", chgrp_cmd},
 	{"cache", 			"prints the fs cache status", cacheStatus_cmd},
+	{"random", 			HELP_RANDOM, random_cmd},
 	{"pfiles", 			"prints the files opened by the current process", pfiles},
+	{"DMtest", 			"disk manager test", diskManagerTest},
+	{"pitest", 			"pipes test", pipeTest_cmd},
 	{"", "", NULL}
 };
 
