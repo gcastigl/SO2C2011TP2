@@ -1,6 +1,7 @@
 #include <command.h>
 extern PROCESS process[];
 
+PRIVATE void _ls_cmd_setColor(u32int fileType);
 PRIVATE char* _ls_cmd_EndingString(u32int fileType);
 
 // REALLY BIG FIXME: ALL this funcions should be doing a system call!!
@@ -273,6 +274,7 @@ int ls_cmd(int argc, char **argv) {
     char perm[MASK_STRING_LEN];
     if (argc == 0) {
         while ((node = readdir_fs(&current, i)) != NULL) {                 // get directory i
+        	_ls_cmd_setColor(FILE_TYPE(node->mask));
             mask_string(node->mask, perm);
             log(L_DEBUG, "%s\t%s\t%s\t%s%s\n",
                     perm,
@@ -305,6 +307,22 @@ PRIVATE char* _ls_cmd_EndingString(u32int fileType) {
 		return "|";
 	}
 	return "";
+}
+
+PRIVATE void _ls_cmd_setColor(u32int fileType) {
+	switch(fileType) {
+	case FS_DIRECTORY:
+		tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
+		break;
+	case FS_SYMLINK:
+		tty_setFormatToCurrTTY(video_getFormattedColor(CYAN, BLACK));
+		break;
+	case FS_PIPE:
+		tty_setFormatToCurrTTY(video_getFormattedColor(BROWN, BLACK));
+		break;
+	default:
+		tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_GREY, BLACK));
+	}
 }
 
 int mkdir_cmd(int argc, char **argv) {
