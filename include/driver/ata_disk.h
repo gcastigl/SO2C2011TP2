@@ -34,9 +34,6 @@
 /* Parameters for the disk drive. */
 #define SECTOR_SIZE      512	/* physical sector size in bytes */
 
-/* Error codes */
-#define ERR		  -1	/* general error */
-
 /* Miscellaneous. */
 #define MAX_ERRORS         4	/* how often to try rd/wt before quitting */
 #define NR_DEVICES        10	/* maximum number of drives */
