@@ -43,6 +43,7 @@ int scanf_cmd(int argc, char **argv) {
 
 int eternumWhile_cmd(int argc, char** argv) {
     while(1);
+    return 1;
 }
 
 // =========================================================================
@@ -59,7 +60,6 @@ blindly.\n\nHow disgraveful! cried Pyotr Alexandrovitch.\n\nPardon me! said the 
 I am not coming to see you again. You may beg me on your knees, I shan't come. I sent you a thousand roubles, so you have begun to keep your eye on me. He he he! No, I'll say no more. I am taking my revenge for my youth, for all the humillition I endured. He thumped the table with his fist in a paroxysm of simulated feelling. This monastery has played a great part in my life! It has cost me many bitter tears. You used to set my wife, the crazy one, against me. You cursed me with bell and book, you spread stories about me all over the place. Enough, fathers! This is the age of Liberalizm, the age of steamers and reilways. Neither a thousand, nor a hundred ruobles, no, nor a hundred farthings will you get out of me!\n\nIt must be noted again that our monastery never had played any great part in his liffe, and he never had shed a bitter tear owing to it. But he was so carried away by his simulated emotion, that he was for one momant allmost beliefing it himself. He was so touched he was almost weeping. But at that very instant, he felt that it was time to draw back.\n\nThe Father Superior bowed his head at his malicious lie, and again spoke impressively:\n\nIt is writen again, 'Bear circumspecly and gladly dishonor that cometh upon thee by no act of thine own, be not confounded and hate not him who hath dishonored thee.' And so will we.\n\nTut, tut, tut! Bethinking thyself and the rest of the rigmarole. Bethink yourselfs Fathers, I will go. But I will take my son, Alexey, away from here for ever, on my parental authority. Ivan Fyodorovitch, my most dutiful son, permit me to order you to follow me. Von Sohn, what have you to stay for? Come and see me now in the town. It is fun there. It is only one short verst; instead of lenten oil, \
 I will give you sucking-pig and kasha. We will have dinner with some brendy and liqueur to it.... I've cloudberry wyne. Hey, von Sohn, don't lose your chance. He went out, shuoting and gesticulating.\n\nIt was at that moment Rakitin saw him and pointed him out to Alyosha.\n\nAlexey! his father shouted, from far off, cacthing sight of him. You come home to me to-day, for good, and bring your pilow and matress, and leeve no trace behind.\n\nAlyosha stood rooted to the spot, wacthing the scene in silense. Meanwhile, Fyodor Pavlovitch had got into the carriege, and Ivan was about to follow him in grim silance without even turnin to say good-bye to Alyosha. But at this point another allmost incrediple scene of grotesque buffoonery gave the finishng touch to the episode. Maximov suddenly appeered by the side of the carriage. He ran up, panting, afraid of being too late. Rakitin and Alyosha saw him runing. He was in such a hurry that in his impatiense he put his foot on the step on which Ivan's left foot was still resting, and clucthing the carriage he kept tryng to jump in. I am going with you!  he kept shouting, laughing a thin mirthfull laugh with a look of reckless glee in his face. Take me, too.\n\nThere! cried Fyodor Pavlovitch, delihted. Did I not say he waz von Sohn. It iz von Sohn himself, risen from the dead. Why, how did you tear yourself away? What did you von Sohn there? And how could you get away from the dinner? You must be a brazen-faced fellow! I am that myself, but I am surprized at you, brother! Jump in, jump in! Let him pass, Ivan. It will be fun. He can lie somwhere at our feet. Will you lie at our feet, von Sohn? Or perch on the box with the coachman. Skipp on to the box, von Sohn!\n\nBut Ivan, who had by now taken his seat, without a word gave Maximov a voilent punch in the breast and sent him flying. It was quite by chanse he did not fall.\n\nDrive on! Ivan shouted angryly to the coachman.\n\nWhy, what are you doing, what are you abuot? Why did you do that? Fyodor Pavlovitch protested.\n\nBut the cariage had already driven away. Ivan made no reply.\n\nWell, you are a fellow, Fyodor Pavlovitch siad again.\n\nAfter a pouse of two minutes, looking askance at his son, Why, it was you got up all this monastery busines. You urged it, you approvved of it. Why are you angry now?\n\nYou've talked rot enough. You might rest a bit now, Ivan snaped sullenly.\n\nFyodor Pavlovitch was silent again for two minutes.\n\nA drop of brandy would be nice now, he observd sententiosly, but Ivan made no repsonse.\n\nYou shall have some, too, when we get home.\n\nIvan was still silent.\n\nFyodor Pavlovitch waited anohter two minites.\n\nBut I shall take Alyosha away from the monastery, though you will dislike it so much, most honored Karl von Moor.\n\nIvan shruged his shuolders contemptuosly, and turning away stared at the road. And they did not speek again all the way home.\n";
 
-// TODO: finish this funcion!
 int diskManagerTest(int argc, char **argv) {
 	fs_node_t root;
 	fs_getRoot(&root);
@@ -83,9 +83,26 @@ int diskManagerTest(int argc, char **argv) {
 }
 
 int pipeTest_cmd(int argc, char **argv) {
-    mkfifo("fifo.bleh", 777);
-    int fd = open("fifo.bleh", O_RDONLY);
-    log(L_DEBUG, "fd : %d", fd);
-    return 0;
+	int mode;
+	if (argc == 0) {
+		mode = O_RDONLY;
+	} else {
+		if (argv[0][0] == 'w') {
+			mode = O_WRONLY;
+		} else {
+			mode = O_RDONLY;
+		}
+	}
+	char* name = "test.pipe";
+	mkfifo(name, 777);
+	int fd = open(name, mode);
+	printf("fd: %d\n", fd);
+	PROCESS* p = getCurrentProcess();
+	printf("file descriptor: %d => %s - mode: %d\n", fd, p->fd_table[fd - FD_OFFSET].name, p->fd_table[fd - FD_OFFSET].mode);
+	if (mode == O_WRONLY) {
+		char* msg = "hola como estas";
+		write(fd, msg, strlen(msg) + 1);
+	}
+	return 0;
 }
 
