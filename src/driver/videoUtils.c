@@ -66,19 +66,19 @@ void terminal_formatRange(char* terminal, int offsetFrom, int offsetTo, char for
 
 int terminal_prtSpecialCharater(char* terminal, int offset, char ascii, char format) {
 	int initOffset = offset;
-	int endOfRow, tab, col;
+	int fill, col;
 	switch (ascii) {
-		case '\n':
-			endOfRow = offset + 2 * COLUMNS - (offset % (2 * COLUMNS));
-			terminal_formatRange(terminal, offset, endOfRow, format);
-							offset = endOfRow;
+		case '\n':	// Line break
+			col = terminal_getColumn(offset);
+			fill = (COLUMNS - col) * 2;
+			terminal_formatRange(terminal, offset, offset + fill, format);
+			offset += fill;
 			break;
 		case '\t': // Tab
 			col = terminal_getColumn(offset);
-			tab = TAB_SIZE - col % TAB_SIZE;
-			tab *= 2;
-			terminal_formatRange(terminal, offset, offset + 2 * tab, format);
-			offset += tab;
+			fill = (TAB_SIZE - col % TAB_SIZE) * 2;
+			terminal_formatRange(terminal, offset, offset + fill, format);
+			offset += fill;
 			break;
 		case '\b': // Backspace
 			offset -= 2;
