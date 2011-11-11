@@ -239,10 +239,6 @@ int cd_cmd(int argc, char **argv) {
         fs_node_t current;
         fs_getFsNode(&current, currentiNode);
         fs_node_t *node = finddir_fs(&current, argv[0]);
-        if (!permission_file_hasAccess(node, R_BIT)) {
-            printf("cd: You don't have read access to %s\n", argv[0]);
-            return -1;
-        }
         if (node != NULL) {
         	if (FILE_TYPE(node->mask) == FS_SYMLINK) {
         		char name[MAX_NAME_LENGTH];
@@ -251,6 +247,10 @@ int cd_cmd(int argc, char **argv) {
         		cd_cmd(1, (char**) &n);
         		return 0;
         	}
+            if (!permission_file_hasAccess(node, R_BIT)) {
+                printf("cd: You don't have read access to %s\n", argv[0]);
+                return -1;
+            }
             if (FILE_TYPE(node->mask) == FS_DIRECTORY) {
                 tty->currDirectory = node->inode;
                 memcpy(tty->currPath, node->name, strlen(node->name) + 1);
