@@ -145,12 +145,18 @@ PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent) {
 // FIXME: There should be a call to realloc! (need to be implemented)
 PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* name) {
 	char fileName[MAX_NAME_LENGTH];
+	int index = _indexOf(dirInodeNumber);
+	if (index == -1) {
+		errno = E_ACCESS;
+		log(L_ERROR, "Could not load inode: %d", dirInodeNumber);
+		return;
+	}
 	if (name == NULL) {
 		diskManager_getFileName(fileInodeNumber, fileName);
 	} else {
 		strcpy(fileName, name);
 	}
-	if (FILE_TYPE(inodes[dirInodeNumber].mask) != FS_DIRECTORY) {
+	if (FILE_TYPE(inodes[index].mask) != FS_DIRECTORY) {
 		log(L_ERROR, "Trying to add file %s to a non dir!\n\n", name);
 		errno = E_INVALID_ARG;
 		return;
@@ -171,7 +177,7 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 	offset = contentsLength;
 	memcpy(content + offset, &fileInodeNumber, sizeof(u32int));	offset += sizeof(u32int);
 	memcpy(content + offset, fileName, MAX_NAME_LENGTH); 		offset += MAX_NAME_LENGTH;
-	inodes[dirInodeNumber].length = offset;
+	inodes[index].length = offset;
 	// log(L_DEBUG, "_appendFile: final contLen = %d, appending %s", offset, name);
 	// FIXME: write last part instead of the whole contents again
 	diskManager_writeContents(dirInodeNumber, content, offset, 0);
@@ -252,7 +258,6 @@ PRIVATE u32int fs_removedir(fs_node_t* node, u32int inode) {
     	log(L_ERROR, "could not load inode: %d", node->inode);
     	return E_ACCESS;
 	}
-	// inodes[inode].length = diskManager_size(inode);
 		log(L_DEBUG, "removing inode: %d, length: %d", inode, inodes[index].length);
 	char contents[inodes[index].length];
 	diskManager_readContents(node->inode, contents, inodes[index].length, 0);
