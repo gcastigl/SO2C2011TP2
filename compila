@@ -45,6 +45,8 @@ gcc -m32 -std=c99 -g -c ../src/access/user.c -o user.o                  -I../inc
 gcc -m32 -std=c99 -g -c ../src/access/group.c -o group.o                -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/access/permission.c -o permission.o      -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
+gcc -m32 -std=c99 -g -c ../src/paging/paging.c -o paging.o               -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+
 gcc -m32 -std=c99 -g -c ../src/test/test.c -o test.o                    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
 echo "\033[37;1mCOMPILATION DONE, LINKING (errors under this line means compila is missing .o)\033[0m"
