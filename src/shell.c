@@ -24,6 +24,7 @@ extern PUBLIC int activeTTYs;
  *	Tabla de comandos disponibles al usuario en esta shell
  */
 cmd_table_entry cmd_table[] = {
+	// FIXME: remove all this annoying hard coded text and send it to a help text file...
 	{"help", 			HELP_HELP, help_cmd},
 	{"restart", 		HELP_RESTART, restart_cmd},
 	{"clear", 			HELP_CLEAR, clear_cmd},
@@ -54,9 +55,11 @@ cmd_table_entry cmd_table[] = {
 	{"chgrp", 			"usage: GROUPNAME FILE", chgrp_cmd},
 	{"cache", 			"prints the fs cache status", cacheStatus_cmd},
 	{"random", 			HELP_RANDOM, random_cmd},
+	// TESTS ====================================================================
 	{"pfiles", 			"prints the files opened by the current process", pfiles},
 	{"DMtest", 			"disk manager test", diskManagerTest},
 	{"pitest", 			"pipes test", pipeTest_cmd},
+	{"pageFault", 		"pageFault test", pageFault_cmd},
 	{"", "", NULL}
 };
 
