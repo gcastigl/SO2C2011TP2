@@ -5,21 +5,41 @@
 #include <defs.h>
 #include <util/logger.h>
 
-#define KHEAP_START         0x40000000 // 32 Mb de memoria virtual - 16 Mb memoria fisica
-#define HEAP_MAX_SIZE     	0x4FFFF000	
-#define KHEAP_INITIAL_SIZE	0x800000 	// 8 Mb iniciales de HEAP
-#define HEAP_INDEX_SIZE		0x20000		// 128 Kb
-#define HEAP_MAGIC        	0x123890AB	// Codigo interno para verificar la integridad de los bloques de memoria
-#define HEAP_MIN_SIZE     	0x70000		
 
-#define PAGE_ALIGN 	1
-#define NOT_ALIGN	!ALIGN
-#define NO_PHYS		0
+/**
+   Allocate a chunk of memory, sz in size. If align == 1,
+   the chunk must be page-aligned. If phys != 0, the physical
+   location of the allocated chunk will be stored into phys.
 
+   This is the internal version of kmalloc. More user-friendly
+   parameter representations are available in kmalloc, kmalloc_a,
+   kmalloc_ap, kmalloc_p.
+**/
+u32int kmalloc_int(u32int sz, int align, u32int *phys);
 
-void kfree	( void* p );		//   General deallocation function.
+/**
+   Allocate a chunk of memory, sz in size. The chunk must be
+   page aligned.
+**/
+u32int kmalloc_a(u32int sz);
 
-void*  _kmalloc	(char* file, int line, int size );		//   General allocation function.
-#define kmalloc(...) _kmalloc(__FILE__, __LINE__, __VA_ARGS__);
+/**
+   Allocate a chunk of memory, sz in size. The physical address
+   is returned in phys. Phys MUST be a valid pointer to u32int!
+**/
+u32int kmalloc_p(u32int sz, u32int *phys);
+
+/**
+   Allocate a chunk of memory, sz in size. The physical address
+   is returned in phys. It must be page-aligned.
+**/
+u32int kmalloc_ap(u32int sz, u32int *phys);
+
+/**
+   General allocation function.
+**/
+void* kmalloc(u32int sz);
+
+void kfree(void* p);
 
 #endif
