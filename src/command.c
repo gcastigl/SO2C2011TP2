@@ -173,8 +173,7 @@ int shell_userlist(int argc, char **argv) {
 	_SysCall(SYSTEM_USERLIST, userlist);
 	printf("\tuid\tgid\tusername\n");
 	printf("\t---\t---\t--------\n");
-	int i;
-	for (i = 0; i < USER_MAX; ++i) {
+	for (int i = 0; i < USER_MAX; ++i) {
 		calluser_t user = userlist[i];
 		if (user.uid != NO_USER) {
 			printf("\t%d\t%d\t%s\n", user.uid, user.gid, user.userName);
