@@ -274,7 +274,7 @@ int ls_cmd(int argc, char **argv) {
     char perm[MASK_STRING_LEN];
     if (argc == 0) {
         while ((node = readdir_fs(&current, i)) != NULL) {                 // get directory i
-        	_ls_cmd_setColor(FILE_TYPE(node->mask));
+        	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
             mask_string(node->mask, perm);
             log(L_DEBUG, "%s\t%s\t%s\t%s%s\n",
                     perm,
@@ -282,10 +282,12 @@ int ls_cmd(int argc, char **argv) {
                     group_getName(node->gid),
                     node->name,
                     (FILE_TYPE(node->mask) == FS_DIRECTORY) ? "/": "");
-            printf("%s\t%s\t%s\t%s%s\n",
-                perm,
-                user_getName(node->uid),
-                group_getName(node->gid),
+            printf("%s\t%s\t%s",
+				perm,
+				user_getName(node->uid),
+				group_getName(node->gid));
+        	_ls_cmd_setColor(FILE_TYPE(node->mask));
+            printf("\t%s%s\n",
                 node->name,
                 _ls_cmd_EndingString(FILE_TYPE(node->mask))
             );
@@ -610,7 +612,7 @@ int cacheStatus_cmd(int argc, char **argv) {
 int pfiles(int argc, char **argv) {
 	PROCESS* p;
 	if (argc == 1) {
-		p = getProcessByPID((int) argv[0]);
+		p = getProcessByPID(atoi(argv[0]));
 	} else {
 		p = getCurrentProcess();
 	}
