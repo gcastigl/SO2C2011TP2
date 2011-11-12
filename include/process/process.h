@@ -29,22 +29,26 @@ typedef struct {
 } file_descriptor_entry;
 
 typedef struct {
-	int ownerUid;
-	int pid;
 	char name[MAX_PROCESS_NAME];
-	int priority;
-	int tty;
-	int groundness; 
-	int lastCalled;
-	int sleep;
-	int status;
-	int parent;
-	int ESP;
-	int slotStatus;
-	int stackstart;
-	int stacksize;
+	// Permission
+	int ownerUid;
+	// Memory status
 	int argc;
 	char *argv[MAX_ARG];
+	int ESP;
+	int stacksize;
+	int stackstart;
+	// Process state
+	int pid;
+	int parent;
+	int groundness;
+	int priority;
+	int sleep;
+	int status;
+	int slotStatus;
+	int lastCalled;
+	// I/O
+	int tty;
 	file_descriptor_entry fd_table[MAX_FILES_PER_PROCESS];
 } PROCESS;
 
@@ -69,8 +73,8 @@ int last100[100];
 * - Prioridad del proceso para el scheduler
 *
 **/
-void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** argv, int stacklength, void (*cleaner)(void), int tty,
-    int groundness, int status, int priority);
+void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** argv,
+		int stacklength, void (*cleaner)(void), int tty, int groundness, int status, int priority);
 
 /* getProcessByPID
 *
