@@ -26,16 +26,19 @@ u32int kmalloc_int(u32int sz, int align, u32int *phys)
     return tmp;
 }
 
+// kmalloc page-aligned
 u32int kmalloc_a(u32int sz)
 {
     return kmalloc_int(sz, 1, 0);
 }
 
+// kmalloc returns a physical address
 u32int kmalloc_p(u32int sz, u32int *phys)
 {
     return kmalloc_int(sz, 0, phys);
 }
 
+// kmalloc page-aligned and returns a physical address
 u32int kmalloc_ap(u32int sz, u32int *phys)
 {
     return kmalloc_int(sz, 1, phys);
