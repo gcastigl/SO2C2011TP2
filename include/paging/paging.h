@@ -2,6 +2,7 @@
 #define PAGING_H
 
 #include <defs.h>
+#include <interrupts/interrupts.h>
 #include <util/logger.h>
 
 #define TABLE_ENTRIES	1024
