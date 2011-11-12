@@ -91,46 +91,6 @@ int getCPUspeed_cmd(int argc, char **argv);
 **/
 int random_cmd(int argc, char **argv);
 
-/* getchar_cmd
-*
-* Recibe como parametros:
-* - Cantidad de Argumentos
-* - Argumentos
-*
-* Función de prueba para getchar
-**/
-int getchar_cmd(int argc, char **argv);
-
-/* scanf_cmd
-*
-* Recibe como parametros:
-* - Cantidad de Argumentos
-* - Argumentos
-*
-* Función de prueba para scanf
-**/
-int scanf_cmd(int argc, char **argv);
-
-/* printf_cmd
-*
-* Recibe como parametros:
-* - Cantidad de Argumentos
-* - Argumentos
-*
-* Función de prueba para printf
-**/
-int printf_cmd(int argc, char **argv);
-
-/* pipeTest_cmd
-*
-* Recibe como parametros:
-* - Cantidad de Argumentos
-* - Argumentos
-*
-* Función de prueba para pipes
-**/
-int pipeTest_cmd(int argc, char **argv);
-
 /* format
 *
 * Recibe como parametros:
@@ -302,5 +262,49 @@ int mkfifo_cmd(int argc, char **argv);
 int chmod_cmd(int argc, char **argv);
 int chown_cmd(int argc, char **argv);
 int chgrp_cmd(int argc, char **argv);
+
+// TESTS
+
+int pageFault_cmd(int argc, char **argv);
+
+/* scanf_cmd
+*
+* Recibe como parametros:
+* - Cantidad de Argumentos
+* - Argumentos
+*
+* Función de prueba para scanf
+**/
+int scanf_cmd(int argc, char **argv);
+
+/* printf_cmd
+*
+* Recibe como parametros:
+* - Cantidad de Argumentos
+* - Argumentos
+*
+* Función de prueba para printf
+**/
+int printf_cmd(int argc, char **argv);
+
+/* pipeTest_cmd
+*
+* Recibe como parametros:
+* - Cantidad de Argumentos
+* - Argumentos
+*
+* Función de prueba para pipes
+**/
+int pipeTest_cmd(int argc, char **argv);
+
+/* getchar_cmd
+*
+* Recibe como parametros:
+* - Cantidad de Argumentos
+* - Argumentos
+*
+* Función de prueba para getchar
+**/
+int getchar_cmd(int argc, char **argv);
 
 #endif
