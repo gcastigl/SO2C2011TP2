@@ -1,6 +1,7 @@
 #include <process/process.h>
 #include <session.h>
 
+PRIVATE void killChildren(int pid);
 extern int loadStackFrame();
 int getNextPID();
 PRIVATE boolean _moveProcess(int pid, RoundRobin* from, RoundRobin* to, int newState);
@@ -68,35 +69,18 @@ int getCurrentPID() {
 
 void setCurrentPID(int pid) {
 	// log(L_DEBUG, "setting current process as %d", pid);
-	boolean pidExists = false;
 	for (int i = 0; i < roundRobin_size(&activeProcess); i++) {
 		PROCESS* p = roundRobin_getNext(&activeProcess);
 		if (p->pid == pid) {
-			pidExists = true;
+			currentPID = pid;
+			return;
 		}
 	}
-	if (pidExists) {
-		currentPID = pid;
-	} else {
-		log(L_ERROR, "Trying to set %d as active process, but does not exists as an active process!", pid);
-	}
+	log(L_ERROR, "Trying to set %d as active process, but does not exists as an active process!", pid);
 }
 
 PROCESS *getCurrentProcess() {
     return process_getPID(currentPID);
-}
-
-//TODO: fixear parte comentada
-void killChildren(int pid) {
-	log(L_DEBUG, "killing child process PID: %d", pid);
-    int i;
-    for (i = 0; i < MAX_PROCESSES; i++) {
-        /*if (process[i].slotStatus == OCCUPIED) {
-            if (process[i].parent == pid) {
-                kill(process[i].pid);
-            }
-        }*/
-    }
 }
 
 void process_kill(int pid) {
@@ -104,27 +88,33 @@ void process_kill(int pid) {
     	log(L_ERROR, "Trying to kill TTY: %d (Not Allowed)", pid);
         return;
     }
-    PROCESS *p = NULL;
-    //PROCESS *parent;
     log(L_DEBUG, "killing process PID: %d", pid);
     for (int i = 0; i < roundRobin_size(&activeProcess); i++) {
-    	p = roundRobin_getNext(&activeProcess);
+    	PROCESS *p = roundRobin_getNext(&activeProcess);
     	if (p->pid == pid) {
-			break;
+    		roundRobin_removeCurrent(&activeProcess);
+    	    killChildren(pid);
+    		process_setStatus(p->parent, READY);
+    	    //TODO: Free process memory
+    		return;
 		}
     }
-    if (p == NULL) {
-        return;
+}
+
+PRIVATE void killChildren(int pid) {
+	log(L_DEBUG, "killing child process PID: %d", pid);
+    for (int i = 0; i < roundRobin_size(&activeProcess); i++) {
+		PROCESS* p = roundRobin_getNext(&activeProcess);
+    	if (p->parent == pid) {
+			process_kill(p->pid);
+    	}
     }
-    killChildren(pid);
-	process_setStatus(p->parent, READY);
-    /*parent = getProcessByPID(p->parent);
-    if (parent != NULL) {
-        if (parent->status == BLOCKED) {
-            parent->status = READY;
-        }
-    }*/
-    //Free process memory
+    for (int i = 0; i < roundRobin_size(&blockedProcess); i++) {
+		PROCESS* p = roundRobin_getNext(&blockedProcess);
+		if (p->parent == pid) {
+			process_kill(p->pid);
+		}
+	}
 }
 
 void setPriority(int pid, int newPriority) {
