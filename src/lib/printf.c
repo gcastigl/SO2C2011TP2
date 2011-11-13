@@ -1,7 +1,7 @@
 #include <lib/stdio.h>
 #include <main.h>
 
-static void prints(char * string);
+static void prints(char * string, int padding);
 
 static char * numberBaseNtoString(unsigned int number, int base, char * out);
 
@@ -16,7 +16,7 @@ void putchar(char c) {
 }
 
 void printf(char * formatString, ...) {
-    int integer;
+    int integer, padding;
     unsigned int unsigenedInteger;
     char * string;
     char out[40];
@@ -26,6 +26,16 @@ void printf(char * formatString, ...) {
     while (*formatString != '\0') {
         if (*formatString == '%') {
             formatString++;
+            padding = -1;
+            if (isNumber(*formatString)) {
+            	padding = (*formatString - '0');
+            	formatString++;
+            	if (isNumber(*formatString)) {
+            		padding = padding * 10 + (*(formatString) - '0');
+            		formatString++;
+            	}
+            	log(L_DEBUG, "read a padding format: %d", padding);
+            }
             switch (*formatString) {
                 case 'c':
                     c = va_arg(args, int);
@@ -33,7 +43,7 @@ void printf(char * formatString, ...) {
                     break;
                 case 's':
                     string = va_arg(args, char *);
-                    prints(string);
+                    prints(string, padding);
                     break;
                 case 'd':
                     integer = va_arg(args, int);
@@ -41,20 +51,20 @@ void printf(char * formatString, ...) {
                         integer = -integer;
                         putchar('-');
                     }
-                    prints(numberBaseNtoString(integer, 10, out));
+                    prints(numberBaseNtoString(integer, 10, out), padding);
                     break;
                 case 'u':
                     unsigenedInteger = va_arg(args, unsigned int);
-                    prints(numberBaseNtoString(unsigenedInteger, 10, out));
+                    prints(numberBaseNtoString(unsigenedInteger, 10, out), padding);
                     break;
                 case 'o':
                     integer = va_arg(args, unsigned int);
-                    prints(numberBaseNtoString(integer, 8, out));
+                    prints(numberBaseNtoString(integer, 8, out), padding);
                     break;
                 case 'x':
                 case 'p':
                     unsigenedInteger = va_arg(args, unsigned int);
-                    prints(numberBaseNtoString(unsigenedInteger, 16, out));
+                    prints(numberBaseNtoString(unsigenedInteger, 16, out), padding);
                     break;
                 case '%':
                     putchar('%');
@@ -68,11 +78,15 @@ void printf(char * formatString, ...) {
     va_end(args);
 }
 
-static void prints(char * string) {
-    while (*string != '\0') {
+static void prints(char * string, int padding) {
+    int lenght = 0;
+	while (*string != '\0' && (padding == -1 || lenght++ <= padding)) {
         putchar(*string);
         string++;
     }
+	while(lenght++ <= padding) {
+		putchar(' ');
+	}
 }
 
 static char* numberBaseNtoString(unsigned int number, int base, char * out) {
