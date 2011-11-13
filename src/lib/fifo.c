@@ -1,8 +1,7 @@
 #include <lib/fifo.h>
 #include <fs/file.h>
 
-extern PROCESS process[];
-PRIVATE char queue[200];
+//PRIVATE char queue[200];
 
 boolean noReadingProcess(int inode);
 
@@ -36,14 +35,14 @@ u32int fifo_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 
 boolean noReadingProcess(int inode) {
 	for (int i = 0; i < MAX_PROCESSES; i++) {
-		//if (process[i].status == BLOCKED) {
+		/*if (process[i].status == BLOCKED) {
 			for (int j = 0; j < MAX_FILES_PER_PROCESS; j++) {
 				printf("waiting %d, inode: %d\n", i, process[i].fd_table[j].inode);
 				if (process[i].fd_table[j].inode == inode && process[i].fd_table[j].mode == O_RDONLY) {
 					return false;
 				}
 			}
-		//}
+		}*/
 	}
 	return true;
 }

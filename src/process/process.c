@@ -63,11 +63,11 @@ void process_create(char* name, int(*processFunc)(int, char**), int argc,
     }
 }
 
-int getCurrentPID() {
+int process_currentPID() {
     return currentPID;
 }
 
-void setCurrentPID(int pid) {
+void process_setCurrent(int pid) {
 	// log(L_DEBUG, "setting current process as %d", pid);
 	for (int i = 0; i < roundRobin_size(&activeProcess); i++) {
 		PROCESS* p = roundRobin_getNext(&activeProcess);
@@ -79,7 +79,7 @@ void setCurrentPID(int pid) {
 	log(L_ERROR, "Trying to set %d as active process, but does not exists as an active process!", pid);
 }
 
-PROCESS *getCurrentProcess() {
+PROCESS *process_getCurrent() {
     return process_getPID(currentPID);
 }
 

@@ -61,7 +61,7 @@ int pipeTest_cmd(int argc, char **argv) {
 	mkfifo(name, 777);
 	int fd = open(name, mode);
 	printf("fd: %d\n", fd);
-	PROCESS* p = getCurrentProcess();
+	PROCESS* p = process_getCurrent();
 	printf("file descriptor: %d => %s - mode: %d\n", fd, p->fd_table[fd - FD_OFFSET].name, p->fd_table[fd - FD_OFFSET].mode);
 	if (mode == O_WRONLY) {
 		char* msg = "hola como estas";
@@ -97,14 +97,17 @@ I will give you sucking-pig and kasha. We will have dinner with some brendy and 
 and turning away stared at the road. And they did not speek again all the way home.\n";
 
 int diskManagerTest(int argc, char **argv) {
+	char* fileName = "longText.txt";
 	fs_node_t root;
 	fs_getRoot(&root);
-	int inodeNumber = createdir_fs(&root, "longText.txt", FS_FILE);
+	int inodeNumber = createdir_fs(&root, fileName, FS_FILE);
 	fs_node_t node;
 	fs_getFsNode(&node, inodeNumber);
 	u8int* contents = (u8int*) longText;
 	u32int len = strlen((char*) contents) + 1;
 	write_fs(&node, 0, len, contents);
+	cat_cmd(1, &fileName);
+	/*while(1);
 	int calcSize = diskManager_size(inodeNumber);
 	u8int asd[calcSize];
 	read_fs(&node, 0, calcSize, asd);
@@ -114,7 +117,7 @@ int diskManagerTest(int argc, char **argv) {
 	u8int part[21];
 	read_fs(&node, 40, 20, part);
 	part[20] = '\0';
-	printf("Reading from 40 to 60: %s\n", part);
+	printf("Reading from 40 to 60: %s\n", part);*/
 	return 0;
 }
 

@@ -18,7 +18,7 @@ void scheduler_init(int withPriority) {
 
 int getNextProcess(int oldESP) {
     PROCESS *proc, *proc2;
-    proc2 = process_getPID(getCurrentPID());
+    proc2 = process_getPID(process_currentPID());
     if (proc2->status == RUNNING) {
         proc2->status = READY;
     }
@@ -30,7 +30,8 @@ int getNextProcess(int oldESP) {
     } else {
         firstTime = false;
     }
-    setCurrentPID(proc->pid);
+    process_setCurrent(proc->pid);
+    setFD(proc->tty);
     return proc->ESP;
 }
 
@@ -85,7 +86,7 @@ boolean scheduler_isActive() {
  * Guarda el ESP del proceso actual
  */
 PRIVATE void saveESP(int oldESP) {
-    PROCESS *proc = getCurrentProcess();
+    PROCESS *proc = process_getCurrent();
     if (proc != NULL) {
         proc->ESP = oldESP;
     } else {

@@ -633,7 +633,7 @@ int pfiles(int argc, char **argv) {
 	if (argc == 1) {
 		p = process_getPID(atoi(argv[0]));
 	} else {
-		p = getCurrentProcess();
+		p = process_getCurrent();
 	}
 	printf("Files opened by process: %s (PID: %d)\n", p->name, p->pid);
 	printf("inode\t|\tmode\n");

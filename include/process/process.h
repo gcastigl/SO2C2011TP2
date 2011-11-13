@@ -91,9 +91,9 @@ PROCESS* process_getPID(int pid);
 *
 * Devuelve el PID del proceso actual
 **/
-int getCurrentPID();
+int process_currentPID();
 
-void setCurrentPID(int pid);
+void process_setCurrent(int pid);
 
 /* clean
 *
@@ -114,7 +114,7 @@ void process_kill(int pid);
 *
 * Devuelve el proceso actual
 **/
-PROCESS *getCurrentProcess();
+PROCESS *process_getCurrent();
 
 /* setPriority
 *

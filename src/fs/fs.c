@@ -320,7 +320,7 @@ PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buff
 
 PRIVATE void fs_open(fs_node_t *node) {
 	log(L_DEBUG, "fs_open...");
-	PROCESS* p = getCurrentProcess();
+	PROCESS* p = process_getCurrent();
 	if (p == NULL) {
 		log(L_ERROR, "current process is null!");
 		return;
@@ -344,7 +344,7 @@ PRIVATE void fs_open(fs_node_t *node) {
 }
 
 PRIVATE void fs_close(fs_node_t *node) {
-	PROCESS* p = getCurrentProcess();
+	PROCESS* p = process_getCurrent();
 	for(int i = 0; i < MAX_FILES_PER_PROCESS; i++) {
 		if (p->fd_table[i].inode == node->inode) {
 			p->fd_table[i].mask = 0;
