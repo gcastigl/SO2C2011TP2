@@ -42,8 +42,7 @@ int help_cmd(int argc, char **argv) {
 		for(int i = 0; commands[i].func != NULL; i++) {
 			len = strlen(commands[i].name);
 			if (i%2 == 0) {
-				printf("\t%s", commands[i].name);
-				while(len++ < 12) printf(" ");
+				printf("\t%12s", commands[i].name);
 				printf("|");
 			} else {
 				printf("\t%s\n", commands[i].name);
@@ -84,8 +83,7 @@ int getCPUspeed_cmd(int argc, char **argv) {
 		printf("Using rdmsr to perform measurement...\n");
 		speed = calculateCpuSpeed(_msrGetCpuSpeed);
 	} else {
-		printf("error: rdtsc or rdmsr should be available to \
-			perform this command\n");
+		printf("error: rdtsc or rdmsr should be available to perform this command\n");
 			return false;
 	}
 	
@@ -300,7 +298,7 @@ int ls_cmd(int argc, char **argv) {
                     group_getName(node->gid),
                     node->name,
                     (FILE_TYPE(node->mask) == FS_DIRECTORY) ? "/": "");
-            printf("%s\t%s\t%s",
+            printf("%s\t%5s\t%5s",
 				perm,
 				user_getName(node->uid),
 				group_getName(node->gid));
@@ -415,12 +413,13 @@ int touch_cmd(int argc, char **argv) {
             case OK:
                 break;
             case E_ACCESS:
-                err = "No write permission.";
+                err = "No write permission";
                 break;
             case E_FILE_EXISTS:
                 err = "File exists";
                 break;
             default:
+            	printf("errno: %d", errno);
                 err = "Unknown error";
                 break;
         }
