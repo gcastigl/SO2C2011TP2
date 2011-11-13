@@ -1,6 +1,6 @@
 #include <io.h>
 
-int isTTY(int fd);
+PRIVATE int isTTY(int fd);
 PRIVATE fs_node_t* getFile(char* fileName);
 PRIVATE int nextFreeIndex(file_descriptor_entry* files);
 
@@ -17,7 +17,7 @@ void sysRead(int fd, void * buffer, u32int count) {
 		}
 	} else if (fd >= FD_OFFSET) {
 		fs_node_t node;
-		file_descriptor_entry* file = &(getCurrentProcess()->fd_table[fd - FD_OFFSET]);
+		file_descriptor_entry* file = &(process_getCurrent()->fd_table[fd - FD_OFFSET]);
 		fs_getFsNode(&node, file->inode);
         int read = read_fs(&node, file->offset, count, buffer);
         file->offset += read;
@@ -26,23 +26,26 @@ void sysRead(int fd, void * buffer, u32int count) {
 
 void sysWrite(int fd, void * buffer, u32int count) {
 	TTY* tty;
-	if (fd < FD_OFFSET) {
-	    if (fd == STD_OUT || fd == STD_ERROR) {
-    		tty = tty_getCurrentTTY();
-    	} else if (isTTY(fd)) {
-    		tty = tty_getCurrentTTY(fd - 3);
-    	}
-    	tty_write(tty, (char*) buffer, count);
-    	video_setOffset(0);
-    	video_write(tty->terminal, tty->offset + 1);
+	if (false && (fd == STD_OUT || fd == STD_ERROR)) {
+		tty = tty_getCurrentTTY();
+		log(L_DEBUG, "logging to current tty: %d", tty->id);
+	} else if (true || isTTY(fd)) {
+		tty = tty_getTTY(fd);
+		log(L_DEBUG, "Logging to tty_%d", fd);
     } else {
-    	fs_node_t node;
+    	// TODO: review this code
+    	/*fs_node_t node;
     	printf("opening descriptor: %d", fd - FD_OFFSET);
-    	file_descriptor_entry* file = &(getCurrentProcess()->fd_table[fd - FD_OFFSET]);
+    	file_descriptor_entry* file = &(process_getCurrent()->fd_table[fd - FD_OFFSET]);
     	fs_getFsNode(&node, file->inode);
         int written = write_fs(&node, file->offset, count, buffer);
-        file->offset += written;
+        file->offset += written;*/
     }
+	tty_write(tty, (char*) buffer, count);
+	video_setOffset(0);
+	if (tty->id == tty_getCurrentTTY()->id) {
+		video_write(tty->terminal, tty->offset + 1);
+	}
 }
 
 int sysOpen(char* fileName, int oflags, int cflags) {
@@ -57,7 +60,7 @@ int sysOpen(char* fileName, int oflags, int cflags) {
             return ERROR;
         }
     }*/
-    file_descriptor_entry* files = getCurrentProcess()->fd_table;
+    file_descriptor_entry* files = process_getCurrent()->fd_table;
     int next = nextFreeIndex(files);
     if (next != -1) {							// Check if process has available slot to open a file
     	fs_node_t* node = getFile(fileName);		// Get file to be opened
@@ -92,6 +95,6 @@ PRIVATE fs_node_t* getFile(char* fileName) {
 	return finddir_fs(&current, fileName);
 }
 
-int isTTY(int fd) {
-	return 3 <= fd && fd < MAX_TTYs + 3;
+PRIVATE int isTTY(int fd) {
+	return 0 <= fd && fd < MAX_TTYs;
 }

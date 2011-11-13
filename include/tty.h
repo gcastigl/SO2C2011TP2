@@ -96,6 +96,8 @@ void tty_clean(TTY* tty);
 **/
 void tty_setFormatToCurrTTY(char format);
 
+void tty_setFormat(TTY* tty, char format);
+
 /* tty_getFormatToCurrTTY
 *
 * Devuelve el formato de la TTy actual

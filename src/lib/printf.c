@@ -2,10 +2,9 @@
 #include <main.h>
 
 static void prints(char * string, int padding);
-
 static char * numberBaseNtoString(unsigned int number, int base, char * out);
 
-static int currentFd;
+PRIVATE int currentFd;
 
 void setFD(int fileDescriptor) {
 	currentFd = fileDescriptor;

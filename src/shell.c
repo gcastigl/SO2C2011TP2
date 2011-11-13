@@ -9,7 +9,7 @@ void excecuteCmd(char* buffer);
 int parse_cmd(char* buffer);
 char** getArguments(char* buffer, int* argc, int *background);
 void cleanBuffer(TTY* tty);
-void printShellLabel();
+void printShellLabel(int index);
 //FIXME: checkReset & checkTTY could be in a separated keyboard manager file
 void checkReset();
 void checkTTY();
@@ -68,11 +68,14 @@ void shell_update(int index) {
 	checkTTY();
 	TTY* tty = tty_getCurrentTTY();
 	if (tty->id != index) {
-        return;
+		return;
 	}
 	if (!session_isLoggedIn()) {
 		session_login();
-		printShellLabel();
+		printShellLabel(index);
+	}
+	if (tty->offset == 0) {
+		printShellLabel(index);
 	}
 	if (bufferIsEmpty()) {
 		return;
@@ -84,7 +87,7 @@ void shell_update(int index) {
 	if (c == '\n') {
 		printf("\n");
 		excecuteCmd(tty->buffer);
-		printShellLabel();
+		printShellLabel(index);
 		cleanBuffer(tty);
 	} else if (c == '\b') {
 		if (tty->bufferOffset > 0) {
@@ -124,13 +127,13 @@ void excecuteCmd(char* buffer) {
         int background;
 		argv = getArguments(buffer + cmdLen, &argc, &background);
         log(L_DEBUG, "Running %s in %s", cmd_table[cmdIndex].name, (background == true ? "background" : "foreground"));
-		process_create(cmd_table[cmdIndex].name, cmd_table[cmdIndex].func, argc, argv, DEFAULT_STACK_SIZE, &clean, 0,
+		process_create(cmd_table[cmdIndex].name, cmd_table[cmdIndex].func, argc, argv, DEFAULT_STACK_SIZE, &clean, tty_getCurrent(),
             (background == true ? BACKGROUND : FOREGROUND), READY, NORMAL);
 	} else if(buffer[0]!='\0') {
 		tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
 		printf("\n\tUnknown command\n");
 	}
-	tty_setFormatToCurrTTY(oldFormat); // restore old format
+	tty_setFormatToCurrTTY(video_getFormattedColor(WHITE, BLACK)); // restore old format
 }
 
 
@@ -202,8 +205,8 @@ void checkReset() {
 
 void checkTTY() {
 	if (IS_CTRL() && newTTY == -1) {
-		int i;
-		for (i = 0; i < (activeTTYs > MAX_TTYs ? MAX_TTYs : activeTTYs); ++i) {
+		int ttys = (activeTTYs > MAX_TTYs ? MAX_TTYs : activeTTYs);
+		for (int i = 0; i < ttys; ++i) {
 			if (F_PRESSED(i)) {
 				newTTY = i;
 				break;
@@ -213,18 +216,18 @@ void checkTTY() {
 	if (!IS_CTRL() && newTTY != -1) {
 		if (newTTY != tty_getCurrent()) { // Do not switch to the same tty!
 			tty_setCurrent(newTTY);
-			if (tty_getCurrentTTY()->offset == 0) printShellLabel();
 		}
 		newTTY = -1;
 	}
 }
 
-void printShellLabel() {
+void printShellLabel(int index) {
 	UPDATE_PROMPT;
-	char oldFormat = tty_getCurrTTYFormat();
-	tty_setFormatToCurrTTY(video_getFormattedColor(CYAN, BLACK));
+	TTY* tty = tty_getTTY(index);
+	char oldFormat = video_getFormattedColor(tty->fgColor, tty->bgColor);
+	tty_setFormat(tty, video_getFormattedColor(CYAN, BLACK));
 	printf(shell_text);
-	tty_setFormatToCurrTTY(oldFormat);
+	tty_setFormat(tty, oldFormat);
 }
 
 
