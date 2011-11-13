@@ -1,8 +1,8 @@
 #include <command.h>
-extern PROCESS process[];
 
 PRIVATE void _ls_cmd_setColor(u32int fileType);
 PRIVATE char* _ls_cmd_EndingString(u32int fileType);
+PRIVATE void _top_cmd_print(RoundRobin* list, int* execCount);
 
 // REALLY BIG FIXME: ALL this funcions should be doing a system call!!
 
@@ -111,28 +111,46 @@ int top_cmd(int argc, char**argv) {
     int i;
     int slot;
     int execCount[MAX_PROCESSES] = { 0 };
-    char *status[] = {"Ready", "Child Wait", "Running"};
-    char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
     printf("Last 100:\n");
     for (i = 0; i < 100; i++) {
         slot = last100[i];
-        if (process[slot].slotStatus == OCCUPIED)
-            execCount[slot]++;
+        /*if (process[slot].slotStatus == OCCUPIED)
+            execCount[slot]++;*/
     }
+    printf("[ACTIVE]\n");
     printf("User\tName\tPID\tStatus\tPriority\tExecutions over 100\n");
-    for (i = 0; i < MAX_PROCESSES; i++) {
-        if ((process[i].slotStatus == OCCUPIED)) {
-            log(L_DEBUG, "%s\t%d\t%s\t%s\t%d\n", process[i].name, process[i].pid, status[process[i].status], priority[process[i].priority], execCount[i]);
-            printf("%s\t%s\t%d\t%s\t%s\t%d\n", user_getName(process[i].ownerUid), process[i].name, process[i].pid, status[process[i].status], priority[process[i].priority % 10], execCount[i]);
-        }
-    }
+    //_top_cmd_print(getActiveProcess());
+    printf("[BLOCKED]\n");
     
     return 0;
 }
 
+PRIVATE void _top_cmd_print(RoundRobin* list, int* execCount) {
+    char *status[] = {"Ready", "Child Wait", "Running"};
+    char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
+	PROCESS* p;
+	for (int i = 0; i < roundRobin_size(list); i++) {
+		p = roundRobin_getNext(list);
+		log(L_DEBUG, "%s\t%d\t%s\t%s\t%d\n", user_getName(p[i].ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
+        printf("%s\t%s\t%d\t%s\t%s\t%d\n", user_getName(p[i].ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
+	}
+}
+
 int kill_cmd(int argc, char**argv) {
     if (argc == 1) {
-        kill(atoi(argv[0]));
+    	int pid = atoi(argv[0]);
+    	PROCESS* p = process_getPID(pid);
+    	char* err = NULL;
+    	if (p == NULL) {
+    		err = "Process does not exist";
+    	} else if (!permission_user_isOwner(p->ownerUid)) {
+    		err = "Access denied";
+    	}
+    	if (err == NULL) {	// No error
+			process_kill(pid);
+    	} else {
+    		printf("Could not kill %d: %s", pid, err);
+    	}
     } else {
         printf("Usage:\nkill PID");
     }
@@ -293,6 +311,7 @@ int ls_cmd(int argc, char **argv) {
             i++;
         }
     }
+    // while(1);
     return 0;
 }
 
@@ -611,7 +630,7 @@ int cacheStatus_cmd(int argc, char **argv) {
 int pfiles(int argc, char **argv) {
 	PROCESS* p;
 	if (argc == 1) {
-		p = getProcessByPID(atoi(argv[0]));
+		p = process_getPID(atoi(argv[0]));
 	} else {
 		p = getCurrentProcess();
 	}

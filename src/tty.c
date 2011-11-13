@@ -10,7 +10,7 @@ void startTTYs() {
     char name[5];
     for (int i = 1; i <= MAX_TTYs; i++) {
         sprintf(name, "tty%d", i);
-        createProcess(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, i, BACKGROUND, READY, ((i == 1) ? activeTTYpriority : inactiveTTYpriority));
+        process_create(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, i, BACKGROUND, READY, ((i == 1) ? activeTTYpriority : inactiveTTYpriority));
         //createProcess(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, i, BACKGROUND, READY, activeTTYpriority);
     }
 }

@@ -12,19 +12,18 @@ PRIVATE RoundRobin activeProcess;
 PRIVATE RoundRobin blockedProcess;
 
 void process_initialize() {
-	roundRobin_init(&activeProcess);
-	roundRobin_init(&blockedProcess);
+	roundRobin_init(&activeProcess, "Active");
+	roundRobin_init(&blockedProcess, "Blocked");
 }
 
-void createProcess(char* name, int(*processFunc)(int, char**), int argc,
+void process_create(char* name, int(*processFunc)(int, char**), int argc,
         char** argv, int stacklength, void(*cleaner)(void), int tty,
         int groundness, int status, int priority) {
     if (roundRobin_size(&activeProcess) + roundRobin_size(&blockedProcess) >= MAX_PROCESSES) {
     	log(L_ERROR, "Could not create proces %s, max process running", name);
         return;
     }
-    PROCESS *newProcess;
-    newProcess = kmalloc(sizeof(PROCESS));
+    PROCESS *newProcess = kmalloc(sizeof(PROCESS));
     void *stack = kmalloc(stacklength);
     for (int i = 0; i < argc; i++) {
         newProcess->argv[i] = (char*) kmalloc(strlen(argv[i])+1);
@@ -43,18 +42,19 @@ void createProcess(char* name, int(*processFunc)(int, char**), int argc,
     newProcess->groundness = groundness;
     newProcess->parent = currentPID;			// POSSIBLE FIXME HERE...
     newProcess->status = status;
-		log(L_DEBUG, "Creating new process: %s - PID: %d\n", name, newProcess->pid);
     for (int i = 0; i < MAX_FILES_PER_PROCESS; i++) {
     	newProcess->fd_table[i].mask = 0;
     }
+	log(L_DEBUG, "Creating new process: %s - PID: %d. Parent: %d\n", newProcess->name, newProcess->pid, newProcess->parent);
     if (status == BLOCKED) {
     	roundRobin_add(&blockedProcess, newProcess);
     } else {
     	roundRobin_add(&activeProcess, newProcess);
     }
     if (groundness == FOREGROUND) {
-        PROCESS *p = getProcessByPID(currentPID);
+        PROCESS *p = process_getPID(currentPID);
         if (p != NULL) {
+        	process_setStatus(currentPID, BLOCKED);
         	p->status = BLOCKED;
             p->lastCalled = 0;
             switchProcess();
@@ -67,7 +67,7 @@ int getCurrentPID() {
 }
 
 void setCurrentPID(int pid) {
-	log(L_DEBUG, "setting current process as %d", pid);
+	// log(L_DEBUG, "setting current process as %d", pid);
 	boolean pidExists = false;
 	for (int i = 0; i < roundRobin_size(&activeProcess); i++) {
 		PROCESS* p = roundRobin_getNext(&activeProcess);
@@ -82,8 +82,8 @@ void setCurrentPID(int pid) {
 	}
 }
 
-PROCESS *getCurrentProcess(void) {
-    return getProcessByPID(currentPID);
+PROCESS *getCurrentProcess() {
+    return process_getPID(currentPID);
 }
 
 //TODO: fixear parte comentada
@@ -99,45 +99,36 @@ void killChildren(int pid) {
     }
 }
 
-//TODO: fixear parte comentada
-void kill(int pid) {
-    int i;
-    PROCESS *p = NULL;
-    PROCESS *parent;
-    log(L_DEBUG, "killing process PID: %d", pid);
+void process_kill(int pid) {
     if (pid < MAX_TTYs) {
+    	log(L_ERROR, "Trying to kill TTY: %d (Not Allowed)", pid);
         return;
     }
-    for (i = 0; i < MAX_PROCESSES; i++) {
-        /*if (process[i].slotStatus == OCCUPIED) {
-            if (process[i].pid == pid) {
-                if (permission_user_isOwner(process[i].ownerUid)) {
-                    p = &process[i];
-                    break;
-                } else {
-                    printf("Access denied\n");
-                    errno = EACCES;
-                    return;
-                }
-            }
-        }*/
+    PROCESS *p = NULL;
+    //PROCESS *parent;
+    log(L_DEBUG, "killing process PID: %d", pid);
+    for (int i = 0; i < roundRobin_size(&activeProcess); i++) {
+    	p = roundRobin_getNext(&activeProcess);
+    	if (p->pid == pid) {
+			break;
+		}
     }
     if (p == NULL) {
-        printf("PID is not valid\n");
         return;
     }
     killChildren(pid);
-    parent = getProcessByPID(p->parent);
-    if (parent) {
+	process_setStatus(p->parent, READY);
+    /*parent = getProcessByPID(p->parent);
+    if (parent != NULL) {
         if (parent->status == BLOCKED) {
             parent->status = READY;
         }
-    }
+    }*/
     //Free process memory
 }
 
 void setPriority(int pid, int newPriority) {
-    PROCESS *p = getProcessByPID(pid);
+    PROCESS *p = process_getPID(pid);
     if (p == NULL) {
     	log(L_ERROR, "could not set priority %d to pid %d", newPriority, pid);
     	return;
@@ -147,25 +138,17 @@ void setPriority(int pid, int newPriority) {
 
 void clean() {
 	_cli();
-	log(L_DEBUG, "EXECUTING CLEAN! - removing %d", currentPID);
-    PROCESS *temp;
-    temp = getProcessByPID(currentPID);
+    PROCESS *temp = process_getPID(currentPID);
+    	log(L_DEBUG, "CLEAN! - name: %s pid: %d / parent: %d", temp->name, temp->pid, temp->parent);
     while((temp = roundRobin_getNext(&activeProcess))->pid != currentPID) {
 //    	log(L_DEBUG, "next... %d", temp->pid); // Scroll until list is at currentPID
     }
 	roundRobin_removeCurrent(&activeProcess);
-	temp = getProcessByPID(temp->parent);
-	log(L_DEBUG, "Removed from active processes. Parent: %d - %d", temp->parent, temp);
-    if (temp != NULL) {
-    	process_setStatus(temp->parent, READY);
-        if (temp->status == BLOCKED) {
-            temp->status = READY;
-        }
-    }
     kfree((void*) temp->stackstart - temp->stacksize + 1);
     for (int i = 0; i < temp->argc; i++) {
         kfree((void*) temp->argv[i]);
     }
+	process_setStatus(temp->parent, READY);
     switchProcess();
 }
 
@@ -173,13 +156,13 @@ int getNextPID() {
     return nextPID++;
 }
 
-PROCESS *getProcessByPID(int pid) {
+PROCESS *process_getPID(int pid) {
 	PROCESS* current;
     // Search active processes
 	for (int i = 0; i < roundRobin_size(&activeProcess); i++) {
     	current = roundRobin_getNext(&activeProcess);
 		if (current->pid == pid) {
-//			log(L_DEBUG, "process %d was found as activeProcess - %d", pid, current);
+			// log(L_DEBUG, "process %d was found as activeProcess - %d", pid, current);
 			return current;
 		}
     }
@@ -187,7 +170,7 @@ PROCESS *getProcessByPID(int pid) {
     for (int i = 0; i < roundRobin_size(&activeProcess); i++) {
 		current = roundRobin_getNext(&blockedProcess);
 		if (current->pid == pid) {
-//			log(L_DEBUG, "process %d was found as blockedProcess", pid);
+			// log(L_DEBUG, "process %d was found as blockedProcess", pid);
 			return current;
 		}
     }
@@ -195,19 +178,20 @@ PROCESS *getProcessByPID(int pid) {
     return NULL;
 }
 
-void* getActiveProcess() {
+void* process_getActive() {
 	return &activeProcess;
 }
 
-void* getBlockedProcess() {
+void* process_getBlocked() {
 	return &blockedProcess;
 }
 
 boolean process_setStatus(u32int pid, u32int status) {
-	log(L_DEBUG, "changing process %d to state %d", pid, status);
 	if (status == BLOCKED) {
+		log(L_DEBUG, "moving %d [%s] -> [%s]", pid, activeProcess.name, blockedProcess.name);
 		return _moveProcess(pid, &activeProcess, &blockedProcess, status);
 	} else if (status == READY || status == RUNNING) {
+		log(L_DEBUG, "moving %d [%s] -> [%s]", pid, blockedProcess.name, activeProcess.name);
 		return _moveProcess(pid, &blockedProcess, &activeProcess, status);
 	}
 	return false;
@@ -217,8 +201,10 @@ PRIVATE boolean _moveProcess(int pid, RoundRobin* from, RoundRobin* to, int newS
 	for (int i = 0; i < roundRobin_size(from); i++) {
 		PROCESS* p = roundRobin_getNext(from);
 		if (p->pid == pid) {
+			roundRobin_removeCurrent(from);
 			p->status = newState;
-			roundRobin_add(to, roundRobin_removeCurrent(from));
+			roundRobin_add(to, p);
+			log(L_DEBUG, "process %d has been set to: %d", pid, newState);
 			return true;
 		}
 	}

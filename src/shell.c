@@ -124,7 +124,7 @@ void excecuteCmd(char* buffer) {
         int background;
 		argv = getArguments(buffer + cmdLen, &argc, &background);
         log(L_DEBUG, "Running %s in %s", cmd_table[cmdIndex].name, (background == true ? "background" : "foreground"));
-		createProcess(cmd_table[cmdIndex].name, cmd_table[cmdIndex].func, argc, argv, DEFAULT_STACK_SIZE, &clean, 0,
+		process_create(cmd_table[cmdIndex].name, cmd_table[cmdIndex].func, argc, argv, DEFAULT_STACK_SIZE, &clean, 0,
             (background == true ? BACKGROUND : FOREGROUND), READY, NORMAL);
 	} else if(buffer[0]!='\0') {
 		tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));

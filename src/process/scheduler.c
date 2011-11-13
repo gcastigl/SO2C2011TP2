@@ -12,13 +12,13 @@ PRIVATE int count100;
 void scheduler_init(int withPriority) {
     count100 = 0;
     usePriority = withPriority;
-    createProcess("Idle", &idle_cmd, 0, NULL, DEFAULT_STACK_SIZE, &clean, -1, BACKGROUND, READY, VERY_LOW);
+    process_create("Idle", &idle_cmd, 0, NULL, DEFAULT_STACK_SIZE, &clean, -1, BACKGROUND, READY, VERY_LOW);
     schedulerActive = true;
 }
 
 int getNextProcess(int oldESP) {
     PROCESS *proc, *proc2;
-    proc2 = getProcessByPID(getCurrentPID());
+    proc2 = process_getPID(getCurrentPID());
     if (proc2->status == RUNNING) {
         proc2->status = READY;
     }
@@ -46,26 +46,25 @@ PROCESS* _nextTask(int withPriority) {
     PROCESS* nextReady = NULL;
     int temp, bestScore = 0;
     PROCESS *current;
-    RoundRobin* active =  (RoundRobin*) getActiveProcess();
+    RoundRobin* active =  (RoundRobin*) process_getActive();
     for (i = 0; i < roundRobin_size(active); i++) {
     	current = roundRobin_getNext(active);
-        if (current->status != BLOCKED) {
-        	current->lastCalled++;
-            if (withPriority == true) {
-                temp = current->priority * P_RATIO + current->lastCalled;
-            } else {
-                temp = current->lastCalled;
-            }
-            if (current->priority == PNONE) {
-                temp /= 5;
-            }
-            if (temp > bestScore) {
-                bestScore = temp;
-                nextReady = current;
-            }
-        }
+		current->lastCalled++;
+		if (withPriority) {
+			temp = current->priority * P_RATIO + current->lastCalled;
+		} else {
+			temp = current->lastCalled;
+		}
+		if (current->priority == PNONE) {
+			temp /= 5;
+		}
+		if (temp > bestScore) {
+			bestScore = temp;
+			nextReady = current;
+		}
     }
-    //last100[(count100 = (count100 + 1) % 100)] = nextReady;
+    // log(L_DEBUG, "returning: %s", nextReady->name);
+    last100[(count100 = (count100 + 1) % 100)] = nextReady->pid;
     return nextReady;
     //notar que si no hay procesos disponibles, retornara &processes[0], o sea idle
 
@@ -80,17 +79,18 @@ boolean scheduler_isActive() {
 }
 
 /* saveESP
-*
-* Recibe como parametros:
-* - valor del viejo ESP
-*
-* Guarda el ESP del proceso actual
-**/
+ * Recibe como parametros:
+ * - valor del viejo ESP
+ *
+ * Guarda el ESP del proceso actual
+ */
 PRIVATE void saveESP(int oldESP) {
     PROCESS *proc = getCurrentProcess();
     if (proc != NULL) {
         proc->ESP = oldESP;
     } else {
+    	// FIXME: The code normally reaches this else when a process has just returned and
+    	// because it was the current process it does not exist any more.
     	log(L_ERROR, "current process is NULL!!");
     }
 }

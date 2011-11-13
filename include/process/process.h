@@ -74,7 +74,7 @@ void process_initialize();
 * - Prioridad del proceso para el scheduler
 *
 **/
-void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** argv,
+void process_create(char* name, int (*processFunc)(int,char**), int argc, char** argv,
 		int stacklength, void (*cleaner)(void), int tty, int groundness, int status, int priority);
 
 /* getProcessByPID
@@ -84,7 +84,7 @@ void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** 
 *
 * Devuelve el proceso con el pid indicado o NULL si el pid es inválido
 **/
-PROCESS* getProcessByPID(int pid);
+PROCESS* process_getPID(int pid);
 
 
 /* getCurrentPID
@@ -108,7 +108,7 @@ void clean();
 *
 * Mata el proceso indicado por pid
 **/
-void kill(int pid);
+void process_kill(int pid);
 
 /* getCurrentProcess
 *
@@ -127,9 +127,9 @@ PROCESS *getCurrentProcess();
 void setPriority(int pid, int newPriority);
 
 // FIXME: PORQUE NO COMPILA CON RoundRobin* ?????!!!!
-void* getActiveProcess();
+void* process_getActive();
 
-void* getBlockedProcess();
+void* process_getBlocked();
 
 boolean process_setStatus(u32int pid, u32int status);
 
