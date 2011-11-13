@@ -119,9 +119,10 @@ int top_cmd(int argc, char**argv) {
     }
     printf("[ACTIVE]\n");
     printf("User\tName\tPID\tStatus\tPriority\tExecutions over 100\n");
-    //_top_cmd_print(getActiveProcess());
+    _top_cmd_print(process_getActive(), execCount);
     printf("[BLOCKED]\n");
-    
+    printf("User\tName\tPID\tStatus\tPriority\tExecutions over 100\n");
+    _top_cmd_print(process_getBlocked(), execCount);
     return 0;
 }
 
