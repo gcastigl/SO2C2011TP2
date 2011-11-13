@@ -14,6 +14,7 @@ typedef struct node node_t;
 typedef struct {
 	node_t* prevCurrent;
 	int size;
+	boolean removed;
 } RoundRobin;
 
 
@@ -21,7 +22,7 @@ void roundRobin_init(RoundRobin* list);
 
 void roundRobin_add(RoundRobin* list, void* elem);
 
-void roundRobin_remove(RoundRobin* list);
+void* roundRobin_removeCurrent(RoundRobin* list);
 
 void* roundRobin_getNext(RoundRobin* list);
 

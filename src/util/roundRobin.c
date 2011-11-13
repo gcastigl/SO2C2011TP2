@@ -11,6 +11,7 @@ PRIVATE node_t *recicledNodes[MAX_RECICLED_NODES];
 void roundRobin_init(RoundRobin* list) {
 	list->prevCurrent = NULL;
 	list->size = 0;
+	list->removed = false;
 	// FIXME: this could be in separate initializer class method
 	if (!classInitialzed) {
 		for(int i = 0; i < MAX_RECICLED_NODES; ++i) {
@@ -32,25 +33,32 @@ void roundRobin_add(RoundRobin* list, void* elem) {
 		list->prevCurrent = node;
 	} else {
 		node_t* current = list->prevCurrent->next;
-		node->next = current->next;
-		current->next = node;
+		node->next = current;
+		list->prevCurrent->next = node;
+		list->prevCurrent = node;
 	}
 	list->size++;
+	list->removed = false;
 }
 
-void roundRobin_remove(RoundRobin* list) {
-	if (roundRobin_isEmpty(list)) {
-		return;
+void* roundRobin_removeCurrent(RoundRobin* list) {
+	void* removed;
+	if (roundRobin_isEmpty(list) || list->removed) {
+		return NULL;
 	}
 	if (roundRobin_size(list) == 1) {
+		removed = list->prevCurrent;
 		_recicle(list->prevCurrent);
 		list->prevCurrent = NULL;
 	} else {
 		node_t* current = list->prevCurrent->next;
 		list->prevCurrent->next = current->next;
+		removed = current->element;
 		_recicle(current);
 	}
+	list->removed = true;
 	list->size--;
+	return removed;
 }
 
 void* roundRobin_getNext(RoundRobin* list) {
@@ -59,6 +67,9 @@ void* roundRobin_getNext(RoundRobin* list) {
 	}
 	node_t* current = list->prevCurrent->next;
 	list->prevCurrent = current;
+	if (list->removed) {
+		return current->element;
+	}
 	return current->next->element;
 }
 
