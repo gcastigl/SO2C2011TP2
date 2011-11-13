@@ -139,6 +139,7 @@ void clean() {
         kfree((void*) temp->argv[i]);
     }
 	process_setStatus(temp->parent, READY);
+	// setCurrentPID(temp->parent);	// FIXME: this line should not be commented but makes te SO to fail
     switchProcess();
 }
 
