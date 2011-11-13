@@ -3,8 +3,11 @@
 
 #include <defs.h>
 #include <lib/kheap.h>
+#include <util/roundRobin.h>
 #include <util/logger.h>
 
+#define DEFAULT_STACK_SIZE 0x400
+// I think there is one like this already defined...
 #define MAX_PROCESS_NAME 	32
 #define MAX_PROCESSES		64
 #define MAX_ARG             32
@@ -12,7 +15,6 @@
 
 enum {READY, BLOCKED, RUNNING};
 enum {BACKGROUND, FOREGROUND};
-enum {OCCUPIED = 0, FREE};
 enum {PNONE, VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SHELL_HIGH = 15};
 
 #define MAX_PRIORITY HIGH
@@ -45,7 +47,6 @@ typedef struct {
 	int priority;
 	int sleep;
 	int status;
-	int slotStatus;
 	int lastCalled;
 	// I/O
 	int tty;
@@ -57,7 +58,7 @@ typedef struct {
 **/
 int last100[100];
 
-#define DEFAULT_STACK_SIZE 0x400
+void process_initialize();
 
 /* createProcess
 *
@@ -85,35 +86,20 @@ void createProcess(char* name, int (*processFunc)(int,char**), int argc, char** 
 **/
 PROCESS* getProcessByPID(int pid);
 
-/* getNextTask
-*
-* Recibe como parametros:
-* - valor booleano indicando que scheduler usar
-*
-* Devuelve el próximo proceso a ejecutar
-**/
-PROCESS* getNextTask(int withPriority);
-
-/* initScheduler
-*
-* Recibe como parametros:
-* - valor booleano indicando que scheduler usar
-*
-* Inicializa el scheduler (multitasking)
-**/
-void initScheduler(int withPriority);
 
 /* getCurrentPID
 *
 * Devuelve el PID del proceso actual
 **/
-int getCurrentPID(void);
+int getCurrentPID();
+
+void setCurrentPID(int pid);
 
 /* clean
 *
 * Función cementerio al cual van a parar todos los procesos una vez que terminan
 **/
-void clean(void);
+void clean();
 
 /* kill
 *
@@ -128,7 +114,7 @@ void kill(int pid);
 *
 * Devuelve el proceso actual
 **/
-PROCESS *getCurrentProcess(void);
+PROCESS *getCurrentProcess();
 
 /* setPriority
 *
@@ -139,5 +125,30 @@ PROCESS *getCurrentProcess(void);
 * Setea una nueva prioridad para el pid dado
 **/
 void setPriority(int pid, int newPriority);
+
+// FIXME: PORQUE NO COMPILA CON RoundRobin* ?????!!!!
+void* getActiveProcess();
+
+void* getBlockedProcess();
+
+boolean process_setStatus(u32int pid, u32int status);
+
+// =============================================================
+// 							SCHEDULER
+// =============================================================
+
+
+/* initScheduler
+*
+* Recibe como parametros:
+* - valor booleano indicando que scheduler usar
+*
+* Inicializa el scheduler (multitasking)
+**/
+void scheduler_init(int withPriority);
+
+void scheduler_setActive(boolean active);
+
+boolean scheduler_isActive();
 
 #endif

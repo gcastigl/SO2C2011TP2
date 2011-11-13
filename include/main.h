@@ -7,12 +7,7 @@
 #include <interrupts/interrupts.h>
 #include <fs/fs.h>
 #include <paging/paging.h>
-
-/* getNextPID
-*
-* Devuelve el próximo PID libre
-**/
-int getNextPID();
+#include <util/roundRobin.h>
 
 #endif
 

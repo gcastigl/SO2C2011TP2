@@ -35,7 +35,7 @@ int loadStackFrame(int (*func)(int argc, char** argv),int stackStart, int argc, 
 *
 * Cambia el proceso actual
 **/
-void switchProcess(void);
+void switchProcess();
 void _cli(void);        /* Deshabilita interrupciones  */
 void _sti(void);	 /* Habilita interrupciones  */
 

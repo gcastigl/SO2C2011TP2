@@ -1,60 +1,36 @@
 #include <process/process.h>
 #include <session.h>
 
-extern PROCESS process[];
-extern int currentPID;
-int count100;
-int firstTime = true;
-int schedulerActive = false;
-static int usePriority;
-static int activeProcesses;
 extern int loadStackFrame();
+int getNextPID();
+PRIVATE boolean _moveProcess(int pid, RoundRobin* from, RoundRobin* to, int newState);
 
-/* saveESP
-*
-* Recibe como parametros:
-* - valor del viejo ESP
-*
-* Guarda el ESP del proceso actual
-**/
-void saveESP(int oldESP);
-extern int getNextPID();
+PRIVATE int currentPID = 0;
+PRIVATE int nextPID = 0;
 
-void initScheduler(int withPriority) {
-    int i;
-    for (i = 0; i < MAX_PROCESSES; i++) {
-        process[i].slotStatus = FREE;
-    }
-    count100 = 0;
-    activeProcesses = 0;
-    usePriority = withPriority;
-    createProcess("Idle", &idle_cmd, 0, NULL, DEFAULT_STACK_SIZE, &clean, -1, BACKGROUND, READY, VERY_LOW);
-    schedulerActive = true;
+PRIVATE RoundRobin activeProcess;
+PRIVATE RoundRobin blockedProcess;
+
+void process_initialize() {
+	roundRobin_init(&activeProcess);
+	roundRobin_init(&blockedProcess);
 }
 
 void createProcess(char* name, int(*processFunc)(int, char**), int argc,
         char** argv, int stacklength, void(*cleaner)(void), int tty,
         int groundness, int status, int priority) {
-    int i;
-    PROCESS *newProcess;
-    newProcess = kmalloc(sizeof(PROCESS));
-    void *stack = kmalloc(stacklength);
-
-    for (i = 0; i < MAX_PROCESSES; i++) {
-        if (process[i].slotStatus == FREE) {
-            break;
-        }
-    }
-
-    if (i == MAX_PROCESSES) {
+    if (roundRobin_size(&activeProcess) + roundRobin_size(&blockedProcess) >= MAX_PROCESSES) {
     	log(L_ERROR, "Could not create proces %s, max process running", name);
         return;
     }
-    newProcess = &process[i];
-    for (i = 0; i < argc; i++) {
+    PROCESS *newProcess;
+    newProcess = kmalloc(sizeof(PROCESS));
+    void *stack = kmalloc(stacklength);
+    for (int i = 0; i < argc; i++) {
         newProcess->argv[i] = (char*) kmalloc(strlen(argv[i])+1);
         strcpy(newProcess->argv[i], argv[i]);
     }
+    newProcess->argc = argc;
     memcpy(newProcess->name, name, strlen(name) + 1);
     newProcess->ownerUid = session_getEuid();
     newProcess->pid = getNextPID();
@@ -65,105 +41,65 @@ void createProcess(char* name, int(*processFunc)(int, char**), int argc,
     newProcess->lastCalled = 0;
     newProcess->priority = priority;
     newProcess->groundness = groundness;
-    newProcess->slotStatus = OCCUPIED;
-    newProcess->parent = currentPID;
+    newProcess->parent = currentPID;			// POSSIBLE FIXME HERE...
     newProcess->status = status;
-
-	log(L_DEBUG, "Creating new process: %s - PID: %d\n", name, newProcess->pid);
-    for (i = 0; i < MAX_FILES_PER_PROCESS; i++) {
+		log(L_DEBUG, "Creating new process: %s - PID: %d\n", name, newProcess->pid);
+    for (int i = 0; i < MAX_FILES_PER_PROCESS; i++) {
     	newProcess->fd_table[i].mask = 0;
     }
+    if (status == BLOCKED) {
+    	roundRobin_add(&blockedProcess, newProcess);
+    } else {
+    	roundRobin_add(&activeProcess, newProcess);
+    }
     if (groundness == FOREGROUND) {
-        PROCESS *p;
-        p = getProcessByPID(currentPID);
+        PROCESS *p = getProcessByPID(currentPID);
         if (p != NULL) {
-            p->status = BLOCKED;
+        	p->status = BLOCKED;
             p->lastCalled = 0;
             switchProcess();
         }
     }
-    activeProcesses++;
-    return;
 }
 
-PROCESS* getNextTask(int withPriority) {
-    int i;
-    int nextReady = 0;
-    int temp, bestScore = 0;
-    PROCESS *proc;
-    for (i = 1; i < MAX_PROCESSES; i++) {
-        proc=&process[i];
-        if ((proc->slotStatus != FREE) && (proc->status != BLOCKED)) {
-            proc->lastCalled++;
-            if (withPriority == true) {
-                temp = proc->priority * P_RATIO + proc->lastCalled;
-            } else {
-                temp = proc->lastCalled;
-            }
-            if (proc->priority == PNONE) {
-                temp /= 5;
-            }
-            if (temp > bestScore) {
-                bestScore = temp;
-                nextReady = i;
-            }
-        }
-    }
-    last100[(count100 = (count100 + 1) % 100)] = nextReady;
-    return &process[nextReady];
-
-    //notar que si no hay procesos disponibles, retornara &processes[0], o sea idle
-
-}
-
-int getNextProcess(int oldESP) {
-    PROCESS *proc, *proc2;
-    proc2 = getProcessByPID(currentPID);
-    if (proc2->status == RUNNING) {
-        proc2->status = READY;
-    }
-    proc = getNextTask(usePriority);
-    proc->status = RUNNING;
-    proc->lastCalled = 0;
-    if (firstTime == false) {
-        saveESP(oldESP); // el oldESP esta el stack pointer del proceso
-    } else {
-        firstTime = false;
-    }
-    currentPID = proc->pid;
-
-    return proc->ESP;
-}
-
-void saveESP(int oldESP) {
-    PROCESS *proc;
-    proc = getProcessByPID(currentPID);
-    if (proc != NULL) {
-        proc->ESP = oldESP;
-    }
-    return;
-}
-
-int getCurrentPID(void) {
+int getCurrentPID() {
     return currentPID;
+}
+
+void setCurrentPID(int pid) {
+	log(L_DEBUG, "setting current process as %d", pid);
+	boolean pidExists = false;
+	for (int i = 0; i < roundRobin_size(&activeProcess); i++) {
+		PROCESS* p = roundRobin_getNext(&activeProcess);
+		if (p->pid == pid) {
+			pidExists = true;
+		}
+	}
+	if (pidExists) {
+		currentPID = pid;
+	} else {
+		log(L_ERROR, "Trying to set %d as active process, but does not exists as an active process!", pid);
+	}
 }
 
 PROCESS *getCurrentProcess(void) {
     return getProcessByPID(currentPID);
 }
 
+//TODO: fixear parte comentada
 void killChildren(int pid) {
 	log(L_DEBUG, "killing child process PID: %d", pid);
     int i;
     for (i = 0; i < MAX_PROCESSES; i++) {
-        if (process[i].slotStatus == OCCUPIED) {
+        /*if (process[i].slotStatus == OCCUPIED) {
             if (process[i].parent == pid) {
                 kill(process[i].pid);
             }
-        }
+        }*/
     }
 }
 
+//TODO: fixear parte comentada
 void kill(int pid) {
     int i;
     PROCESS *p = NULL;
@@ -173,7 +109,7 @@ void kill(int pid) {
         return;
     }
     for (i = 0; i < MAX_PROCESSES; i++) {
-        if (process[i].slotStatus == OCCUPIED) {
+        /*if (process[i].slotStatus == OCCUPIED) {
             if (process[i].pid == pid) {
                 if (permission_user_isOwner(process[i].ownerUid)) {
                     p = &process[i];
@@ -184,21 +120,19 @@ void kill(int pid) {
                     return;
                 }
             }
-        }
+        }*/
     }
     if (p == NULL) {
         printf("PID is not valid\n");
         return;
     }
     killChildren(pid);
-    p->slotStatus = FREE;
     parent = getProcessByPID(p->parent);
     if (parent) {
         if (parent->status == BLOCKED) {
             parent->status = READY;
         }
     }
-    activeProcesses--;
     //Free process memory
 }
 
@@ -211,21 +145,83 @@ void setPriority(int pid, int newPriority) {
     p->priority = newPriority;
 }
 
-void clean(void) {
+void clean() {
+	_cli();
+	log(L_DEBUG, "EXECUTING CLEAN! - removing %d", currentPID);
     PROCESS *temp;
-    int i;
     temp = getProcessByPID(currentPID);
-    temp->slotStatus = FREE;
-    temp = getProcessByPID(temp->parent);
+    while((temp = roundRobin_getNext(&activeProcess))->pid != currentPID) {
+//    	log(L_DEBUG, "next... %d", temp->pid); // Scroll until list is at currentPID
+    }
+	roundRobin_removeCurrent(&activeProcess);
+	temp = getProcessByPID(temp->parent);
+	log(L_DEBUG, "Removed from active processes. Parent: %d - %d", temp->parent, temp);
     if (temp != NULL) {
+    	process_setStatus(temp->parent, READY);
         if (temp->status == BLOCKED) {
             temp->status = READY;
         }
     }
-    activeProcesses--;
     kfree((void*) temp->stackstart - temp->stacksize + 1);
-    for (i = 0; i < temp->argc; i++) {
+    for (int i = 0; i < temp->argc; i++) {
         kfree((void*) temp->argv[i]);
     }
     switchProcess();
+}
+
+int getNextPID() {
+    return nextPID++;
+}
+
+PROCESS *getProcessByPID(int pid) {
+	PROCESS* current;
+    // Search active processes
+	for (int i = 0; i < roundRobin_size(&activeProcess); i++) {
+    	current = roundRobin_getNext(&activeProcess);
+		if (current->pid == pid) {
+//			log(L_DEBUG, "process %d was found as activeProcess - %d", pid, current);
+			return current;
+		}
+    }
+    // Search blocked processes
+    for (int i = 0; i < roundRobin_size(&activeProcess); i++) {
+		current = roundRobin_getNext(&blockedProcess);
+		if (current->pid == pid) {
+//			log(L_DEBUG, "process %d was found as blockedProcess", pid);
+			return current;
+		}
+    }
+	log(L_ERROR, "process %d was NOT found", pid);
+    return NULL;
+}
+
+void* getActiveProcess() {
+	return &activeProcess;
+}
+
+void* getBlockedProcess() {
+	return &blockedProcess;
+}
+
+boolean process_setStatus(u32int pid, u32int status) {
+	log(L_DEBUG, "changing process %d to state %d", pid, status);
+	if (status == BLOCKED) {
+		return _moveProcess(pid, &activeProcess, &blockedProcess, status);
+	} else if (status == READY || status == RUNNING) {
+		return _moveProcess(pid, &blockedProcess, &activeProcess, status);
+	}
+	return false;
+}
+
+PRIVATE boolean _moveProcess(int pid, RoundRobin* from, RoundRobin* to, int newState) {
+	for (int i = 0; i < roundRobin_size(from); i++) {
+		PROCESS* p = roundRobin_getNext(from);
+		if (p->pid == pid) {
+			p->status = newState;
+			roundRobin_add(to, roundRobin_removeCurrent(from));
+			return true;
+		}
+	}
+	log(L_DEBUG, "could not move process %d", pid);
+	return false;
 }
