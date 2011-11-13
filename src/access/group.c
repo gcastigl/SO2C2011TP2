@@ -235,19 +235,19 @@ PUBLIC boolean do_groupdel(char *groupName) {
     int gid = group_find(groupName);
         if (gid == NO_GROUP) {
             printf("No group exists with %s groupname.\n", groupName);
-            errno = INVALID_INPUT;
+            errno = E_INVALID_ARG;
             return false;
         }
         if (session_getEgid() == gid) {
             printf("You can't delete your own group.\n");
-            errno = INVALID_INPUT;
+            errno = E_INVALID_ARG;
             return false;
         }
         if (permission_group_isOwner(gid)) {
             return group_del(gid);
         } else {
             printf("Access denied.\n");
-            errno = EACCES;
+            errno = E_ACCESS;
             return false;
         }
 }

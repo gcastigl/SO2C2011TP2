@@ -358,7 +358,7 @@ int mkdir_cmd(int argc, char **argv) {
         switch(errno) {
             case OK:
                 break;
-            case EACCES:
+            case E_ACCESS:
                 err = "No write permission.";
                 break;
             case E_FILE_EXISTS:
@@ -414,7 +414,7 @@ int touch_cmd(int argc, char **argv) {
         switch(errno) {
             case OK:
                 break;
-            case EACCES:
+            case E_ACCESS:
                 err = "No write permission.";
                 break;
             case E_FILE_EXISTS:

@@ -337,20 +337,20 @@ PUBLIC boolean do_userdel(char *userName) {
     int uid = user_find(userName);
     if (uid == NO_USER) {
         printf("No user exists with %s username.\n", userName);
-        errno = INVALID_INPUT;
+        errno = E_INVALID_ARG;
         return false;
     }
     user_t *user = user_get(uid);
     if (session_getEuid() == uid) {
         printf("You can't delete your own user.\n");
-        errno = INVALID_INPUT;
+        errno = E_INVALID_ARG;
         return false;
     }
     if (permission_user_isOwner(uid) || permission_group_isOwner(user->gid)) {
         return user_del(uid);
     } else {
         printf("Access denied.\n");
-        errno = EACCES;
+        errno = E_ACCESS;
         return false;
     }
 }

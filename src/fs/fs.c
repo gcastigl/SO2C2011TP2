@@ -235,7 +235,7 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 
 PRIVATE u32int fs_createdir(fs_node_t* node, char* name, u32int type) {
 	if (!permission_file_hasAccess(node, W_BIT)) {
-	    errno = EACCES;
+	    errno = E_ACCESS;
 	    return -1;
 	}
 	if (fs_finddir(node, name) != NULL) {
