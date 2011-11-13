@@ -3,6 +3,7 @@
 
 #include <defs.h>
 #include <lib/stdlib.h>
+#include <lib/string.h>
 
 struct node {
 	void* element;
@@ -12,13 +13,14 @@ struct node {
 typedef struct node node_t;
 
 typedef struct {
+	char name[24];
 	node_t* prevCurrent;
 	int size;
 	boolean removed;
 } RoundRobin;
 
 
-void roundRobin_init(RoundRobin* list);
+void roundRobin_init(RoundRobin* list, char* name);
 
 void roundRobin_add(RoundRobin* list, void* elem);
 

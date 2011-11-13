@@ -1,6 +1,6 @@
 #include <util/roundRobin.h>
 
-#define MAX_RECICLED_NODES	20
+#define MAX_RECICLED_NODES	10
 
 PRIVATE node_t* _getRecicled();
 PRIVATE void _recicle(node_t* node);
@@ -8,7 +8,8 @@ PRIVATE void _recicle(node_t* node);
 PRIVATE boolean classInitialzed = false;
 PRIVATE node_t *recicledNodes[MAX_RECICLED_NODES];
 
-void roundRobin_init(RoundRobin* list) {
+void roundRobin_init(RoundRobin* list, char* name) {
+	strcpy(list->name, name);
 	list->prevCurrent = NULL;
 	list->size = 0;
 	list->removed = false;
@@ -44,6 +45,7 @@ void roundRobin_add(RoundRobin* list, void* elem) {
 void* roundRobin_removeCurrent(RoundRobin* list) {
 	void* removed;
 	if (roundRobin_isEmpty(list) || list->removed) {
+		log(L_DEBUG, "[%s] not removing...", list->name);
 		return NULL;
 	}
 	if (roundRobin_size(list) == 1) {
@@ -52,8 +54,8 @@ void* roundRobin_removeCurrent(RoundRobin* list) {
 		list->prevCurrent = NULL;
 	} else {
 		node_t* current = list->prevCurrent->next;
-		list->prevCurrent->next = current->next;
 		removed = current->element;
+		list->prevCurrent->next = current->next;
 		_recicle(current);
 	}
 	list->removed = true;
@@ -67,7 +69,9 @@ void* roundRobin_getNext(RoundRobin* list) {
 	}
 	node_t* current = list->prevCurrent->next;
 	list->prevCurrent = current;
-	if (list->removed) {
+	boolean removed = list->removed;
+	list->removed = false;
+	if (removed) {
 		return current->element;
 	}
 	return current->next->element;
@@ -81,13 +85,13 @@ u32int roundRobin_size(RoundRobin* list) {
 	return list->size;
 }
 
-
 PRIVATE void _recicle(node_t* node) {
 	boolean recicled = false;
 	for(int i = 0; i < MAX_RECICLED_NODES && !recicled; ++i) {
 		if (recicledNodes[i] == NULL) {
 			recicledNodes[i] = node;
 			recicled = true;
+			// log(L_DEBUG, "Saving to recicle");
 		}
 	}
 	if (!recicled) {
@@ -98,7 +102,10 @@ PRIVATE void _recicle(node_t* node) {
 PRIVATE node_t* _getRecicled() {
 	for(int i = 0; i < MAX_RECICLED_NODES; ++i) {
 		if (recicledNodes[i] != NULL) {
-			return recicledNodes[i];
+			node_t* node = recicledNodes[i];
+			recicledNodes[i] = NULL;
+			// log(L_DEBUG, "Node recicled!");
+			return node;
 		}
 	}
 	return malloc(sizeof(node_t));
