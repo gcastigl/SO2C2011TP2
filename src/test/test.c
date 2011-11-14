@@ -107,17 +107,6 @@ int diskManagerTest(int argc, char **argv) {
 	u32int len = strlen((char*) contents) + 1;
 	write_fs(&node, 0, len, contents);
 	cat_cmd(1, &fileName);
-	/*while(1);
-	int calcSize = diskManager_size(inodeNumber);
-	u8int asd[calcSize];
-	read_fs(&node, 0, calcSize, asd);
-	printf("Press any key to show contents...");
-	getchar();
-	printf("Recovered contents (%d, originalSize = %d):\n%s\n", calcSize, len, asd);
-	u8int part[21];
-	read_fs(&node, 40, 20, part);
-	part[20] = '\0';
-	printf("Reading from 40 to 60: %s\n", part);*/
 	return 0;
 }
 
