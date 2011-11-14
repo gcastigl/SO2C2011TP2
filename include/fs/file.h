@@ -19,7 +19,7 @@ typedef struct {
     u32int      offset;
 } FILE;
 
-#define FD_OFFSET (MAX_TTYs + 3)
+#define FD_OFFSET (MAX_TTYs + 4)
 
 #define O_RDONLY    0x0001
 #define O_WRONLY    0x0010

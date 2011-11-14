@@ -26,20 +26,18 @@ void sysRead(int fd, void * buffer, u32int count) {
 
 void sysWrite(int fd, void * buffer, u32int count) {
 	TTY* tty;
-	if (false && (fd == STD_OUT || fd == STD_ERROR)) {
+	if (fd == STD_OUT || fd == STD_ERROR) {
 		tty = tty_getCurrentTTY();
-		log(L_DEBUG, "logging to current tty: %d", tty->id);
-	} else if (true || isTTY(fd)) {
+	} else if (isTTY(fd)) {
 		tty = tty_getTTY(fd);
-		log(L_DEBUG, "Logging to tty_%d", fd);
     } else {
     	// TODO: review this code
-    	/*fs_node_t node;
+    	fs_node_t node;
     	printf("opening descriptor: %d", fd - FD_OFFSET);
     	file_descriptor_entry* file = &(process_getCurrent()->fd_table[fd - FD_OFFSET]);
     	fs_getFsNode(&node, file->inode);
         int written = write_fs(&node, file->offset, count, buffer);
-        file->offset += written;*/
+        file->offset += written;
     }
 	tty_write(tty, (char*) buffer, count);
 	video_setOffset(0);

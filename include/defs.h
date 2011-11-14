@@ -66,9 +66,11 @@ typedef void*           type_t;
 #define SYSTEM_CHMOD        20
 
 // File descriptors for STD in-out-error
-#define STD_IN		0
-#define STD_OUT		1
-#define STD_ERROR	2
+#define MAX_TTYs		4
+
+#define STD_IN		MAX_TTYs + 0
+#define STD_OUT		MAX_TTYs + 1
+#define STD_ERROR	MAX_TTYs + 2
 
 // Keyboard buffer size
 #define K_BUFFER_SIZE	10
