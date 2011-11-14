@@ -50,21 +50,5 @@ int mkfifo(char *name, int mode) {
 	if (fifo == NULL) {
 		createdir_fs(&current, name, FS_PIPE);
 	}
-	//fs_setFileMode(fifo->inode, mode);
 	return 0;
-	/*errno = 0;
-    if ((mode&O_CREAT) != 0) { // If exists, then use it, else create a new one
-    	fifo = finddir_fs(&current, name);
-    	if (fifo == NULL) {
-			createdir_fs(&current, name, FS_PIPE);
-    	}
-    	//fs_setFileMode(fifo->inode, mode);
-    	log(L_DEBUG, "new fifo using 0_CREAT");
-    } else {
-    	log(L_DEBUG, "creating a new fifo with 0_CREAT");
-    	fs_node_t newFifo;
-    	int inode = createdir_fs(&current, name, FS_PIPE);
-    	fs_getFsNode(&newFifo, inode);
-    }
-    return (errno == 0) ? 0 : -1;*/
 }

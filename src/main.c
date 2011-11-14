@@ -12,7 +12,7 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
         port_serial_init();
         keyboard_init();
         video_init();
-        setFD(0);
+        setFD(STD_OUT);
         fs_init();
         group_init();
         user_init();

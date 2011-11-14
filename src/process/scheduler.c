@@ -31,7 +31,7 @@ int getNextProcess(int oldESP) {
         firstTime = false;
     }
     process_setCurrent(proc->pid);
-    setFD(proc->tty);
+    setFD(proc->tty);				// Sets the output to the tty corresponding to the process
     return proc->ESP;
 }
 
@@ -43,12 +43,11 @@ int getNextProcess(int oldESP) {
 * Devuelve el próximo proceso a ejecutar
 **/
 PROCESS* _nextTask(int withPriority) {
-    int i;
     PROCESS* nextReady = NULL;
     int temp, bestScore = 0;
     PROCESS *current;
     RoundRobin* active =  (RoundRobin*) process_getActive();
-    for (i = 0; i < roundRobin_size(active); i++) {
+    for (int i = 0; i < roundRobin_size(active); i++) {
     	current = roundRobin_getNext(active);
 		current->lastCalled++;
 		if (withPriority) {
