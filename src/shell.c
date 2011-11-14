@@ -1,5 +1,8 @@
 #include <shell.h>
 
+#define DEFAULT_COLOR_FG	WHITE
+#define DEFAULT_COLOR_BG	BLACK
+
 // "user"@tty"n" "currPath" >
 #define SHELL_PROMPT	"%s@tty%d %s > "
 #define UPDATE_PROMPT	sprintf(shell_text, SHELL_PROMPT, session_getName(), tty_getCurrent() + 1, \
@@ -117,10 +120,7 @@ void shell_cleanScreen() {
 void excecuteCmd(char* buffer) {
 	int cmdLen, argc;
 	char **argv;
-
-	char oldFormat = tty_getCurrTTYFormat();
 	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
-
 	int cmdIndex = parse_cmd(buffer);
 	if (cmdIndex != -1) {
 		cmdLen = strlen(cmd_table[cmdIndex].name);
@@ -133,7 +133,7 @@ void excecuteCmd(char* buffer) {
 		tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
 		printf("\n\tUnknown command\n");
 	}
-	tty_setFormatToCurrTTY(video_getFormattedColor(WHITE, BLACK)); // restore old format
+	tty_setFormatToCurrTTY(video_getFormattedColor(DEFAULT_COLOR_FG, DEFAULT_COLOR_BG)); // restore old format
 }
 
 
@@ -224,10 +224,9 @@ void checkTTY() {
 void printShellLabel(int index) {
 	UPDATE_PROMPT;
 	TTY* tty = tty_getTTY(index);
-	char oldFormat = video_getFormattedColor(tty->fgColor, tty->bgColor);
 	tty_setFormat(tty, video_getFormattedColor(CYAN, BLACK));
 	printf(shell_text);
-	tty_setFormat(tty, oldFormat);
+	tty_setFormat(tty, video_getFormattedColor(DEFAULT_COLOR_FG, DEFAULT_COLOR_BG));
 }
 
 
