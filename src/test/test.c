@@ -64,8 +64,14 @@ int pipeTest_cmd(int argc, char **argv) {
 	PROCESS* p = process_getCurrent();
 	printf("file descriptor: %d => %s - mode: %d\n", fd, p->fd_table[fd - FD_OFFSET].name, p->fd_table[fd - FD_OFFSET].mode);
 	if (mode == O_WRONLY) {
+		printf("Writing to the pipe");
 		char* msg = "hola como estas";
+		log(L_DEBUG, "writing to fd: %d / %d bytes", fd, strlen(msg) + 1);
 		write(fd, msg, strlen(msg) + 1);
+	} else {
+		char msg[50];
+		read(fd, msg, 10);
+		printf("Read msg from pipe: %s", msg);
 	}
 	return 0;
 }
