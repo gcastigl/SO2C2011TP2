@@ -8,9 +8,9 @@
 #include <driver/video.h>
 #include <process/process.h>
 
-#define MAX_TTYs		8
+#define MAX_TTYs		4
 
-#define BUFFER_SIZE	512
+#define BUFFER_SIZE	128
 
 typedef struct {
     int id;
