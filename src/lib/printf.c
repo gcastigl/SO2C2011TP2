@@ -78,10 +78,11 @@ void printf(char * formatString, ...) {
 }
 
 static void prints(char * string, int padding) {
-    int lenght = 0;
-	while (*string != '\0' && (padding == -1 || lenght++ <= padding)) {
-        putchar(*string);
-        string++;
+    int lenght = strlen(string);
+    if (padding == -1 || lenght <= padding) {
+    	write(currentFd, string, lenght);
+    } else if (lenght > padding){
+    	write(currentFd, string, padding);
     }
 	while(lenght++ <= padding) {
 		putchar(' ');
