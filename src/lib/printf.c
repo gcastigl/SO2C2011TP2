@@ -2,7 +2,7 @@
 #include <main.h>
 
 static void prints(char * string, int padding);
-static char * numberBaseNtoString(unsigned int number, int base, char * out);
+static char *numberBaseNtoString(unsigned int number, int base, char * out);
 
 PRIVATE int currentFd;
 
@@ -33,7 +33,6 @@ void printf(char * formatString, ...) {
             		padding = padding * 10 + (*(formatString) - '0');
             		formatString++;
             	}
-            	log(L_DEBUG, "read a padding format: %d", padding);
             }
             switch (*formatString) {
                 case 'c':
@@ -84,7 +83,7 @@ static void prints(char * string, int padding) {
     } else if (lenght > padding){
     	write(currentFd, string, padding);
     }
-	while(lenght++ <= padding) {
+	while(padding != -1 && lenght++ <= padding) {
 		putchar(' ');
 	}
 }
