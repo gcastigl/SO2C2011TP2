@@ -5,8 +5,8 @@
 
 // "user"@tty"n" "currPath" >
 #define SHELL_PROMPT	"%s@tty%d %s > "
-#define UPDATE_PROMPT	sprintf(shell_text, SHELL_PROMPT, session_getName(), tty_getCurrent() + 1, \
-				tty_getCurrentTTY()->currPath);
+#define UPDATE_PROMPT(tty)	sprintf(shell_text, SHELL_PROMPT, session_getName(), tty + 1, \
+				tty_getTTY(tty)->currPath);
 
 void excecuteCmd(char* buffer);
 int parse_cmd(char* buffer);
@@ -222,7 +222,7 @@ void checkTTY() {
 }
 
 void printShellLabel(int index) {
-	UPDATE_PROMPT;
+	UPDATE_PROMPT(index);
 	TTY* tty = tty_getTTY(index);
 	tty_setFormat(tty, video_getFormattedColor(CYAN, BLACK));
 	printf(shell_text);
