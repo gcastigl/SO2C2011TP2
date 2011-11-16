@@ -1,6 +1,6 @@
 #include <util/roundRobin.h>
 
-#define MAX_RECICLED_NODES	10
+#define MAX_RECICLED_NODES	15
 
 PRIVATE node_t* _getRecicled();
 PRIVATE void _recicle(node_t* node);
@@ -13,6 +13,7 @@ void roundRobin_init(RoundRobin* list, char* name) {
 	list->prevCurrent = NULL;
 	list->size = 0;
 	list->removed = false;
+	list->busy = false;
 	// FIXME: this could be in separate initializer class method
 	if (!classInitialzed) {
 		for(int i = 0; i < MAX_RECICLED_NODES; ++i) {
@@ -65,15 +66,16 @@ void* roundRobin_removeCurrent(RoundRobin* list) {
 
 void* roundRobin_getNext(RoundRobin* list) {
 	if (roundRobin_isEmpty(list)) {
+		log(L_DEBUG, "list is empty...");
 		return NULL;
 	}
 	node_t* current = list->prevCurrent->next;
-	list->prevCurrent = current;
-	boolean removed = list->removed;
-	list->removed = false;
-	if (removed) {
+	if (list->removed) {
+		list->removed = false;
 		return current->element;
 	}
+	list->prevCurrent = current;
+	list->removed = false;
 	return current->next->element;
 }
 
@@ -91,7 +93,7 @@ PRIVATE void _recicle(node_t* node) {
 		if (recicledNodes[i] == NULL) {
 			recicledNodes[i] = node;
 			recicled = true;
-			// log(L_DEBUG, "Saving to recicle");
+//			log(L_DEBUG, "Saving to recicle %d", *((int*)node->element));
 		}
 	}
 	if (!recicled) {
@@ -109,4 +111,19 @@ PRIVATE node_t* _getRecicled() {
 		}
 	}
 	return malloc(sizeof(node_t));
+}
+
+int roundRobin_toArray(RoundRobin* list, void* array) {
+	if (roundRobin_isEmpty(list)) {
+		return 0;
+	}
+	char* charArray = (char*) array;
+	int i;
+	node_t* node = list->prevCurrent;
+	for (i = 0; i < roundRobin_size(list); ++i) {
+		memcpy(charArray, &node->element, sizeof(void*));
+		charArray += sizeof(void*);
+		node = node->next;
+	}
+	return i;
 }

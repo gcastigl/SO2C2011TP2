@@ -15,12 +15,18 @@ void sysRead(int fd, void * buffer, u32int count) {
 			c = getKeyFromBuffer();
 			*(aux+i) = c;
 		}
-	} else if (fd >= FD_OFFSET) {
+	} else if (fd >= MAX_TTYs) {
 		fs_node_t node;
-		file_descriptor_entry* file = &(process_getCurrent()->fd_table[fd - FD_OFFSET]);
+		u32int index = fd - FD_OFFSET;
+		file_descriptor_entry* file = &(scheduler_getCurrentProcess()->fd_table[index]);
 		fs_getFsNode(&node, file->inode);
         int read = read_fs(&node, file->offset, count, buffer);
         file->offset += read;
+        if (file->offset >= file->length) {
+        	log(L_DEBUG, "resetting offset: %d / length: %d", file->offset, file->length);
+        	file->offset = 0;
+        }
+        return;
 	}
 }
 
@@ -31,13 +37,14 @@ void sysWrite(int fd, void * buffer, u32int count) {
 	} else if (isTTY(fd)) {
 		tty = tty_getTTY(fd);
     } else {
-    	// TODO: review this code
     	fs_node_t node;
-    	printf("opening descriptor: %d", fd - FD_OFFSET);
-    	file_descriptor_entry* file = &(process_getCurrent()->fd_table[fd - FD_OFFSET]);
+    	u32int index = fd - FD_OFFSET;
+    	file_descriptor_entry* file = &(scheduler_getCurrentProcess()->fd_table[index]);
     	fs_getFsNode(&node, file->inode);
+    	printf("File index: %d / offset: %d / count: %d / buff: %s\n", index, file->offset, count, buffer);
         int written = write_fs(&node, file->offset, count, buffer);
-        file->offset += written;
+        file->length = written;
+        return;
     }
 	tty_write(tty, (char*) buffer, count);
 	video_setOffset(0);
@@ -58,7 +65,7 @@ int sysOpen(char* fileName, int oflags, int cflags) {
             return ERROR;
         }
     }*/
-    file_descriptor_entry* files = process_getCurrent()->fd_table;
+    file_descriptor_entry* files = scheduler_getCurrentProcess()->fd_table;
     int next = nextFreeIndex(files);
     if (next != -1) {							// Check if process has available slot to open a file
     	fs_node_t* node = getFile(fileName);		// Get file to be opened
@@ -76,6 +83,19 @@ int sysOpen(char* fileName, int oflags, int cflags) {
 		file->offset = 0;
     }
     return fd + FD_OFFSET;
+}
+
+int sysClose(char* fileName, int oflags, int cflags) {
+	file_descriptor_entry* files = scheduler_getCurrentProcess()->fd_table;
+	for (int i = 0; i < MAX_FILES_PER_PROCESS; ++i) {
+		if (strcmp(files[i].name, fileName) == 0) {
+			log(L_DEBUG, "closing file: %s", fileName);
+			if (scheduler_getCurrentProcess()->waitingFlags == W_FIFO) {
+				scheduler_getCurrentProcess()->status = READY;
+			}
+		}
+	}
+	return 0;
 }
 
 PRIVATE int nextFreeIndex(file_descriptor_entry* files) {

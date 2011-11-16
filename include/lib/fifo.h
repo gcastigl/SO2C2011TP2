@@ -4,7 +4,7 @@
 #include <defs.h>
 #include <fs/fs_API.h>
 
-#include <process/process.h>
+#include <process/scheduler.h>
 #include <lib/stdlib.h>
 
 u32int fifo_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer);

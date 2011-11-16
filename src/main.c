@@ -16,7 +16,6 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
         fs_init();
         group_init();
         user_init();
-        process_initialize();
         scheduler_init(true);
         _initTTCounter();
         startTTYs();
@@ -25,7 +24,3 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
     return 0;
 }
 
-u32int yield(void) {
-    _SysCall(SYSTEM_YIELD);
-    return 0;
-}

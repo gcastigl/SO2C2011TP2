@@ -1,7 +1,7 @@
 #include <tty.h>
 
 PRIVATE TTY tty[MAX_TTYs];
-PRIVATE int inactiveTTYpriority = PNONE;
+PRIVATE int inactiveTTYpriority = VERY_LOW;
 PRIVATE int activeTTYpriority = HIGH;
 int currentTTY = 0;
 PUBLIC int activeTTYs = 0;
@@ -12,7 +12,7 @@ void startTTYs() {
     for (int i = 0; i < MAX_TTYs; i++) {
         sprintf(name, "tty%d", i + 1);
         int priority = ((i == 0) ? activeTTYpriority : inactiveTTYpriority);
-        process_create(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, i, BACKGROUND, READY, priority);
+        scheduler_schedule(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, i, BACKGROUND, READY, priority);
     }
 }
 
@@ -118,7 +118,7 @@ void tty_setFormat(TTY* tty, char format) {
 }
 
 int tty_p(int argc, char **argv) {
-    int index = initTTY(process_currentPID());
+    int index = initTTY(scheduler_currentPID());
     while(1) {
         shell_update(index);
     }

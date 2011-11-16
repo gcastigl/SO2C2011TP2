@@ -6,9 +6,9 @@
 #include <asm/interrupts.h>
 #include <util/logger.h>
 #include <interrupts/defs.h>
-#include <process/process.h>
+#include <process/scheduler.h>
 #include <access/user.h>
-#include <fs/file.h>
+#include <lib/file.h>
 
 void initBasicHandlers();
 

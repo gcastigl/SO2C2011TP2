@@ -11,7 +11,8 @@
 #include <interrupts/interrupts.h>
 #include <process/process.h>
 #include <lib/unistd.h>
-#include <fs/file.h>
+#include <lib/file.h>
+
 #define HELP_HELP			"Shows this help function"
 
 #define HELP_RESTART		"Restarts the OS"

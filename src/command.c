@@ -1,8 +1,9 @@
 #include <command.h>
+#include <access/permission.h>
 
 PRIVATE void _ls_cmd_setColor(u32int fileType);
 PRIVATE char* _ls_cmd_EndingString(u32int fileType);
-PRIVATE void _top_cmd_print(RoundRobin* list, int* execCount);
+PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus);
 
 // REALLY BIG FIXME: ALL this funcions should be doing a system call!!
 
@@ -102,44 +103,47 @@ int logout(int argc, char **argv) {
 	return 0;
 }
 
-
-//Processes
-
 int top_cmd(int argc, char**argv) {
     int slot;
     int execCount[MAX_PROCESSES] = { 0 };
     printf("Last 100:\n");
+    PROCESS** all = scheduler_getAllProcesses();
     for (int i = 0; i < 100; i++) {
         slot = last100[i];
-        /*if (process[slot].slotStatus == OCCUPIED)
-            execCount[slot]++;*/
+        if (all[slot] != NULL) {
+            execCount[slot]++;
+        }
     }
     // FIXME: process switching has to be stopped because it uses a roundrobin and shoud not be switched while listing!
     _cli();
     printf("Executions over 100\n\n[ACTIVE]\n");
-    _top_cmd_print(process_getActive(), execCount);
+    printf("\n[ACTIVE]\n");
+    printf("User\tName\tPID\tStatus\tPriority\texecCount\n");
+    _top_cmd_print(scheduler_getAllProcesses(), execCount, RUNNING);
+    _top_cmd_print(scheduler_getAllProcesses(), execCount, READY);
     printf("\n[BLOCKED]\n");
-    _top_cmd_print(process_getBlocked(), execCount);
+    printf("User\tName\tPID\tStatus\tPriority\texecCount\n");
+    _top_cmd_print(scheduler_getAllProcesses(), execCount, BLOCKED);
     _sti();
     return 0;
 }
 
-PRIVATE void _top_cmd_print(RoundRobin* list, int* execCount) {
+PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus) {
     char *status[] = {"Ready", "Blocked", "Running"};
     char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
-	PROCESS* p;
-    printf("User\tName\tPID\tStatus\tPriority\texecCount\n");
-	for (int i = 0; i < roundRobin_size(list); i++) {
-		p = roundRobin_getNext(list);
-		log(L_DEBUG, "%s\t%d\t%s\t%s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
-        printf("%5s\t%5s\t%d\t%s\t%9s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
+	for (int i = 0; i < MAX_PROCESSES; i++) {
+		PROCESS* p = list[i];
+		if (p->status == pstatus) {
+			log(L_DEBUG, "%s\t%d\t%s\t%s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
+			printf("%5s\t%5s\t%d\t%s\t%9s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
+		}
 	}
 }
 
 int kill_cmd(int argc, char**argv) {
     if (argc == 1) {
     	int pid = atoi(argv[0]);
-    	PROCESS* p = process_getPID(pid);
+    	PROCESS* p = scheduler_getProcess(pid);
     	char* err = NULL;
     	if (p == NULL) {
     		err = "Process does not exist";
@@ -293,12 +297,12 @@ int ls_cmd(int argc, char **argv) {
         while ((node = readdir_fs(&current, i)) != NULL) {                 // get directory i
         	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
             mask_string(node->mask, perm);
-            log(L_DEBUG, "%s\t%s\t%s\t%s%s\n",
+            /*log(L_DEBUG, "%s\t%s\t%s\t%s%s\n",
                     perm,
                     user_getName(node->uid),
                     group_getName(node->gid),
                     node->name,
-                    (FILE_TYPE(node->mask) == FS_DIRECTORY) ? "/": "");
+                    (FILE_TYPE(node->mask) == FS_DIRECTORY) ? "/": "");*/
             printf("%s\t%5s\t%5s",
 				perm,
 				user_getName(node->uid),
@@ -631,9 +635,9 @@ int cacheStatus_cmd(int argc, char **argv) {
 int pfiles(int argc, char **argv) {
 	PROCESS* p;
 	if (argc == 1) {
-		p = process_getPID(atoi(argv[0]));
+		p = scheduler_getProcess(atoi(argv[0]));
 	} else {
-		p = process_getCurrent();
+		p = scheduler_getCurrentProcess();
 	}
 	printf("Files opened by process: %s (PID: %d)\n", p->name, p->pid);
 	printf("inode\t|\tmode\n");

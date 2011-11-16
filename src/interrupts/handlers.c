@@ -101,6 +101,9 @@ void *systemCallHandler(int sysCallNumber, void ** args) {
         case SYSTEM_OPEN:
             ret = (void*)sysOpen((char*)args[0], (int)args[1], (int)args[2]);
             break;
+        case SYSTEM_CLOSE:
+            ret = (void*)sysClose((char*)args[0], (int)args[1], (int)args[2]);
+            break;
 	}
 	
     return ret;

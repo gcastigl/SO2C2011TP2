@@ -1,4 +1,7 @@
 #include <lib/unistd.h>
+// FIXME: This does not go here
+#include <fs/fs.h>
+#include <tty.h>
 
 int open(const char *path, int oflags, ...) {
     int create_flags = -1;
@@ -43,6 +46,7 @@ int lseek(int fildes, int offset, int oflag) {
 	return 0;
 }
 
+// FIXME: system call missing here
 int mkfifo(char *name, int mode) {
     fs_node_t current, *fifo;
     fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
@@ -52,3 +56,4 @@ int mkfifo(char *name, int mode) {
 	}
 	return 0;
 }
+

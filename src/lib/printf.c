@@ -1,4 +1,5 @@
 #include <lib/stdio.h>
+#include <lib/unistd.h>
 #include <main.h>
 
 static void prints(char * string, int padding);
@@ -179,4 +180,24 @@ char* itoa(int i) {
     *--p = '-';
   }
   return p;
+}
+
+char fgetc(FILE* steam) {
+	char c;
+	read(steam->fd, &c, 1);
+	return c;
+}
+
+void fprintf(FILE* stream, char* tpt, ...) {
+	int size = strlen(tpt);
+	log(L_DEBUG, "writing %s to %d / %d bytes", tpt, stream->fd, size);
+	write(stream->fd, tpt, size);
+}
+
+int fclose(FILE *stream) {
+	// free(stream);
+	log(L_DEBUG, "Closing the steam... sendiong EOF");
+	char c = EOF;
+	write(stream->fd, &c, 1);
+	return 0;
 }

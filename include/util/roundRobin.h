@@ -17,6 +17,7 @@ typedef struct {
 	node_t* prevCurrent;
 	int size;
 	boolean removed;
+	boolean busy;
 } RoundRobin;
 
 
@@ -31,5 +32,7 @@ void* roundRobin_getNext(RoundRobin* list);
 boolean roundRobin_isEmpty(RoundRobin* list);
 
 u32int roundRobin_size(RoundRobin* list);
+
+int roundRobin_toArray(RoundRobin* list, void* array);
 
 #endif
