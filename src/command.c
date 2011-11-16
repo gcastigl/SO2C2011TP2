@@ -265,8 +265,7 @@ int cd_cmd(int argc, char **argv) {
         		char name[MAX_NAME_LENGTH];
         		read_fs(node, 0, MAX_NAME_LENGTH, (u8int*) name);
         		char* n = name;
-        		cd_cmd(1, (char**) &n);
-        		return 0;
+        		return cd_cmd(1, (char**) &n);;
         	}
             if (!permission_file_hasAccess(node, R_BIT)) {
                 printf("cd: You don't have read access to %s\n", argv[0]);
@@ -278,7 +277,7 @@ int cd_cmd(int argc, char **argv) {
             } else {
                 printf("cd: %s is not a directory\n", argv[0]);
             }
-            // free(node);
+            kfree(node);
         } else {
             printf("cd: The directory \"%s\" does not exist\n", argv[0]);
         }
