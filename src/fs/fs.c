@@ -1,5 +1,6 @@
 #include <fs/fs.h>
 #include <session.h>
+#include <access/permission.h>
 
 #define MAX(x,y)	(((x) > (y)) ? (x) : (y))
 
@@ -58,9 +59,13 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 	fsNode->impl = inode->impl;
 	fsNode->mask = inode->mask;
 	fsNode->inode = inodeNumber;
-	//POSSIBLE FIXME: this function assignments could be different(depending of the flags maybe?)
-	fsNode->read = fs_read;
-	fsNode->write = fs_write;
+	if (FILE_TYPE(inode->mask) == FS_PIPE) {
+		fsNode->read = fifo_read;
+		fsNode->write = fifo_write;
+	} else {
+		fsNode->read = fs_read;
+		fsNode->write = fs_write;
+	}
 	fsNode->open = fs_open;
 	fsNode->close = fs_close;
 	fsNode->size = fs_size;
@@ -141,12 +146,18 @@ PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent) {
 // FIXME: There should be a call to realloc! (need to be implemented)
 PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* name) {
 	char fileName[MAX_NAME_LENGTH];
+	int index = _indexOf(dirInodeNumber);
+	if (index == -1) {
+		errno = E_ACCESS;
+		log(L_ERROR, "Could not load inode: %d", dirInodeNumber);
+		return;
+	}
 	if (name == NULL) {
 		diskManager_getFileName(fileInodeNumber, fileName);
 	} else {
 		strcpy(fileName, name);
 	}
-	if (FILE_TYPE(inodes[dirInodeNumber].mask) != FS_DIRECTORY) {
+	if (FILE_TYPE(inodes[index].mask) != FS_DIRECTORY) {
 		log(L_ERROR, "Trying to add file %s to a non dir!\n\n", name);
 		errno = E_INVALID_ARG;
 		return;
@@ -167,7 +178,7 @@ PRIVATE void _appendFile(u32int dirInodeNumber, u32int fileInodeNumber, char* na
 	offset = contentsLength;
 	memcpy(content + offset, &fileInodeNumber, sizeof(u32int));	offset += sizeof(u32int);
 	memcpy(content + offset, fileName, MAX_NAME_LENGTH); 		offset += MAX_NAME_LENGTH;
-	inodes[dirInodeNumber].length = offset;
+	inodes[index].length = offset;
 	// log(L_DEBUG, "_appendFile: final contLen = %d, appending %s", offset, name);
 	// FIXME: write last part instead of the whole contents again
 	diskManager_writeContents(dirInodeNumber, content, offset, 0);
@@ -225,7 +236,7 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 
 PRIVATE u32int fs_createdir(fs_node_t* node, char* name, u32int type) {
 	if (!permission_file_hasAccess(node, W_BIT)) {
-	    errno = EACCES;
+	    errno = E_ACCESS;
 	    return -1;
 	}
 	if (fs_finddir(node, name) != NULL) {
@@ -248,7 +259,6 @@ PRIVATE u32int fs_removedir(fs_node_t* node, u32int inode) {
     	log(L_ERROR, "could not load inode: %d", node->inode);
     	return E_ACCESS;
 	}
-	// inodes[inode].length = diskManager_size(inode);
 		log(L_DEBUG, "removing inode: %d, length: %d", inode, inodes[index].length);
 	char contents[inodes[index].length];
 	diskManager_readContents(node->inode, contents, inodes[index].length, 0);
@@ -311,7 +321,11 @@ PRIVATE u32int fs_write(fs_node_t *node, u32int offset, u32int size, u8int *buff
 
 PRIVATE void fs_open(fs_node_t *node) {
 	log(L_DEBUG, "fs_open...");
-	PROCESS* p = getCurrentProcess();
+	PROCESS* p = scheduler_getCurrentProcess();
+	if (p == NULL) {
+		log(L_ERROR, "current process is null!");
+		return;
+	}
 	log(L_DEBUG, "opening file %s, process: %d", node->name, p);
 	boolean fileOpened = false;
 	for(int i = 0; i < MAX_FILES_PER_PROCESS && !fileOpened; i++) {
@@ -326,12 +340,12 @@ PRIVATE void fs_open(fs_node_t *node) {
 	}
 	log(L_DEBUG, "node opened? => %d", fileOpened);
 	if (!fileOpened) {
-		errno = E_MAX_FS_REACHED;
+		errno = E_MAX_FD_REACHED;
 	}
 }
 
 PRIVATE void fs_close(fs_node_t *node) {
-	PROCESS* p = getCurrentProcess();
+	PROCESS* p = scheduler_getCurrentProcess();
 	for(int i = 0; i < MAX_FILES_PER_PROCESS; i++) {
 		if (p->fd_table[i].inode == node->inode) {
 			p->fd_table[i].mask = 0;

@@ -8,9 +8,7 @@
 #include <driver/video.h>
 #include <process/process.h>
 
-#define MAX_TTYs		8
-
-#define BUFFER_SIZE	512
+#define BUFFER_SIZE	128
 
 typedef struct {
     int id;
@@ -95,6 +93,8 @@ void tty_clean(TTY* tty);
 * Setea el formato a la TTY actual
 **/
 void tty_setFormatToCurrTTY(char format);
+
+void tty_setFormat(TTY* tty, char format);
 
 /* tty_getFormatToCurrTTY
 *

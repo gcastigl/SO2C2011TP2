@@ -1,4 +1,7 @@
 #include <lib/unistd.h>
+// FIXME: This does not go here
+#include <fs/fs.h>
+#include <tty.h>
 
 int open(const char *path, int oflags, ...) {
     int create_flags = -1;
@@ -43,25 +46,14 @@ int lseek(int fildes, int offset, int oflag) {
 	return 0;
 }
 
+// FIXME: system call missing here
 int mkfifo(char *name, int mode) {
     fs_node_t current, *fifo;
     fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
-    errno = 0;
-    if ((mode&O_CREAT) != 0) { // If exists, then use it, else create a new one
-    	fifo = finddir_fs(&current, name);
-    	if (fifo == NULL) {
-			createdir_fs(&current, name, FS_PIPE);
-    	}
-    	fifo->flags = mode;
-    	log(L_DEBUG, "new fifo using 0_CREAT");
-    	open_fs(fifo);
-    } else {
-    	log(L_DEBUG, "creating a new fifo with 0_CREAT");
-    	fs_node_t newFifo;
-    	int inode = createdir_fs(&current, name, FS_PIPE);
-    	fs_getFsNode(&newFifo, inode);
-    	newFifo.flags = mode;
-    	open_fs(&newFifo);
-    }
-    return (errno == 0) ? 0 : -1;
+    fifo = finddir_fs(&current, name);
+	if (fifo == NULL) {
+		createdir_fs(&current, name, FS_PIPE);
+	}
+	return 0;
 }
+

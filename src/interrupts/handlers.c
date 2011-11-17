@@ -1,6 +1,5 @@
 #include <interrupts/interrupts.h>
 
-extern int schedulerActive;
 extern void switchProcess(void);
 int taskSwitch = true;
 static int ticksSinceLasfFlush = 0;
@@ -55,10 +54,8 @@ void timerTickHandler(registers_t regs) {
     	cache_flush();
     	ticksSinceLasfFlush = 0;
     }
-    if (schedulerActive == true) {
-        if (taskSwitch == true) {
-            switchProcess();
-        }
+    if (scheduler_isActive() && taskSwitch) {
+		switchProcess();
     }
 }
 
@@ -103,6 +100,9 @@ void *systemCallHandler(int sysCallNumber, void ** args) {
             break;
         case SYSTEM_OPEN:
             ret = (void*)sysOpen((char*)args[0], (int)args[1], (int)args[2]);
+            break;
+        case SYSTEM_CLOSE:
+            ret = (void*)sysClose((char*)args[0], (int)args[1], (int)args[2]);
             break;
 	}
 	

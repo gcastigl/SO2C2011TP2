@@ -4,7 +4,7 @@
 #include <defs.h>
 #include <asm/libasm.h>
 #include <stdarg.h>
-#include <fs/file.h>
+#include <lib/file.h>
 #include <fs/fs_API.h>
 
 int open(const char *path, int oflag, ...);

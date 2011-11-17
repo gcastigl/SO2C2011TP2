@@ -1,7 +1,9 @@
 #include <command.h>
-extern PROCESS process[];
+#include <access/permission.h>
 
+PRIVATE void _ls_cmd_setColor(u32int fileType);
 PRIVATE char* _ls_cmd_EndingString(u32int fileType);
+PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus);
 
 // REALLY BIG FIXME: ALL this funcions should be doing a system call!!
 
@@ -41,8 +43,7 @@ int help_cmd(int argc, char **argv) {
 		for(int i = 0; commands[i].func != NULL; i++) {
 			len = strlen(commands[i].name);
 			if (i%2 == 0) {
-				printf("\t%s", commands[i].name);
-				while(len++ < 12) printf(" ");
+				printf("\t%12s", commands[i].name);
 				printf("|");
 			} else {
 				printf("\t%s\n", commands[i].name);
@@ -83,8 +84,7 @@ int getCPUspeed_cmd(int argc, char **argv) {
 		printf("Using rdmsr to perform measurement...\n");
 		speed = calculateCpuSpeed(_msrGetCpuSpeed);
 	} else {
-		printf("error: rdtsc or rdmsr should be available to \
-			perform this command\n");
+		printf("error: rdtsc or rdmsr should be available to perform this command\n");
 			return false;
 	}
 	
@@ -103,35 +103,58 @@ int logout(int argc, char **argv) {
 	return 0;
 }
 
-
-//Processes
-
 int top_cmd(int argc, char**argv) {
-    int i;
     int slot;
     int execCount[MAX_PROCESSES] = { 0 };
-    char *status[] = {"Ready", "Child Wait", "Running"};
-    char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
     printf("Last 100:\n");
-    for (i = 0; i < 100; i++) {
+    PROCESS** all = scheduler_getAllProcesses();
+    for (int i = 0; i < 100; i++) {
         slot = last100[i];
-        if (process[slot].slotStatus == OCCUPIED)
+        if (all[slot] != NULL) {
             execCount[slot]++;
-    }
-    printf("User\tName\tPID\tStatus\tPriority\tExecutions over 100\n");
-    for (i = 0; i < MAX_PROCESSES; i++) {
-        if ((process[i].slotStatus == OCCUPIED)) {
-            log(L_DEBUG, "%s\t%d\t%s\t%s\t%d\n", process[i].name, process[i].pid, status[process[i].status], priority[process[i].priority], execCount[i]);
-            printf("%s\t%s\t%d\t%s\t%s\t%d\n", user_getName(process[i].ownerUid), process[i].name, process[i].pid, status[process[i].status], priority[process[i].priority % 10], execCount[i]);
         }
     }
-    
+    // FIXME: process switching has to be stopped because it uses a roundrobin and shoud not be switched while listing!
+    _cli();
+    printf("Executions over 100\n\n[ACTIVE]\n");
+    printf("\n[ACTIVE]\n");
+    printf("User\tName\tPID\tStatus\tPriority\texecCount\n");
+    _top_cmd_print(scheduler_getAllProcesses(), execCount, RUNNING);
+    _top_cmd_print(scheduler_getAllProcesses(), execCount, READY);
+    printf("\n[BLOCKED]\n");
+    printf("User\tName\tPID\tStatus\tPriority\texecCount\n");
+    _top_cmd_print(scheduler_getAllProcesses(), execCount, BLOCKED);
+    _sti();
     return 0;
+}
+
+PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus) {
+    char *status[] = {"Ready", "Blocked", "Running"};
+    char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
+	for (int i = 0; i < MAX_PROCESSES; i++) {
+		PROCESS* p = list[i];
+		if (p->status == pstatus) {
+			log(L_DEBUG, "%s\t%d\t%s\t%s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
+			printf("%5s\t%5s\t%d\t%s\t%9s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
+		}
+	}
 }
 
 int kill_cmd(int argc, char**argv) {
     if (argc == 1) {
-        kill(atoi(argv[0]));
+    	int pid = atoi(argv[0]);
+    	PROCESS* p = scheduler_getProcess(pid);
+    	char* err = NULL;
+    	if (p == NULL) {
+    		err = "Process does not exist";
+    	} else if (!permission_user_isOwner(p->ownerUid)) {
+    		err = "Access denied";
+    	}
+    	if (err == NULL) {	// No error
+			process_kill(pid);
+    	} else {
+    		printf("Could not kill %d: %s", pid, err);
+    	}
     } else {
         printf("Usage:\nkill PID");
     }
@@ -172,8 +195,7 @@ int shell_userlist(int argc, char **argv) {
 	_SysCall(SYSTEM_USERLIST, userlist);
 	printf("\tuid\tgid\tusername\n");
 	printf("\t---\t---\t--------\n");
-	int i;
-	for (i = 0; i < USER_MAX; ++i) {
+	for (int i = 0; i < USER_MAX; ++i) {
 		calluser_t user = userlist[i];
 		if (user.uid != NO_USER) {
 			printf("\t%d\t%d\t%s\n", user.uid, user.gid, user.userName);
@@ -238,10 +260,6 @@ int cd_cmd(int argc, char **argv) {
         fs_node_t current;
         fs_getFsNode(&current, currentiNode);
         fs_node_t *node = finddir_fs(&current, argv[0]);
-        if (!permission_file_hasAccess(node, R_BIT)) {
-            printf("cd: You don't have read access to %s\n", argv[0]);
-            return -1;
-        }
         if (node != NULL) {
         	if (FILE_TYPE(node->mask) == FS_SYMLINK) {
         		char name[MAX_NAME_LENGTH];
@@ -250,6 +268,10 @@ int cd_cmd(int argc, char **argv) {
         		cd_cmd(1, (char**) &n);
         		return 0;
         	}
+            if (!permission_file_hasAccess(node, R_BIT)) {
+                printf("cd: You don't have read access to %s\n", argv[0]);
+                return -1;
+            }
             if (FILE_TYPE(node->mask) == FS_DIRECTORY) {
                 tty->currDirectory = node->inode;
                 memcpy(tty->currPath, node->name, strlen(node->name) + 1);
@@ -273,23 +295,27 @@ int ls_cmd(int argc, char **argv) {
     char perm[MASK_STRING_LEN];
     if (argc == 0) {
         while ((node = readdir_fs(&current, i)) != NULL) {                 // get directory i
+        	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
             mask_string(node->mask, perm);
-            log(L_DEBUG, "%s\t%s\t%s\t%s%s\n",
+            /*log(L_DEBUG, "%s\t%s\t%s\t%s%s\n",
                     perm,
                     user_getName(node->uid),
                     group_getName(node->gid),
                     node->name,
-                    (FILE_TYPE(node->mask) == FS_DIRECTORY) ? "/": "");
-            printf("%s\t%s\t%s\t%s%s\n",
-                perm,
-                user_getName(node->uid),
-                group_getName(node->gid),
+                    (FILE_TYPE(node->mask) == FS_DIRECTORY) ? "/": "");*/
+            printf("%s\t%5s\t%5s",
+				perm,
+				user_getName(node->uid),
+				group_getName(node->gid));
+        	_ls_cmd_setColor(FILE_TYPE(node->mask));
+            printf("\t%s%s\n",
                 node->name,
                 _ls_cmd_EndingString(FILE_TYPE(node->mask))
             );
             i++;
         }
     }
+    // while(1);
     return 0;
 }
 
@@ -307,6 +333,22 @@ PRIVATE char* _ls_cmd_EndingString(u32int fileType) {
 	return "";
 }
 
+PRIVATE void _ls_cmd_setColor(u32int fileType) {
+	switch(fileType) {
+	case FS_DIRECTORY:
+		tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
+		break;
+	case FS_SYMLINK:
+		tty_setFormatToCurrTTY(video_getFormattedColor(CYAN, BLACK));
+		break;
+	case FS_PIPE:
+		tty_setFormatToCurrTTY(video_getFormattedColor(BROWN, BLACK));
+		break;
+	default:
+		tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_GREY, BLACK));
+	}
+}
+
 int mkdir_cmd(int argc, char **argv) {
     if(argc == 0 ) {
         printf("mkdir: missing operand\n");
@@ -319,7 +361,7 @@ int mkdir_cmd(int argc, char **argv) {
         switch(errno) {
             case OK:
                 break;
-            case EACCES:
+            case E_ACCESS:
                 err = "No write permission.";
                 break;
             case E_FILE_EXISTS:
@@ -341,12 +383,18 @@ int rm_cmd(int argc, char **argv) {
         fs_node_t current;
         fs_getFsNode(&current, currentiNode);
         fs_node_t *node = finddir_fs(&current, argv[0]);
-        if (!permission_file_hasAccess(node, W_BIT)) {
-            printf("rm: You don't have write access to %s\n", argv[0]);
+        char* err = NULL;
+        if (node == NULL) {
+        	err = "No such file or directory";
+        } else if (!permission_file_hasAccess(node, W_BIT)){
+        	err = "Don't have write access";
+        }
+        if (err != NULL) {
+			printf("rm: cannot remove \"%s\": %s\n", argv[0], err);
             return -1;
         }
 		int removed = removedir_fs(&current, node->inode);
-        log(L_DEBUG, "rm: remove file returned: %d", removed);
+        	log(L_DEBUG, "rm: remove file returned: %d", removed);
 		kfree(node);
 	}
 	return 0;
@@ -369,13 +417,14 @@ int touch_cmd(int argc, char **argv) {
         switch(errno) {
             case OK:
                 break;
-            case EACCES:
-                err = "No write permission.";
+            case E_ACCESS:
+                err = "No write permission";
                 break;
             case E_FILE_EXISTS:
                 err = "File exists";
                 break;
             default:
+            	printf("errno: %d", errno);
                 err = "Unknown error";
                 break;
         }
@@ -463,27 +512,8 @@ int cat_cmd(int argc, char **argv) {
 }
 
 int mkfifo_cmd(int argc, char **argv) {
-	if (argc == 2) {
-		if (argv[1][0] == 'w') {
-			mkfifo(argv[0], O_WRONLY | O_CREAT);
-		} else if (argv[1][0] == 'r') {
-			mkfifo(argv[0], O_WRONLY | O_CREAT);
-		}
-	} else if(argc == 3) {
-		fs_node_t current, *fifo;
-		fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
-		fifo = finddir_fs(&current, argv[1]);
-		char *err = NULL;
-		if (fifo == NULL) {
-			err = "file does not exist";
-		} else if (FILE_TYPE(fifo->mask) != FS_PIPE) {
-			err = "the file is not a pipe";
-		}
-		if (err != NULL) {
-			printf("mkfifo: can't write to %s: %s\n", argv[1], err);
-			return -1;
-		}
-		write_fs(fifo, 0, strlen(argv[2]), (u8int*) argv[2]);
+	if (argc == 1) {
+		mkfifo(argv[0], O_RDWR | O_CREAT);
 	}
 	return 0;
 }
@@ -603,7 +633,12 @@ int cacheStatus_cmd(int argc, char **argv) {
 }
 
 int pfiles(int argc, char **argv) {
-	PROCESS* p = getCurrentProcess();
+	PROCESS* p;
+	if (argc == 1) {
+		p = scheduler_getProcess(atoi(argv[0]));
+	} else {
+		p = scheduler_getCurrentProcess();
+	}
 	printf("Files opened by process: %s (PID: %d)\n", p->name, p->pid);
 	printf("inode\t|\tmode\n");
 	boolean hasOpenedFiles = false;
@@ -614,7 +649,7 @@ int pfiles(int argc, char **argv) {
 		}
 	}
 	if (!hasOpenedFiles) {
-		printf("(none)\n");
+		printf("[none]\n");
 	}
 	printf("\n");
 	return 0;

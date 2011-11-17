@@ -1,17 +1,18 @@
 #include <tty.h>
 
 PRIVATE TTY tty[MAX_TTYs];
-PRIVATE int inactiveTTYpriority = PNONE;
+PRIVATE int inactiveTTYpriority = VERY_LOW;
 PRIVATE int activeTTYpriority = HIGH;
 int currentTTY = 0;
 PUBLIC int activeTTYs = 0;
 extern void shell_update(int index);
+
 void startTTYs() {
     char name[5];
-    for (int i = 1; i <= MAX_TTYs; i++) {
-        sprintf(name, "tty%d", i);
-        createProcess(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, i, BACKGROUND, READY, ((i == 1) ? activeTTYpriority : inactiveTTYpriority));
-        //createProcess(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, &clean, i, BACKGROUND, READY, activeTTYpriority);
+    for (int i = 0; i < MAX_TTYs; i++) {
+        sprintf(name, "tty%d", i + 1);
+        int priority = ((i == 0) ? activeTTYpriority : inactiveTTYpriority);
+        scheduler_schedule(name, &tty_p, 0, NULL, DEFAULT_STACK_SIZE, i, BACKGROUND, READY, priority);
     }
 }
 
@@ -108,13 +109,16 @@ char tty_getCurrTTYFormat() {
 }
 
 void tty_setFormatToCurrTTY(char format) {
-	TTY* currTTY = tty_getCurrentTTY();
-	currTTY->fgColor = video_getFGcolor(format);
-	currTTY->bgColor = video_getBGcolor(format);
+	tty_setFormat(tty_getCurrentTTY(), format);
+}
+
+void tty_setFormat(TTY* tty, char format) {
+	tty->fgColor = video_getFGcolor(format);
+	tty->bgColor = video_getBGcolor(format);
 }
 
 int tty_p(int argc, char **argv) {
-    int index = initTTY(getCurrentPID());
+    int index = initTTY(scheduler_currentPID());
     while(1) {
         shell_update(index);
     }

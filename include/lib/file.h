@@ -2,27 +2,27 @@
 #define FILE_H
 
 #include <defs.h>
-#include <lib/stdio.h>
+/*
+ * #include <lib/stdio.h>
 #include <fs/fs.h>
 #include <tty.h>
 #include <access/permission.h>
 #include <fs/diskManager.h>
 #include <lib/stdlib.h>
+ */
 
-#define MAX_OPEN_FILES          60
 
-typedef struct {
+/*typedef struct {
     char        name[MAX_NAME_LENGTH];
     u8int       permissions;
     u8int       inode;
     fs_node_t   *node;
     u8int       flags;
     u32int      offset;
-} FILE;
+} FILE;*/
 
-FILE openFiles[MAX_OPEN_FILES];
-
-#define FD_OFFSET (MAX_TTYs + 3)
+#define FD_OFFSET (MAX_TTYs + 4)
+#define EOF			-1
 
 #define O_RDONLY    0x0001
 #define O_WRONLY    0x0010

@@ -2,14 +2,14 @@
 #define STDLIB_H
 
 #include <defs.h>
+#include <lib/kheap.h>
 
-/*
 void* malloc(u32int neededMem);
+
+void free(void * pointer);
 
 void* calloc(u32int size);
 
-void free(void * pointer);
-*/
 void memcpy(void* to, void* from, u32int count);
 
 /* panic
@@ -22,9 +22,6 @@ void memcpy(void* to, void* from, u32int count);
 * Muestra el mensaje 'msg' en la línea 'line' y si lock es true, haltea
 **/
 void panic(char* msg, int line, int lock);
-
-void* realloc(void* ptr, int newsize);
-
 
 /* atoi
 *

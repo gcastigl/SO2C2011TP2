@@ -11,7 +11,8 @@
 #include <interrupts/interrupts.h>
 #include <process/process.h>
 #include <lib/unistd.h>
-#include <fs/file.h>
+#include <lib/file.h>
+
 #define HELP_HELP			"Shows this help function"
 
 #define HELP_RESTART		"Restarts the OS"
@@ -90,46 +91,6 @@ int getCPUspeed_cmd(int argc, char **argv);
 * Devuelve un número pseudo-aleatorio
 **/
 int random_cmd(int argc, char **argv);
-
-/* getchar_cmd
-*
-* Recibe como parametros:
-* - Cantidad de Argumentos
-* - Argumentos
-*
-* Función de prueba para getchar
-**/
-int getchar_cmd(int argc, char **argv);
-
-/* scanf_cmd
-*
-* Recibe como parametros:
-* - Cantidad de Argumentos
-* - Argumentos
-*
-* Función de prueba para scanf
-**/
-int scanf_cmd(int argc, char **argv);
-
-/* printf_cmd
-*
-* Recibe como parametros:
-* - Cantidad de Argumentos
-* - Argumentos
-*
-* Función de prueba para printf
-**/
-int printf_cmd(int argc, char **argv);
-
-/* pipeTest_cmd
-*
-* Recibe como parametros:
-* - Cantidad de Argumentos
-* - Argumentos
-*
-* Función de prueba para pipes
-**/
-int pipeTest_cmd(int argc, char **argv);
 
 /* format
 *
@@ -302,5 +263,49 @@ int mkfifo_cmd(int argc, char **argv);
 int chmod_cmd(int argc, char **argv);
 int chown_cmd(int argc, char **argv);
 int chgrp_cmd(int argc, char **argv);
+
+// TESTS
+
+int pageFault_cmd(int argc, char **argv);
+
+/* scanf_cmd
+*
+* Recibe como parametros:
+* - Cantidad de Argumentos
+* - Argumentos
+*
+* Función de prueba para scanf
+**/
+int scanf_cmd(int argc, char **argv);
+
+/* printf_cmd
+*
+* Recibe como parametros:
+* - Cantidad de Argumentos
+* - Argumentos
+*
+* Función de prueba para printf
+**/
+int printf_cmd(int argc, char **argv);
+
+/* pipeTest_cmd
+*
+* Recibe como parametros:
+* - Cantidad de Argumentos
+* - Argumentos
+*
+* Función de prueba para pipes
+**/
+int pipeTest_cmd(int argc, char **argv);
+
+/* getchar_cmd
+*
+* Recibe como parametros:
+* - Cantidad de Argumentos
+* - Argumentos
+*
+* Función de prueba para getchar
+**/
+int getchar_cmd(int argc, char **argv);
 
 #endif
