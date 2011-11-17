@@ -3,9 +3,22 @@
 
 #include <defs.h>
 #include <fs/fs_API.h>
-
 #include <process/scheduler.h>
+#include <lib/stdio.h>
 #include <lib/stdlib.h>
+#include <util/semaphore.h>
+
+#define PIPE_BUF 200
+
+typedef struct {
+	char buff[PIPE_BUF];
+	semaphore_t readers;
+	semaphore_t writers;
+	semaphore_t lock;
+	int inode;
+} fifo_t;
+
+void fifo_init();
 
 u32int fifo_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer);
 

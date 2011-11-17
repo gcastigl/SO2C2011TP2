@@ -1,17 +1,42 @@
 #include <lib/fifo.h>
 #include <lib/file.h>
 
-#define PIPE_BUF 200
+#define MAX_FIFOS	1
 
-PRIVATE char pipe_buffer[PIPE_BUF];
-PRIVATE int msgLen = 0;
-PRIVATE int inode = -1;
-PRIVATE boolean writing = false;
+PRIVATE fifo_t fifos[MAX_FIFOS];
 
+PRIVATE int pipe_index(u32int inode);
+
+/*
 PRIVATE boolean _checkReadingProcess(int inode, PROCESS** list, int currentPID);
 PRIVATE boolean _checkWritingProcess(int inode, PROCESS** list, int currentPID);
 PRIVATE boolean _checkConditionProcess(int inode, PROCESS** list, int currentPID, int condition);
 PRIVATE int signalWriters(int inode, PROCESS** list, int currentPID);
+*/
+
+void fifo_init() {
+	for (int i = 0; i < MAX_FIFOS; ++i) {
+		sem_init(&fifos[i].readers, 0);
+		sem_init(&fifos[i].writers, 0);
+		sem_init(&fifos[i].lock, 1);
+		fifos[i].inode = -1;
+	}
+}
+
+PRIVATE int pipe_index(u32int inode) {
+	for (int i = 0; i < MAX_FIFOS; ++i) {
+		if (fifos[i].inode == inode) {
+			return i;
+		}
+	}
+	for (int i = 0; i < MAX_FIFOS; ++i) {
+		if (fifos[i].inode == -1) {
+			fifos[i].inode = inode;
+			return i;
+		}
+	}
+	return -1;
+}
 
 u32int fifo_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 	if (FILE_TYPE(node->mask) != FS_PIPE) {
@@ -19,67 +44,54 @@ u32int fifo_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 		errno = E_INVALID_ARG;
 		return 0;
 	}
-	PROCESS* me = scheduler_getCurrentProcess();
-	int writers = signalWriters(node->inode, scheduler_getAllProcesses(), me->pid);
-	if (writers == 0) {
-		me->status = BLOCKED;
-		me->waitingFlags = W_FIFO;
-		me->waitingInfo = node->inode;
-		yield();
+	_sti();
+	int index = pipe_index(node->inode);
+	if (index == -1) {
+		log(L_ERROR, "NO MORE SPACE IN SYSTEM FOR ANOTHER FIFO!");
+		return 0;
 	}
-	log(L_DEBUG, "Waiting for my turn!! - writers: %d / node: %s", writers, node->name);
-	while (writing || inode != node->inode) {
-		log(L_DEBUG, "%d || %d", writing, inode);
-		me->waitingFlags = W_FIFO;
-		me->waitingInfo = node->inode;
-		yield();	// Wait for my turn...
-	}
-	if (size > PIPE_BUF) {
-		size = PIPE_BUF;
-	}
-	memcpy(buffer, pipe_buffer + offset, size);
-	if (offset >= msgLen) {
-		msgLen = 0;
-		inode = -1;
-	}
-	log(L_DEBUG, "READING from a pipe!!! - %d bytes / buff: %c / p: %s / offset: %d / msglen: %d", size, *buffer, pipe_buffer, offset, msgLen);
+	fifo_t* fifo = &fifos[index];
+	printf("< [Entering read]\n");
+	sem_signal(&fifo->readers);
+	while(fifo->writers.count == 0)
+		;
+	sem_wait(&fifo->lock);
+	printf("<-- I'm reading the buffer....\n");
+	sem_signal(&fifo->lock);
+	sem_wait(&fifo->readers);
 	return size;
 }
 
+// wait until no readers or writers
+// access database
+// wake up waiting readers or writers
 u32int fifo_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 	if (FILE_TYPE(node->mask) != FS_PIPE) {
 		log(L_ERROR, "Trying to write to a file that is not a pipe!");
 		errno = E_INVALID_ARG;
 		return 0;
 	}
-	log(L_DEBUG, "waiting for a process to read from the pipe...");
-	PROCESS* me = scheduler_getCurrentProcess();
-	if (!_checkReadingProcess(node->inode, scheduler_getAllProcesses(), me->pid)) {	// No process has this file opened for reading
-		log(L_DEBUG, "%d has gotten block!", me->pid);
-		me->status = BLOCKED;
-		me->waitingFlags = W_FIFO;
-		me->waitingInfo = node->inode;
-		yield();
+	_sti();
+	int index = pipe_index(node->inode);
+	if (index == -1) {
+		log(L_ERROR, "NO MORE SPACE IN SYSTEM FOR ANOTHER FIFO!");
+		return 0;
 	}
-	log(L_DEBUG, "%d -> Somebody opened the pipe for READING!!");
-	while(writing || inode != -1)
-		yield();// Wait for my turn
-	writing = true;
-	if (size > PIPE_BUF) {
-		size = PIPE_BUF;
-	}
-	memcpy(pipe_buffer, buffer, size);
+	fifo_t* fifo = &fifos[index];
+	printf("> [Entering write]\n");
 
-	msgLen = size;
-	writing = false;
-	inode = node->inode;
-
-	log(L_DEBUG, "Data written to the pipe! : %s / bytes: %d", pipe_buffer, size);
-	while(msgLen != 0)
-		yield();
+	sem_signal(&fifo->writers);
+	sem_wait(&fifo->lock);
+	while(fifo->readers.count == 0)
+		;
+	printf("--> I'm writing to the buffer....\n");
+	sem_signal(&fifo->lock);
+	while(fifo->readers.count != 0)
+		;
+	sem_wait(&fifo->writers);
 	return size;
 }
-
+/*
 PRIVATE boolean _checkReadingProcess(int inode, PROCESS** list, int currentPID) {
 	return _checkConditionProcess(inode, list, currentPID, O_RDONLY);
 }
@@ -123,4 +135,4 @@ PRIVATE int signalWriters(int inode, PROCESS** list, int currentPID) {
 	}
 	return signaled;
 }
-
+*/
