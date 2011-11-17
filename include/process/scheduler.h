@@ -43,7 +43,7 @@ void scheduler_setCurrent(int pid);
 *
 * Mata el proceso indicado por pid
 **/
-void process_kill(int pid);
+void kill(int pid);
 
 /* getCurrentProcess
 *

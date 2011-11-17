@@ -129,7 +129,7 @@ int top_cmd(int argc, char**argv) {
 }
 
 PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus) {
-    char *status[] = {"Ready", "Blocked", "Running"};
+    char *status[] = {"Blocked", "Ready", "Running"};
     char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
 	for (int i = 0; i < MAX_PROCESSES; i++) {
 		PROCESS* p = list[i];
@@ -151,7 +151,7 @@ int kill_cmd(int argc, char**argv) {
     		err = "Access denied";
     	}
     	if (err == NULL) {	// No error
-			process_kill(pid);
+			kill(pid);
     	} else {
     		printf("Could not kill %d: %s", pid, err);
     	}

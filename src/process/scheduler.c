@@ -180,7 +180,7 @@ void scheduler_setCurrent(int pid) {
 	currentPID = pid;
 }
 
-void process_kill(int pid) {
+void kill(int pid) {
     if (pid < MAX_TTYs) {
     	log(L_ERROR, "Trying to kill TTY: %d (Not Allowed)", pid);
         return;
@@ -200,7 +200,7 @@ PRIVATE void killChildren(int pid) {
 	log(L_DEBUG, "killing child process PID: %d", pid);
     for (int i = 0; i < MAX_PROCESSES; i++) {
     	if (allProcess[i] != NULL && allProcess[i]->parent == pid) {
-    		process_kill(allProcess[i]->pid);
+    		kill(allProcess[i]->pid);
 		}
     }
 }
