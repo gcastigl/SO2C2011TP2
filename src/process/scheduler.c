@@ -133,15 +133,14 @@ PRIVATE PROCESS* _nextTask(int withPriority) {
 	return nextReady;
 }
 
-boolean scheduler_setStatus(u32int pid, u32int status) {
+void scheduler_setStatus(u32int pid, u32int status) {
 	for (int i = 0; i < MAX_PROCESSES; ++i) {
 		if (allProcess[i] != NULL && allProcess[i]->pid == pid) {
 			allProcess[i]->status = status;
-			log(L_DEBUG, "pid %d now has status %d", pid, status);
-			return true;
+			log(L_DEBUG, "(%s)%d now has status %s", allProcess[i]->name, pid,
+				(status == 0) ? "Blocked" : ((status == 1) ? "Ready" : "Running"));
 		}
 	}
-	return false;
 }
 
 PRIVATE void clean() {
@@ -177,7 +176,7 @@ int scheduler_currentPID() {
 }
 
 void scheduler_setCurrent(int pid) {
-	log(L_DEBUG, "current -> %d", pid);
+//	log(L_DEBUG, "current -> %d", pid);
 	currentPID = pid;
 }
 

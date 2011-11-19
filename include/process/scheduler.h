@@ -61,7 +61,7 @@ PROCESS *scheduler_getCurrentProcess();
 **/
 void setPriority(int pid, int newPriority);
 
-boolean scheduler_setStatus(u32int pid, u32int status);
+void scheduler_setStatus(u32int pid, u32int status);
 
 PROCESS **scheduler_getAllProcesses();
 
