@@ -3,7 +3,6 @@
 
 #include <defs.h>
 #include <lib/kheap.h>
-#include <util/logger.h>
 
 #define DEFAULT_STACK_SIZE 0x400
 // I think there is one like this already defined...

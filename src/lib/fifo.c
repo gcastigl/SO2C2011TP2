@@ -127,7 +127,7 @@ PRIVATE int sigalCondition(fifo_t* fifo, int condition) {
 		for (int j = 0; j < MAX_FILES_PER_PROCESS; ++j) {
 			if (p->fd_table[j].mask != 0 && (p->fd_table[j].mode&&condition) != 0) {
 				scheduler_setStatus(p->pid, READY);
-				PROCESS* p = list_remove(&fifo->waitingQueue, i);
+				list_remove(&fifo->waitingQueue, i);
 				log(L_DEBUG, "%d has been removed from the queue / size: %d", p->pid, fifo->waitingQueue.size);
 				signaled++;
 				break;

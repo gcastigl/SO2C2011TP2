@@ -1,5 +1,6 @@
 #include <process/process.h>
 #include <session.h>
+#include <util/logger.h>
 
 extern int loadStackFrame();
 int getNextPID();
