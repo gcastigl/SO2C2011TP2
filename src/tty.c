@@ -44,11 +44,9 @@ void tty_setCurrent(int tty) {
 	log(L_DEBUG, "switching ttys!");
     TTY* currTTY = tty_getCurrentTTY();
     setPriority(currTTY->pid, inactiveTTYpriority);
-    scheduler_setStatus(currTTY->pid, BLOCKED);
 	currentTTY = tty;
 	currTTY = tty_getCurrentTTY();
     setPriority(currTTY->pid, activeTTYpriority);
-    scheduler_setStatus(currTTY->pid, RUNNING);
 	video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
 	video_setOffset(0);
 	video_write(currTTY->terminal, currTTY->offset);
