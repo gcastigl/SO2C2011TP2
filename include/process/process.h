@@ -12,10 +12,10 @@
 #define MAX_ARG             16
 #define P_RATIO             2
 
-typedef enum {BLOCKED = 0, READY, RUNNING} status;
-typedef enum {BACKGROUND = 0, FOREGROUND} groundness;
-typedef enum {PNONE = 0, VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SKY_HIGH} priority;
-typedef enum {W_FIFO = 0} block_type;
+typedef enum {BLOCKED = 0, READY, RUNNING} status_t;
+typedef enum {BACKGROUND = 0, FOREGROUND} groundness_t;
+typedef enum {PNONE = 0, VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SKY_HIGH} priority_t;
+typedef enum {W_FIFO = 0, W_INPUT} block_t;
 
 #define MAX_PRIORITY HIGH
 #define MAX_FILES_PER_PROCESS	10
@@ -43,12 +43,12 @@ typedef struct {
 	// Process state
 	int pid;
 	int parent;
-	int groundness;
-	int priority;
+	groundness_t groundness;
+	priority_t priority;
 	int sleep;
-	int status;
+	status_t status;
 	int lastCalled;
-	int waitingFlags;
+	block_t waitingFlags;
 	int waitingInfo;
 	// I/O
 	int tty;
