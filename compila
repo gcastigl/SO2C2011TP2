@@ -34,7 +34,7 @@ gcc -m32 -std=c99 -g -c ../src/fs/diskCache.c -o diskCache.o            -I../inc
 
 gcc -m32 -std=c99 -g -c ../src/util/logger.c -o logger.o                -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/util/semaphore.c -o semaphore.o          -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -std=c99 -g -c ../src/util/roundRobin.c -o roundRobin.o        -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/util/list.c -o list.o                    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
 gcc -m32 -std=c99 -g -c ../src/access/user.c -o user.o                  -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/access/group.c -o group.o                -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc

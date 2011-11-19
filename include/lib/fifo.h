@@ -7,15 +7,19 @@
 #include <lib/stdio.h>
 #include <lib/stdlib.h>
 #include <util/semaphore.h>
+#include <util/list.h>
 
 #define PIPE_BUF 200
 
 typedef struct {
 	char buff[PIPE_BUF];
+	List waitingQueue;
 	semaphore_t readers;
 	semaphore_t writers;
 	semaphore_t lock;
 	int inode;
+	int offset;
+	int lenght;
 } fifo_t;
 
 void fifo_init();

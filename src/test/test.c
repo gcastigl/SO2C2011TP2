@@ -60,9 +60,6 @@ int pipeTest_cmd(int argc, char **argv) {
 	char* name = "test.pipe";
 	mkfifo(name, 777);
 	int fd = open(name, mode);
-	printf("fd: %d\n", fd);
-	PROCESS* p = scheduler_getCurrentProcess();
-	printf("file descriptor: %d => %s - mode: %d\n", fd, p->fd_table[fd - FD_OFFSET].name, p->fd_table[fd - FD_OFFSET].mode);
 	if (mode == O_WRONLY) {
 		printf("Writing to the pipe\n");
 		FILE stream;
@@ -74,14 +71,14 @@ int pipeTest_cmd(int argc, char **argv) {
 		log(L_DEBUG, "MSG 2 - written");
 		fclose(&stream);
 	} else {
-		printf("reading from fd = %d", fd);
+		printf("Reading from the pipe\n");
 		FILE stream;
 		stream.fd = fd;
 		int c;
 		// stream = fdopen(fd, "r");
 		while ((c = fgetc(&stream)) != EOF)
 			putchar(c);
-		fclose(&stream);
+		//fclose(&stream);
 	}
 	return 0;
 }
