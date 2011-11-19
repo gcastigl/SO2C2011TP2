@@ -2,7 +2,6 @@
 #define STRING_H
 
 #include <defs.h>
-#include <lib/stdlib.h>
 
 /* strlen
 *

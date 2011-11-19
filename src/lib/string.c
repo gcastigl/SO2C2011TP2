@@ -1,4 +1,5 @@
 #include <lib/string.h>
+#include <lib/stdlib.h>
 
 u32int strlen(char* string) {
 	u32int count = 0;

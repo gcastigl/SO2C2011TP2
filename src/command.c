@@ -134,7 +134,7 @@ PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus) {
 	for (int i = 0; i < MAX_PROCESSES; i++) {
 		PROCESS* p = list[i];
 		if (p->status == pstatus) {
-			log(L_DEBUG, "%s\t%d\t%s\t%s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
+//			log(L_DEBUG, "%s\t%d\t%s\t%s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
 			printf("%5s\t%5s\t%d\t%s\t%9s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
 		}
 	}
