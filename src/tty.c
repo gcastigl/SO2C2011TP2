@@ -3,7 +3,7 @@
 PRIVATE TTY tty[MAX_TTYs];
 PRIVATE int inactiveTTYpriority = VERY_LOW;
 PRIVATE int activeTTYpriority = HIGH;
-int currentTTY = 0;
+PRIVATE int currentTTY = 0;
 PUBLIC int activeTTYs = 0;
 extern void shell_update(int index);
 
@@ -40,14 +40,19 @@ int initTTY(int pid) {
 }
 
 void tty_setCurrent(int tty) {
+	_cli();
+	log(L_DEBUG, "switching ttys!");
     TTY* currTTY = tty_getCurrentTTY();
     setPriority(currTTY->pid, inactiveTTYpriority);
+    scheduler_setStatus(currTTY->pid, BLOCKED);
 	currentTTY = tty;
 	currTTY = tty_getCurrentTTY();
     setPriority(currTTY->pid, activeTTYpriority);
+    scheduler_setStatus(currTTY->pid, RUNNING);
 	video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
 	video_setOffset(0);
 	video_write(currTTY->terminal, currTTY->offset);
+	_sti();
 }
 
 int tty_getCurrent() {

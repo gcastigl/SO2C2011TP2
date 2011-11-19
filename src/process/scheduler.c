@@ -113,7 +113,7 @@ PRIVATE PROCESS* _nextTask(int withPriority) {
 	int bestScore = 0, temp;
 	for (int i = 0; i < MAX_PROCESSES; ++i) {
 		current = allProcess[i];
-		if (current->status != BLOCKED && current->status != PNONE) {
+		if (current->status != BLOCKED && current->priority != PNONE) {
 			current->lastCalled++;
 			if (withPriority == true) {
 				temp = current->priority * P_RATIO + current->lastCalled;
@@ -177,6 +177,7 @@ int scheduler_currentPID() {
 }
 
 void scheduler_setCurrent(int pid) {
+	log(L_DEBUG, "current -> %d", pid);
 	currentPID = pid;
 }
 
