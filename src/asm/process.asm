@@ -1,5 +1,8 @@
 GLOBAL copy_page_physical
 GLOBAL read_eip
+GLOBAL read_cs
+GLOBAL read_ss
+GLOBAL read_ds
 GLOBAL loadStackFrame
 GLOBAL switchProcess
 EXTERN getNextProcess
@@ -7,6 +10,18 @@ EXTERN getNextProcess
 read_eip:
 	mov eax, [esp]
 	ret
+
+read_cs:
+    mov eax, cs;
+    ret
+
+read_ss:
+    mov eax, ss;
+    ret
+
+read_ds:
+    mov eax, ds;
+    ret
 
 copy_page_physical:
 	push ebx
