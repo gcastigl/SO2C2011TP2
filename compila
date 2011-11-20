@@ -41,6 +41,7 @@ gcc -m32 -std=c99 -g -c ../src/access/group.c -o group.o                -I../inc
 gcc -m32 -std=c99 -g -c ../src/access/permission.c -o permission.o      -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
 gcc -m32 -std=c99 -g -c ../src/paging/paging.c -o paging.o              -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/paging/frame.c -o frame.o                -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
 gcc -m32 -std=c99 -g -c ../src/process/process.c -o process.o           -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/process/scheduler.c -o scheduler.o       -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
