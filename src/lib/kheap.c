@@ -22,7 +22,7 @@ u32int kmalloc_int(u32int sz, int align, u32int *phys)
         *phys = placement_address;
     }
     u32int tmp = placement_address;
-    placement_address += sz + 1000;
+    placement_address += sz;
     return tmp;
 }
 

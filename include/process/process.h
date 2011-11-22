@@ -4,7 +4,7 @@
 #include <defs.h>
 #include <lib/kheap.h>
 
-#define DEFAULT_STACK_SIZE 0x1000
+#define DEFAULT_STACK_SIZE 0x2000
 
 #define _EIP 	read_eip()
 #define _CS 	read_cs()
