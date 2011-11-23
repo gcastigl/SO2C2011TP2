@@ -134,3 +134,15 @@ char *strpbrk(register const char *string, register const char *brk) {
 	}
 	return (char *) NULL;
 }
+
+int strreplace(char* str, char replace, char replacement) {
+	int replaces = 0;
+	while(*str != '\0') {
+		if (*str == replace) {
+			*str = replacement;
+			replaces++;
+		}
+		str++;
+	}
+	return replaces;
+}
