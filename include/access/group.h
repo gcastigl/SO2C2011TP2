@@ -10,7 +10,8 @@
 #define E_GROUP_INVALID_GROUPNAME -1;
 #define E_GROUP_INVALID_PASSWORD -2;
 
-#define GROUP_MAX 20
+#define GROUP_MAX 15
+
 typedef struct {
     int gid;
     char groupName[32];
