@@ -259,6 +259,8 @@ int cat_cmd(int argc, char **argv);
 int ln_cmd(int argc, char **argv);
 int rm_cmd(int argc, char **argv);
 int mkfifo_cmd(int argc, char **argv);
+int cp_cmd(int argc, char **argv);
+int mv_cmd(int argc, char **argv);
 
 int chmod_cmd(int argc, char **argv);
 int chown_cmd(int argc, char **argv);

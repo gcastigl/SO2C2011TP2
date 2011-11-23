@@ -473,10 +473,8 @@ int ln_cmd(int argc, char **argv) {
 
 int cat_cmd(int argc, char **argv) {
     if (argc == 1) {
-        TTY* tty = tty_getCurrentTTY();
-        u32int currentiNode = tty->currDirectory;
         fs_node_t current;
-        fs_getFsNode(&current, currentiNode);
+        fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
         fs_node_t* file = finddir_fs(&current, argv[0]);
         char* err = NULL;
         if (file == NULL) {
@@ -651,5 +649,42 @@ int pfiles(int argc, char **argv) {
 		printf("[none]\n");
 	}
 	printf("\n");
+	return 0;
+}
+
+int cp_cmd(int argc, char **argv) {
+	if (argc == 2) {
+		char* source = argv[0];
+		char* dest = argv[1];
+		fs_node_t current, *destNode, *sourceNode;
+		fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
+		sourceNode = finddir_fs(&current, source);
+		if (sourceNode != NULL) {
+			errno = 0;
+			int created = createdir_fs(&current, dest, FILE_TYPE(sourceNode->mask));
+			if (created == -1) {
+				if (errno == E_FILE_EXISTS)
+					printf("cp: Destination file: %s already exists",  dest);
+				else
+					printf("cp: Unknown error creating destination file. Errno = %d",  errno);
+				kfree(sourceNode);
+				return 0;
+			}
+			destNode = finddir_fs(&current, dest);
+			fs_clone(sourceNode, destNode);
+			kfree(sourceNode);
+			kfree(destNode);
+		} else {
+			printf("cp: Source file: %s does not exists\n", source);
+		}
+	}
+	return 0;
+}
+
+int mv_cmd(int argc, char **argv) {
+	if (argc == 2) {
+		cp_cmd(2, argv);
+		rm_cmd(1, &argv[0]);
+	}
 	return 0;
 }
