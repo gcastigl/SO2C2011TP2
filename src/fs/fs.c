@@ -395,4 +395,27 @@ PUBLIC void fs_setFileGid(u32int inode, int gid) {
     }
 }
 
-
+PUBLIC void fs_clone(fs_node_t *toClone, fs_node_t *target) {
+	int index1 = _indexOf(toClone->inode);
+	int index2 = _indexOf(target->inode);
+	if (index1 == -1 || index1 == -1) {
+		log(L_ERROR, "could not load inode: %d / %d", toClone->inode, target->inode);
+		return;
+	}
+	iNode *inode = &inodes[index2];
+	inode->flags = toClone->flags;
+	inode->impl = toClone->impl;
+	inode->mask = toClone->mask;
+	errno = 0;
+	diskManager_writeInode(inode, target->inode);
+	if (errno != 0) {
+		log(L_ERROR, "Could not write inode to disk, errno %d", errno);
+	}
+	u8int buff[512];
+	int offset = 0;
+	int read;
+	while((read = fs_read(toClone, offset, 512, buff)) != 0) {
+		fs_write(target, offset, 512, buff);
+		offset += read;
+	}
+}

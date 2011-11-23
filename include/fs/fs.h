@@ -44,4 +44,6 @@ PUBLIC void fs_setFileUid(u32int inode, int uid);
  */
 PUBLIC void fs_setFileGid(u32int inode, int gid);
 
+PUBLIC void fs_clone(fs_node_t *file1, fs_node_t *file2);
+
 #endif
