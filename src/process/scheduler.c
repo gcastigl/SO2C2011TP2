@@ -92,22 +92,17 @@ void scheduler_schedule(char* name, int(*processFunc)(int, char**), int argc,
 }
 
 int getNextProcess(int oldESP) {
-    PROCESS *proc, *proc2;
-    proc2 = scheduler_getProcess(scheduler_currentPID());
-    if (proc2->status == RUNNING) {
-        proc2->status = READY;
-    }
-    proc = _nextTask(usePriority);
-    proc->status = RUNNING;
-    proc->lastCalled = 0;
+    PROCESS *next = _nextTask(usePriority);
+    next->status = RUNNING;
+    next->lastCalled = 0;
     if (!firstTime) {
-        saveESP(oldESP); // el oldESP esta el stack pointer del proceso
+        saveESP(oldESP); 			// en el oldESP esta el stack pointer del proceso
     } else {
         firstTime = false;
     }
-    scheduler_setCurrent(proc->pid);
-    setFD(proc->tty);				// Sets the output to the tty corresponding to the process
-    return proc->ESP;
+    scheduler_setCurrent(next->pid);
+    setFD(next->tty);				// Sets the sys write call output to the tty corresponding to the process
+    return next->ESP;
 }
 
 /* getNextTask
