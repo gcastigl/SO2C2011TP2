@@ -49,13 +49,17 @@ boolean scheduler_isActive() {
  */
 PRIVATE void saveESP(int oldESP) {
     PROCESS *proc = scheduler_getCurrentProcess();
-    if (proc != NULL) {
-        proc->ESP = oldESP;
-    } else {
-    	// FIXME: The code normally reaches this else when a process has just returned and
-    	// because it was the current process it does not exist any more.
+    if (proc == NULL) {			// Should never be here...
+    	errno = E_ACCESS;
     	log(L_ERROR, "current process is NULL!!");
+    	return;
     }
+	if (proc->status != FINILIZED) {
+		proc->ESP = oldESP;
+	} else {
+		log(L_DEBUG, "current process is finalized");
+	}
+
 }
 
 void scheduler_schedule(char* name, int(*processFunc)(int, char**), int argc,
@@ -119,6 +123,13 @@ PRIVATE PROCESS* _nextTask(int withPriority) {
 	int bestScore = 0, temp;
 	for (int i = 0; i < MAX_PROCESSES; ++i) {
 		current = allProcess[i];
+		if (current == NULL) {				// slot is empty...
+			continue;
+		}
+		if (current->status == FINILIZED) {	// process is finalized, emty this slot
+			allProcess[i] = NULL;
+			continue;
+		}
 		if (current->status != BLOCKED && current->priority != PNONE) {
 			current->lastCalled++;
 			if (withPriority == true) {
@@ -152,11 +163,7 @@ void scheduler_setStatus(u32int pid, u32int status) {
 PRIVATE void clean() {
     PROCESS *temp = scheduler_getProcess(currentPID);
     	log(L_DEBUG, "CLEAN! - name: %s pid: %d / parent: %d", temp->name, temp->pid, temp->parent);
-    for (int i = 0; i < MAX_PROCESSES; ++i) {
-		if (allProcess[i] != NULL && allProcess[i]->pid == currentPID) {
-			allProcess[i] = NULL;
-		}
-	}
+    temp->status = FINILIZED;
 	scheduler_setStatus(temp->parent, READY);
     process_finalize(temp);
     switchProcess();
