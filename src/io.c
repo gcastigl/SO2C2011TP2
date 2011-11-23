@@ -20,11 +20,7 @@ void sysRead(int fd, void * buffer, u32int count) {
 		u32int index = fd - FD_OFFSET;
 		file_descriptor_entry* file = &(scheduler_getCurrentProcess()->fd_table[index]);
 		fs_getFsNode(&node, file->inode);
-        int read = read_fs(&node, file->offset, count, buffer);
-        // file->offset += read;
-        if (file->offset >= file->length) {
-        	// file->offset = 0;
-        }
+        read_fs(&node, file->offset, count, buffer);
         return;
 	}
 }
@@ -41,7 +37,6 @@ void sysWrite(int fd, void * buffer, u32int count) {
     	file_descriptor_entry* file = &(scheduler_getCurrentProcess()->fd_table[index]);
     	fs_getFsNode(&node, file->inode);
         int written = write_fs(&node, file->offset, count, buffer);
-        file->length = written;
         return;
     }
 	tty_write(tty, (char*) buffer, count);
