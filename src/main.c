@@ -2,21 +2,20 @@
 
 u32int initial_esp; // New global variable.
 
+PRIVATE void testSegmentationFault();
+PRIVATE void testHeap();
+
 int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
     _cli();
     initial_esp = initial_stack;
     init_descriptor_tables();
     _mascaraPIC1(0xFC);
     _mascaraPIC2(0xFF);
-    int a = kmalloc(8);
-    int b = kmalloc(8);
-    log(L_INFO, "kmalloc: 0x%x", a);
-    log(L_INFO, "kmalloc: 0x%x", b);
+    //testSegmentationFault();
+    //testHeap();
     paging_init(0x1000000);
-    int c = kmalloc(8);
-    int d = kmalloc(8);
-    log(L_INFO, "kmalloc: 0x%x", c);
-    log(L_INFO, "kmalloc: 0x%x", d);
+    //testHeap();
+    //testSegmentationFault();
     port_serial_init();
     keyboard_init();
     video_init();
@@ -33,3 +32,17 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
     return 0;
 }
 
+PRIVATE void testSegmentationFault() {
+    u32int *ptr = (u32int*)0xA0000000;
+    u32int do_page_fault = *ptr;
+    do_page_fault = 1;
+}
+
+PRIVATE void testHeap() {
+    int a = kmalloc(8);
+    int b = kmalloc(8);
+    log(L_INFO, "kmalloc: 0x%x", a);
+    log(L_INFO, "kmalloc: 0x%x", b);
+    kfree((void*)a);
+    kfree((void*)b);
+}
