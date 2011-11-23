@@ -28,7 +28,7 @@ PRIVATE int _indexOf(u32int inode);
 PRIVATE int _loadInode(u32int inode);
 
 void fs_init() {
-	diskManager_init(S_LRU_CACHE);
+	diskManager_init(STRATEGY);
 	diskCache_init();
 	fifo_init();
 	for (int i = 0; i < INODES; i++) {

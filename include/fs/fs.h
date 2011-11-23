@@ -7,6 +7,7 @@
 #include <fs/diskManager.h>
 
 #define INODES			25
+#define STRATEGY 		S_LRU_CACHE
 
 /*
  * inicializa el file system
