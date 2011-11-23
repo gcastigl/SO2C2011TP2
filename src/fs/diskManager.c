@@ -155,6 +155,7 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber) {
 		return;
 	}
 	FileHeader header;
+
 	strategy.read(inodeOnDisk.data.disk, &header, sizeof(FileHeader), inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset + sizeof(DiskPage));
 	if (header.magic != MAGIC_NUMBER) {
 			log(L_ERROR, "Can't read file header (%d) - Corrupted->[%d, %d]", inodeNumber, inodeOnDisk.data.nextSector, inodeOnDisk.data.nextOffset);
@@ -174,6 +175,14 @@ void diskManager_readInode(iNode *inode, u32int inodeNumber) {
 	inode->offset = inodeOnDisk.data.nextOffset;
 }
 
+void diskManager_writeInode(iNode *inode, u32int inodeNumber) {
+	FileHeader header;
+	_getFileheader(inodeNumber, &header);
+	header.flags = inode->flags;
+	header.impl = inode->impl;
+	header.mask = inode->mask;
+	_setFileheader(inodeNumber, &header);
+}
 
 int diskManager_writeContents(u32int inodeNumber, char *contents, u32int length, u32int offset) {
 	iNodeDisk inode;
@@ -537,6 +546,7 @@ void _setFileheader(u32int inodeNumber, FileHeader *header) {
 	iNodeDisk inode;
 	_getiNode(inodeNumber, &inode);
 	if (inode.data.magic != MAGIC_NUMBER) {
+		log(L_ERROR, "trying to write haeder to non existen file: %d", inodeNumber);
 		errno = E_CORRUPTED_FILE;
 		return;
 	}
