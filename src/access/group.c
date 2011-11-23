@@ -28,14 +28,18 @@ PRIVATE int group_findOpenGid() {
 }
 
 PRIVATE boolean group_add(int gid) {
-	if (!group_isSet(gid)) {
-		groups[gid].gid = gid;
-		groups[gid].groupName[0] = '\0';
-		groups[gid].password[0] = '\0';
-		return true;
-	} else {
-		return false;
+	if (0 <= gid && gid < GROUP_MAX) {
+		if (!group_isSet(gid)) {
+			groups[gid].gid = gid;
+			groups[gid].groupName[0] = '\0';
+			groups[gid].password[0] = '\0';
+			return true;
+		} else {
+			return false;
+		}
 	}
+	log(L_ERROR, "Tyying to set index %d. Max index: %d", gid, GROUP_MAX);
+	return false;
 }
 
 PRIVATE boolean group_del(int gid) {
@@ -49,6 +53,9 @@ PRIVATE boolean group_del(int gid) {
 }
 
 PUBLIC group_t *group_get(int gid) {
+	if (!(0 <= gid && gid < GROUP_MAX)) {
+		return NULL;
+	}
 	if (group_isSet(gid)) {
 		return &groups[gid];
 	} else {
@@ -99,7 +106,13 @@ PUBLIC boolean group_setGroupname(int gid, char *groupname) {
 		log(L_ERROR, "groupname %s already exists", groupname);
 		return false;
 	}
-	strcpy(group_get(gid)->groupName, groupname);
+	group_t *group = group_get(gid);
+	if (group != NULL) {
+		strcpy(group->groupName, groupname);
+	} else {
+		log(L_ERROR, "invalid gid %d", gid);
+		return false;
+	}
 	return true;
 }
 
@@ -112,7 +125,13 @@ PUBLIC boolean group_setPassword(int gid, char *password) {
 		log(L_ERROR, "password cannot contain the ':' character");
 		return false;
 	}
-	strcpy(group_get(gid)->password, password);
+	group_t *group = group_get(gid);
+	if (group != NULL) {
+		strcpy(group->password, password);
+	} else {
+		log(L_ERROR, "invalid gid %d", gid);
+		return false;
+	}
 	return true;
 }
 
@@ -230,8 +249,6 @@ PUBLIC boolean do_groupadd(char *groupName, char *password) {
 }
 
 PUBLIC boolean do_groupdel(char *groupName) {
-
-
     int gid = group_find(groupName);
         if (gid == NO_GROUP) {
             printf("No group exists with %s groupname.\n", groupName);
