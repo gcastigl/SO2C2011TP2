@@ -36,7 +36,7 @@ void sysWrite(int fd, void * buffer, u32int count) {
     	u32int index = fd - FD_OFFSET;
     	file_descriptor_entry* file = &(scheduler_getCurrentProcess()->fd_table[index]);
     	fs_getFsNode(&node, file->inode);
-        int written = write_fs(&node, file->offset, count, buffer);
+        write_fs(&node, file->offset, count, buffer);
         return;
     }
 	tty_write(tty, (char*) buffer, count);
