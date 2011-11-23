@@ -84,7 +84,7 @@ void strncpy(char *to, const char *from, int size);
 *
 * Devuelve el índice del caracter 'c' en el string 'str'
 **/
-int strIndexOf(char* str, char c, int startIndex);
+int strindex(char* str, char c, int offset);
 
 /* strContains
 *
