@@ -45,7 +45,11 @@ u32int kmalloc_int(u32int sz, int align, u32int *phys)
 
 void kfree(void *p)
 {
-    hfree(p, kheap);
+    if (kheap != 0) {
+        hfree(p, kheap);
+    } else {
+        // Cannot free if heap is not initialized.
+    }
 }
 
 u32int kmalloc_a(u32int sz)
