@@ -1,5 +1,6 @@
-Driver ATA:
-	http://wiki.osdev.org/ATA_PIO_Mode
+Set up:
+    go to your home folder and create / set your .mtoolsrc file to: 
+        drive a: file="**path to the folder**/SO2C2011TP2/img/tpe.img" exclusive 
 
 cosas a tener:
 
