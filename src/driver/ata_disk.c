@@ -1,5 +1,6 @@
 #include <driver/ata_disk.h>
 #include <lib/stdlib.h>
+#include <util/logger.h>
 
 #define BIT(i)	(1 << (i))
 

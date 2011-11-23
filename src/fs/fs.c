@@ -211,7 +211,7 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 	//	log(L_DEBUG, "inode: %d, idnex: %d, i: %d", inodeNumber, index, i);
 	if (i - 1 == index) {
 		//	log(L_DEBUG, "directory %d... inode: %d\n", i, inodeNumber);
-		fsNode = kmalloc(sizeof(fs_node_t));
+		fsNode = (fs_node_t*)kmalloc(sizeof(fs_node_t));
 		fs_getFsNode(fsNode, inodeNumber);
 	}
 	return fsNode;
@@ -226,7 +226,7 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
 		offset += sizeof(u32int);					// skip inodeNumber
 		if (inodeNumber != -1 && strcmp(name, contents + offset) == 0) {
-			fs_node_t* fsnode = kmalloc(sizeof(fs_node_t));
+			fs_node_t* fsnode = (fs_node_t*)kmalloc(sizeof(fs_node_t));
 			fs_getFsNode(fsnode, inodeNumber);
 			return fsnode;
 		}

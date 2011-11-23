@@ -74,7 +74,7 @@ void scheduler_schedule(char* name, int(*processFunc)(int, char**), int argc,
 		log(L_ERROR, "Could not create process %s. Max processes reached!", name);
 		return;
 	}
-    PROCESS* newProcess = kmalloc(sizeof(PROCESS));
+    PROCESS* newProcess = (PROCESS*)kmalloc(sizeof(PROCESS));
 	allProcess[i] = newProcess;
 		log(L_DEBUG, "%s is now on position: %d", name, i);
     process_initialize(newProcess, name, processFunc, argc, argv, stacklength,

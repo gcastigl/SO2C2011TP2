@@ -1,4 +1,5 @@
 #include <io.h>
+#include <util/logger.h>
 
 PRIVATE int isTTY(int fd);
 PRIVATE fs_node_t* getFile(char* fileName);

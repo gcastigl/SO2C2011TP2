@@ -5,7 +5,6 @@
 #include <defs.h>
 #include <util/logger.h>
 
-
 /**
    Allocate a chunk of memory, sz in size. If align == 1,
    the chunk must be page-aligned. If phys != 0, the physical

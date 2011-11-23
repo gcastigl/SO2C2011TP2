@@ -1,4 +1,5 @@
 #include <fs/diskManager.h>
+#include <util/logger.h>
 
 #define MIN(x,y)							(((x) < (y)) ? (x) : (y))
 #define BIT(n, i)							((n) & (1 << (i)))

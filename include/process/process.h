@@ -2,7 +2,7 @@
 #define PROCESS_H
 
 #include <defs.h>
-#include <lib/kheap.h>
+#include <memory/kheap.h>
 
 #define DEFAULT_STACK_SIZE 0x2000
 
