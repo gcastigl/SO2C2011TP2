@@ -1,4 +1,5 @@
 #include <driver/keyboard.h>
+#include <signal.h>
 
 unsigned char lcase[60] =
 {
@@ -141,7 +142,7 @@ int checkSpecialKey(unsigned char scanCode) {
 }
 
 char translateSc(unsigned char scanCode) {
-		return SHIFT_PRESSED() ? ucase[scanCode] : lcase[scanCode];
+	return SHIFT_PRESSED() ? ucase[scanCode] : lcase[scanCode];
 }
 
 int bufferIsEmpty() {
@@ -171,5 +172,6 @@ void putKeyInBuffer(char c) {
 	keyboard_buffer.buffer[keyboard_buffer.to] = c;
 	keyboard_buffer.to++;
 	keyboard_buffer.to %= K_BUFFER_SIZE;
+	signal_keyPressed();
 }
 

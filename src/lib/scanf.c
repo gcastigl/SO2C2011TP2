@@ -10,7 +10,7 @@ char getchar() {
 
 char getc(int fd) {
 	char c;
-	while(bufferIsEmpty()) {
+	while(!tty_hasInput(tty_getCurrentTTY())) {
 		// WAIT...
 	}
 	read(fd, &c, 1);

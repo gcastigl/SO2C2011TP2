@@ -12,7 +12,7 @@ void sysRead(int fd, void * buffer, u32int count) {
 		//COPIA DEL BUFFER DE TECLADO al BUFFER ENTREGADO
 		for (i = 0; i < count; i++) {
 			aux = (char*) buffer;
-			c = getKeyFromBuffer();
+			c = circularBuffer_get(&tty_getCurrentTTY()->input_buffer);
 			*(aux+i) = c;
 		}
 	} else if (fd >= MAX_TTYs) {
