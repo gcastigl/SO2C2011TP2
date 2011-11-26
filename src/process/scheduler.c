@@ -151,6 +151,7 @@ void scheduler_setStatus(u32int pid, u32int status) {
 			allProcess[i]->status = status;
 			log(L_DEBUG, "(%s)%d now has status %s", allProcess[i]->name, pid,
 				(status == 0) ? "Blocked" : ((status == 1) ? "Ready" : "Running"));
+			return;
 		}
 	}
 }
