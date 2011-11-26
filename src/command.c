@@ -662,25 +662,29 @@ int cp_cmd(int argc, char **argv) {
 				if (errno == E_FILE_EXISTS)
 					printf("cp: Destination file: %s already exists",  dest);
 				else
-					printf("cp: Unknown error creating destination file. Errno = %d",  errno);
+					printf("cp: Error creating destination file. errno = %d",  errno);
 				kfree(sourceNode);
-				return 0;
+				return -1;
 			}
 			destNode = finddir_fs(&current, dest);
+			printf("destination node: %s\n", destNode->name);
 			fs_clone(sourceNode, destNode);
 			kfree(sourceNode);
 			kfree(destNode);
+			return 0;
 		} else {
 			printf("cp: Source file: %s does not exists\n", source);
 		}
 	}
-	return 0;
+	return -1;
 }
 
 int mv_cmd(int argc, char **argv) {
 	if (argc == 2) {
-		cp_cmd(2, argv);
-		rm_cmd(1, &argv[0]);
+		int copied = cp_cmd(2, argv);
+		if (copied == 0) {
+			rm_cmd(1, &argv[0]);
+		}
 	}
 	return 0;
 }
