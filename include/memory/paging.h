@@ -7,6 +7,9 @@
 #include <defs.h>
 #include <interrupts/interrupts.h>
 
+#define PAGE_SIZE  0x1000
+#define PAGE_COUNT 1024
+
 typedef struct page
 {
     u32int present    : 1;   // Page present in memory
@@ -20,7 +23,7 @@ typedef struct page
 
 typedef struct page_table
 {
-    page_t pages[1024];
+    page_t pages[PAGE_COUNT];
 } page_table_t;
 
 typedef struct page_directory
@@ -28,12 +31,12 @@ typedef struct page_directory
     /**
        Array of pointers to pagetables.
     **/
-    page_table_t *tables[1024];
+    page_table_t *tables[PAGE_COUNT];
     /**
        Array of pointers to the pagetables above, but gives their *physical*
        location, for loading into the CR3 register.
     **/
-    u32int tablesPhysical[1024];
+    u32int tablesPhysical[PAGE_COUNT];
 
     /**
        The physical address of tablesPhysical. This comes into play
