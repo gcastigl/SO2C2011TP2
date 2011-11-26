@@ -2,7 +2,7 @@
 #include <driver/video.h>
 
 void* malloc(u32int size) {;
-	return kmalloc(size);
+	return (void*)kmalloc(size);
 }
 
 void free(void* p) {

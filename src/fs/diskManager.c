@@ -1,4 +1,5 @@
 #include <fs/diskManager.h>
+#include <util/logger.h>
 
 #define MIN(x,y)							(((x) < (y)) ? (x) : (y))
 #define BIT(n, i)							((n) & (1 << (i)))
@@ -181,6 +182,7 @@ void diskManager_writeInode(iNode *inode, u32int inodeNumber) {
 	header.flags = inode->flags;
 	header.impl = inode->impl;
 	header.mask = inode->mask;
+	strcpy(header.name, inode->name);
 	_setFileheader(inodeNumber, &header);
 }
 

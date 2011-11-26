@@ -52,7 +52,7 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 		return;
 	}
 	iNode* inode = &inodes[index];
-	memcpy(fsNode->name, inode->name, strlen(inode->name) + 1);
+	memcpy(fsNode->name, inode->name, MAX_NAME_LENGTH);
 	fsNode->flags = inode->flags;
 	fsNode->gid = inode->gid;
 	fsNode->uid = inode->uid;
@@ -211,7 +211,7 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 	//	log(L_DEBUG, "inode: %d, idnex: %d, i: %d", inodeNumber, index, i);
 	if (i - 1 == index) {
 		//	log(L_DEBUG, "directory %d... inode: %d\n", i, inodeNumber);
-		fsNode = kmalloc(sizeof(fs_node_t));
+		fsNode = (fs_node_t*)kmalloc(sizeof(fs_node_t));
 		fs_getFsNode(fsNode, inodeNumber);
 	}
 	return fsNode;
@@ -226,7 +226,7 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
 		offset += sizeof(u32int);					// skip inodeNumber
 		if (inodeNumber != -1 && strcmp(name, contents + offset) == 0) {
-			fs_node_t* fsnode = kmalloc(sizeof(fs_node_t));
+			fs_node_t* fsnode = (fs_node_t*)kmalloc(sizeof(fs_node_t));
 			fs_getFsNode(fsnode, inodeNumber);
 			return fsnode;
 		}
@@ -398,7 +398,7 @@ PUBLIC void fs_setFileGid(u32int inode, int gid) {
 PUBLIC void fs_clone(fs_node_t *toClone, fs_node_t *target) {
 	int index1 = _indexOf(toClone->inode);
 	int index2 = _indexOf(target->inode);
-	if (index1 == -1 || index1 == -1) {
+	if (index1 == -1 || index2 == -1) {
 		log(L_ERROR, "could not load inode: %d / %d", toClone->inode, target->inode);
 		return;
 	}
@@ -406,6 +406,7 @@ PUBLIC void fs_clone(fs_node_t *toClone, fs_node_t *target) {
 	inode->flags = toClone->flags;
 	inode->impl = toClone->impl;
 	inode->mask = toClone->mask;
+	strcpy(inode->name, target->name);
 	errno = 0;
 	diskManager_writeInode(inode, target->inode);
 	if (errno != 0) {

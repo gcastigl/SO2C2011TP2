@@ -1,4 +1,5 @@
 #include <tty.h>
+#include <util/logger.h>
 
 PRIVATE TTY tty[MAX_TTYs];
 PRIVATE int inactiveTTYpriority = VERY_LOW;

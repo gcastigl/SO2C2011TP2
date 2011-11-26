@@ -1,5 +1,6 @@
 #include <lib/fifo.h>
 #include <lib/file.h>
+#include <util/logger.h>
 
 #define MAX_FIFOS	1
 
