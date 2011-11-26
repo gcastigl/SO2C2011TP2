@@ -7,13 +7,24 @@
 #include <memory/paging.h>
 #include <memory/frame.h>
 
+/**
+   Allocate a chunk of memory, sz in size. If align == 1,
+   the chunk must be page-aligned. If phys != 0, the physical
+   location of the allocated chunk will be stored into phys.
+
+   This is the internal version of kmalloc. More user-friendly
+   parameter representations are available in kmalloc, kmalloc_a,
+   kmalloc_ap, kmalloc_p.
+**/
+PRIVATE u32int _kmalloc(u32int sz, int align, u32int *phys);
+
 // end is defined in the linker script.
 extern u32int end;
 u32int placement_address = (u32int)&end;
 extern page_directory_t *kernel_directory;
 heap_t *kheap=0;
 
-u32int kmalloc_int(u32int sz, int align, u32int *phys)
+u32int _kmalloc(u32int sz, int align, u32int *phys)
 {
     if (kheap != 0)
     {
@@ -54,22 +65,22 @@ void kfree(void *p)
 
 u32int kmalloc_a(u32int sz)
 {
-    return kmalloc_int(sz, 1, 0);
+    return _kmalloc(sz, 1, 0);
 }
 
 u32int kmalloc_p(u32int sz, u32int *phys)
 {
-    return kmalloc_int(sz, 0, phys);
+    return _kmalloc(sz, 0, phys);
 }
 
 u32int kmalloc_ap(u32int sz, u32int *phys)
 {
-    return kmalloc_int(sz, 1, phys);
+    return _kmalloc(sz, 1, phys);
 }
 
 u32int kmalloc(u32int sz)
 {
-    return kmalloc_int(sz, 0, 0);
+    return _kmalloc(sz, 0, 0);
 }
 
 static void expand(u32int new_size, heap_t *heap)

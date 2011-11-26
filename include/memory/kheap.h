@@ -59,17 +59,6 @@ void *halloc(u32int size, u8int page_align, heap_t *heap);
 void hfree(void *p, heap_t *heap);
 
 /**
-   Allocate a chunk of memory, sz in size. If align == 1,
-   the chunk must be page-aligned. If phys != 0, the physical
-   location of the allocated chunk will be stored into phys.
-
-   This is the internal version of kmalloc. More user-friendly
-   parameter representations are available in kmalloc, kmalloc_a,
-   kmalloc_ap, kmalloc_p.
-**/
-u32int kmalloc_int(u32int sz, int align, u32int *phys);
-
-/**
    Allocate a chunk of memory, sz in size. The chunk must be
    page aligned.
 **/
