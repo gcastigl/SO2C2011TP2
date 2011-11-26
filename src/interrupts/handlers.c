@@ -110,8 +110,11 @@ void *systemCallHandler(int sysCallNumber, void ** args) {
 }
 // This gets called from our ASM interrupt handler stub.
 void isr_handler(registers_t regs) {
-    
-    if (regs.int_no < 32) {
+    if (interruptHandlers[regs.int_no] != 0)
+    {
+        isr_t handler = interruptHandlers[regs.int_no];
+        handler(regs);
+    } else if (regs.int_no < 32) {
         log(L_ERROR, "%s (%d): \n\
  ds: %d\n\
  edi: %d\n\
