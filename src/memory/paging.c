@@ -21,7 +21,7 @@ void paging_init()
     // assume it is 16MB big.
     u32int mem_end_page = 0x1000000;
     
-    nframes = mem_end_page / 0x1000;
+    nframes = mem_end_page / PAGE_SIZE;
     frames = (u32int*)kmalloc(INDEX_FROM_BIT(nframes));
     memset(frames, 0, INDEX_FROM_BIT(nframes));
     
@@ -36,7 +36,7 @@ void paging_init()
     // they need to be identity mapped first below, and yet we can't increase
     // placement_address between identity mapping and enabling the heap!
     int i = 0;
-    for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000)
+    for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += PAGE_SIZE)
         get_page(i, 1, kernel_directory);
 
     // We need to identity map (phys addr = virt addr) from
@@ -49,15 +49,15 @@ void paging_init()
     // Allocate a lil' bit extra so the kernel heap can be
     // initialised properly.
     i = 0;
-    while (i < placement_address+0x1000)
+    while (i < placement_address+PAGE_SIZE)
     {
         // Kernel code is readable but not writeable from userspace.
         alloc_frame( get_page(i, 1, kernel_directory), 0, 0);
-        i += 0x1000;
+        i += PAGE_SIZE;
     }
 
     // Now allocate those pages we mapped earlier.
-    for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000)
+    for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += PAGE_SIZE)
         alloc_frame( get_page(i, 1, kernel_directory), 0, 0);
 
     // Before we enable paging, we must register our page fault handler.
@@ -83,7 +83,7 @@ void switch_page_directory(page_directory_t *dir)
 page_t *get_page(u32int address, int make, page_directory_t *dir)
 {
     // Turn the address into an index.
-    address /= 0x1000;
+    address /= PAGE_SIZE;
     // Find the page table containing this address.
     u32int table_idx = address / 1024;
 
@@ -95,7 +95,7 @@ page_t *get_page(u32int address, int make, page_directory_t *dir)
     {
         u32int tmp;
         dir->tables[table_idx] = (page_table_t*)kmalloc_ap(sizeof(page_table_t), &tmp);
-        memset(dir->tables[table_idx], 0, 0x1000);
+        memset(dir->tables[table_idx], 0, PAGE_SIZE);
         dir->tablesPhysical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
         return &dir->tables[table_idx]->pages[address%1024];
     }

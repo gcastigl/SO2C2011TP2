@@ -7,6 +7,8 @@
 #include <defs.h>
 #include <interrupts/interrupts.h>
 
+#define PAGE_SIZE  0x1000
+
 typedef struct page
 {
     u32int present    : 1;   // Page present in memory

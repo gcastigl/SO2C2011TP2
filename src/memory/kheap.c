@@ -21,7 +21,7 @@ u32int kmalloc_int(u32int sz, int align, u32int *phys)
         if (phys != 0)
         {
             page_t *page = get_page((u32int)addr, 0, kernel_directory);
-            *phys = page->frame*0x1000 + ((u32int)addr&0xFFF);
+            *phys = page->frame*PAGE_SIZE + ((u32int)addr&0xFFF);
         }
         return (u32int)addr;
     }
@@ -31,7 +31,7 @@ u32int kmalloc_int(u32int sz, int align, u32int *phys)
         {
             // Align the placement address;
             placement_address &= 0xFFFFF000;
-            placement_address += 0x1000;
+            placement_address += PAGE_SIZE;
         }
         if (phys)
         {
@@ -81,7 +81,7 @@ static void expand(u32int new_size, heap_t *heap)
     if ((new_size&0xFFFFF000) != 0)
     {
         new_size &= 0xFFFFF000;
-        new_size += 0x1000;
+        new_size += PAGE_SIZE;
     }
 
     // Make sure we are not overreaching ourselves.
@@ -95,7 +95,7 @@ static void expand(u32int new_size, heap_t *heap)
     {
         alloc_frame( get_page(heap->start_address+i, 1, kernel_directory),
                      (heap->supervisor)?1:0, (heap->readonly)?0:1);
-        i += 0x1000 /* page size */;
+        i += PAGE_SIZE;
     }
     heap->end_address = heap->start_address+new_size;
 }
@@ -106,10 +106,10 @@ static u32int contract(u32int new_size, heap_t *heap)
     ASSERT(new_size < heap->end_address-heap->start_address);
 
     // Get the nearest following page boundary.
-    if (new_size&0x1000)
+    if (new_size&PAGE_SIZE)
     {
-        new_size &= 0x1000;
-        new_size += 0x1000;
+        new_size &= PAGE_SIZE;
+        new_size += PAGE_SIZE;
     }
 
     // Don't contract too far!
@@ -117,11 +117,11 @@ static u32int contract(u32int new_size, heap_t *heap)
         new_size = HEAP_MIN_SIZE;
 
     u32int old_size = heap->end_address-heap->start_address;
-    u32int i = old_size - 0x1000;
+    u32int i = old_size - PAGE_SIZE;
     while (new_size < i)
     {
         free_frame(get_page(heap->start_address+i, 0, kernel_directory));
-        i -= 0x1000;
+        i -= PAGE_SIZE;
     }
 
     heap->end_address = heap->start_address + new_size;
@@ -142,7 +142,7 @@ static s32int find_smallest_hole(u32int size, u8int page_align, heap_t *heap)
             u32int location = (u32int)header;
             s32int offset = 0;
             if (((location+sizeof(header_t)) & 0xFFFFF000) != 0)
-                offset = 0x1000 /* page size */  - (location+sizeof(header_t))%0x1000;
+                offset = PAGE_SIZE - (location+sizeof(header_t))%PAGE_SIZE;
             s32int hole_size = (s32int)header->size - offset;
             // Can we fit now?
             if (hole_size >= (s32int)size)
@@ -169,8 +169,8 @@ heap_t *create_heap(u32int start, u32int end_addr, u32int max, u8int supervisor,
     heap_t *heap = (heap_t*)kmalloc(sizeof(heap_t));
 
     // All our assumptions are made on startAddress and endAddress being page-aligned.
-    ASSERT(start%0x1000 == 0);
-    ASSERT(end_addr%0x1000 == 0);
+    ASSERT(start%PAGE_SIZE == 0);
+    ASSERT(end_addr%PAGE_SIZE == 0);
     
     // Initialise the index.
     heap->index = place_ordered_array( (void*)start, HEAP_INDEX_SIZE, &header_t_less_than);
@@ -182,7 +182,7 @@ heap_t *create_heap(u32int start, u32int end_addr, u32int max, u8int supervisor,
     if ((start & 0xFFFFF000) != 0)
     {
         start &= 0xFFFFF000;
-        start += 0x1000;
+        start += PAGE_SIZE;
     }
     // Write the start, end and max addresses into the heap structure.
     heap->start_address = start;
@@ -275,9 +275,9 @@ void *halloc(u32int size, u8int page_align, heap_t *heap)
     // If we need to page-align the data, do it now and make a new hole in front of our block.
     if (page_align && orig_hole_pos&0xFFFFF000)
     {
-        u32int new_location   = orig_hole_pos + 0x1000 /* page size */ - (orig_hole_pos&0xFFF) - sizeof(header_t);
+        u32int new_location   = orig_hole_pos + PAGE_SIZE - (orig_hole_pos&0xFFF) - sizeof(header_t);
         header_t *hole_header = (header_t *)orig_hole_pos;
-        hole_header->size     = 0x1000 /* page size */ - (orig_hole_pos&0xFFF) - sizeof(header_t);
+        hole_header->size     = PAGE_SIZE - (orig_hole_pos&0xFFF) - sizeof(header_t);
         hole_header->magic    = HEAP_MAGIC;
         hole_header->is_hole  = 1;
         footer_t *hole_footer = (footer_t *) ( (u32int)new_location - sizeof(footer_t) );
