@@ -182,6 +182,7 @@ void diskManager_writeInode(iNode *inode, u32int inodeNumber) {
 	header.flags = inode->flags;
 	header.impl = inode->impl;
 	header.mask = inode->mask;
+	strcpy(header.name, inode->name);
 	_setFileheader(inodeNumber, &header);
 }
 
