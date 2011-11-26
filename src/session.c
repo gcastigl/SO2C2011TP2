@@ -8,8 +8,8 @@ void session_login() {
     TTY* tty = tty_getCurrentTTY();
     tty_clean(tty);
     prntWelcomeMsg();
-    static char user[NAME_MAX_LENGTH] = {"\0"};
-    static char password[PASS_MAX_LENGTH] = {"\0"};
+    char password[PASS_MAX_LENGTH] = {"\0"};
+    char user[NAME_MAX_LENGTH] = {"\0"};
     do {
         int uid = NO_USER;
         while (uid == NO_USER) {
