@@ -69,7 +69,7 @@ void tty_getCurrentNode(fs_node_t* node) {
 	u32int currentiNode = tty_getCurrentTTY()->currDirectory;
 	fs_getFsNode(node, currentiNode);
 }
-
+//FIXME: this shouold be a fs_node_t*
 PUBLIC void tty_setCurrentNode(fs_node_t node) {
     tty_getCurrentTTY()->currDirectory = node.inode;
     memcpy(tty_getCurrentTTY()->currPath, node.name, strlen(node.name) + 1);
