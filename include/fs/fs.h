@@ -6,7 +6,7 @@
 #include <lib/fifo.h>
 #include <fs/diskManager.h>
 
-#define INODES			25
+#define INODES			15
 #define STRATEGY 		S_LRU_CACHE
 
 /*
