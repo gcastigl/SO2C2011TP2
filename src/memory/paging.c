@@ -85,11 +85,11 @@ page_t *get_page(u32int address, int make, page_directory_t *dir)
     // Turn the address into an index.
     address /= PAGE_SIZE;
     // Find the page table containing this address.
-    u32int table_idx = address / 1024;
+    u32int table_idx = address / PAGE_COUNT;
 
     if (dir->tables[table_idx]) // If this table is already assigned
     {
-        return &dir->tables[table_idx]->pages[address%1024];
+        return &dir->tables[table_idx]->pages[address%PAGE_COUNT];
     }
     else if(make)
     {
@@ -97,7 +97,7 @@ page_t *get_page(u32int address, int make, page_directory_t *dir)
         dir->tables[table_idx] = (page_table_t*)kmalloc_ap(sizeof(page_table_t), &tmp);
         memset(dir->tables[table_idx], 0, PAGE_SIZE);
         dir->tablesPhysical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
-        return &dir->tables[table_idx]->pages[address%1024];
+        return &dir->tables[table_idx]->pages[address%PAGE_COUNT];
     }
     else
     {
