@@ -114,17 +114,13 @@ int top_cmd(int argc, char**argv) {
             execCount[slot]++;
         }
     }
-    // FIXME: process switching has to be stopped because it uses a roundrobin and shoud not be switched while listing!
-    _cli();
     printf("Executions over 100\n\n[ACTIVE]\n");
-    printf("\n[ACTIVE]\n");
     printf("User\tName\tPID\tStatus\tPriority\texecCount\n");
     _top_cmd_print(scheduler_getAllProcesses(), execCount, RUNNING);
     _top_cmd_print(scheduler_getAllProcesses(), execCount, READY);
     printf("\n[BLOCKED]\n");
     printf("User\tName\tPID\tStatus\tPriority\texecCount\n");
     _top_cmd_print(scheduler_getAllProcesses(), execCount, BLOCKED);
-    _sti();
     return 0;
 }
 
