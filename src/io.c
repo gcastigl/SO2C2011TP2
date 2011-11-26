@@ -42,7 +42,7 @@ void sysWrite(int fd, void * buffer, u32int count) {
 	tty_write(tty, (char*) buffer, count);
 	video_setOffset(0);
 	if (tty->id == tty_getCurrentTTY()->id) {
-		video_write(tty->terminal, tty->offset + 1);
+		video_write(tty->screen, tty->offset + 1);
 	}
 }
 

@@ -20,10 +20,10 @@ int initTTY(int pid) {
     log(L_DEBUG, "Starting tty %d", pid);
     int index = activeTTYs++;
     tty[index].id = index;
-	tty[index].terminal = (char*) kmalloc(TOTAL_VIDEO_SIZE);
+	tty[index].screen = (char*) kmalloc(TOTAL_VIDEO_SIZE);
     for (int i = 0; i < TOTAL_VIDEO_SIZE; i+=2) {
-        tty[index].terminal[i] = 0;
-        tty[index].terminal[i + 1] = 0;
+        tty[index].screen[i] = 0;
+        tty[index].screen[i + 1] = 0;
     }
 	tty[index].offset = 0;
     tty[index].bufferOffset = 0;
@@ -49,7 +49,7 @@ void tty_setCurrent(int tty) {
     setPriority(currTTY->pid, activeTTYpriority);
 	video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
 	video_setOffset(0);
-	video_write(currTTY->terminal, currTTY->offset);
+	video_write(currTTY->screen, currTTY->offset);
 	_sti();
 }
 
@@ -80,30 +80,30 @@ void tty_write(TTY* tty, char* buffer, u32int size) {
 	char format = video_getFormattedColor(tty->fgColor, tty->bgColor);
 	for (j = 0; j < size; ++j) {
 		if (tty->offset >= TOTAL_VIDEO_SIZE) {
-			terminal_scroll(tty->terminal);
+			terminal_scroll(tty->screen);
 			tty->offset = terminal_getOffset(ROWS - 1, 0);
 			video_clearRow(ROWS - 1, -1);
 		}
-		int newOffset = terminal_prtSpecialCharater(tty->terminal, tty->offset, buffer[j], format);
+		int newOffset = terminal_prtSpecialCharater(tty->screen, tty->offset, buffer[j], format);
 		tty->offset += newOffset;
 		if (newOffset != 0) { // It was an special character, nothing to print
 			continue;
 		}
-		tty->terminal[tty->offset++] = buffer[j];
-		tty->terminal[tty->offset++] = format;
+		tty->screen[tty->offset++] = buffer[j];
+		tty->screen[tty->offset++] = format;
 	}
 }
 
 void tty_clean(TTY* tty) {
 	char format = video_getFormattedColor(tty->fgColor, tty->bgColor);
 	for(int i = 0; i < TOTAL_VIDEO_SIZE; i+=2) {
-		tty->terminal[i] = ' ';
-		tty->terminal[i + 1] = format;
+		tty->screen[i] = ' ';
+		tty->screen[i + 1] = format;
 	};
 	tty->offset = 0;
 	video_clearScreen(video_getFormattedColor(tty->fgColor, tty->bgColor));
 	video_setOffset(0);
-	video_write(tty->terminal, tty->offset);
+	video_write(tty->screen, tty->offset);
 }
 
 char tty_getCurrTTYFormat() {

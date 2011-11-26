@@ -13,7 +13,7 @@
 typedef struct {
     int id;
     int pid;
-	char* terminal;
+	char* screen;
 	int offset;
 	char buffer[BUFFER_SIZE];
     int bufferOffset;
