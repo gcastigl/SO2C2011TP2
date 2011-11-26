@@ -20,7 +20,8 @@ int initTTY(int pid) {
     log(L_DEBUG, "Starting tty %d", pid);
     int index = activeTTYs++;
     tty[index].id = index;
-	tty[index].screen = (char*) kmalloc(TOTAL_VIDEO_SIZE);
+    circularBuffer_init(&tty[index].input_buffer, TTY_INPUT_BUFFER_SIZE);
+    tty[index].screen = (char*) kmalloc(TOTAL_VIDEO_SIZE);
     for (int i = 0; i < TOTAL_VIDEO_SIZE; i+=2) {
         tty[index].screen[i] = 0;
         tty[index].screen[i + 1] = 0;
@@ -35,7 +36,6 @@ int initTTY(int pid) {
 	tty[index].currDirectory = root.inode;
 	strcpy(tty[index].currPath, root.name);
 	tty[index].currPathOffset = strlen(root.name);
-	
     return index;
 }
 

@@ -1,4 +1,11 @@
 #include <shell.h>
+#include <tty.h>
+#include <lib/string.h>
+#include <command.h>
+#include <session.h>
+#include <driver/keyboard.h>
+#include <process/process.h>
+#include <lib/file.h>
 
 #define DEFAULT_COLOR_FG	WHITE
 #define DEFAULT_COLOR_BG	BLACK
@@ -19,7 +26,7 @@ void checkTTY();
 
 static char shell_text[15];
 static char* argv[MAX_ARG_DIM];
-static char shellBuffer[BUFFER_SIZE];
+static char shellBuffer[TTY_BUFFER_SIZE];
 static int newTTY = -1;
 extern PUBLIC int activeTTYs;
 
@@ -82,12 +89,16 @@ void shell_update(int index) {
 	if (tty->offset == 0) {
 		printShellLabel(index);
 	}
-	if (bufferIsEmpty()) {
+	if (circularBuffer_isEmpty(&tty->input_buffer)) {
 		return;
 	}
-	char c = getKeyFromBuffer();
-	if (tty->bufferOffset >= BUFFER_SIZE) {
+	if (tty->bufferOffset >= TTY_BUFFER_SIZE) {
+		// TTY buffer is full
 		return;
+	}
+	char c = circularBuffer_get(&tty->input_buffer);
+	if (c == '\0') {
+		log(L_DEBUG, "ERROR, read null charecter!");
 	}
 	if (c == '\n') {
 		printf("\n");

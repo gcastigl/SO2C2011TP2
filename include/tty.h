@@ -7,15 +7,18 @@
 #include <lib/stdlib.h>
 #include <driver/video.h>
 #include <process/process.h>
+#include <util/circularBuffer.h>
 
-#define BUFFER_SIZE	128
+#define TTY_INPUT_BUFFER_SIZE	10
+#define TTY_BUFFER_SIZE			128
 
 typedef struct {
     int id;
     int pid;
 	char* screen;
 	int offset;
-	char buffer[BUFFER_SIZE];
+	c_buffer_t input_buffer;
+	char buffer[TTY_BUFFER_SIZE];
     int bufferOffset;
 	u32int currDirectory;
 	char currPath[64];

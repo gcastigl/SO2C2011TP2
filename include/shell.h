@@ -1,14 +1,6 @@
 #ifndef SHELL_H
 #define SHELL_H
 
-#include <tty.h>
-#include <lib/string.h>
-#include <command.h>
-#include <session.h>
-#include <driver/keyboard.h>
-#include <process/process.h>
-#include <lib/file.h>
-
 #define WELCOME_MSG	"\t\t\t\t\tWelcome to GAT O.S.\n\tFor a list of availables commands \
 please type in help\n"
 
