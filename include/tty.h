@@ -79,6 +79,8 @@ TTY* tty_getTTY(int index);
 **/
 void tty_write(TTY* tty, char* buffer, u32int size);
 
+boolean tty_hasInput(TTY* tty);
+
 /* tty_clean
 *
 * Recibe como parametros:

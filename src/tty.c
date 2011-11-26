@@ -94,6 +94,10 @@ void tty_write(TTY* tty, char* buffer, u32int size) {
 	}
 }
 
+boolean tty_hasInput(TTY* tty) {
+	return !circularBuffer_isEmpty(&tty->input_buffer);
+}
+
 void tty_clean(TTY* tty) {
 	char format = video_getFormattedColor(tty->fgColor, tty->bgColor);
 	for(int i = 0; i < TOTAL_VIDEO_SIZE; i+=2) {
