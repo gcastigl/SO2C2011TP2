@@ -112,23 +112,14 @@ void page_fault(registers_t regs)
     // The faulting address is stored in the CR2 register.
     u32int faulting_address;
     __asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
-    
     // The error code gives us details of what happened.
-    int present   = !(regs.err_code & 0x1); // Page not present
-    int rw = regs.err_code & 0x2;           // Write operation?
-    int us = regs.err_code & 0x4;           // Processor was in user-mode?
-    int reserved = regs.err_code & 0x8;     // Overwritten CPU-reserved bits of page entry?
-    int id = regs.err_code & 0x10;          // Caused by an instruction fetch?
-
-    // Output an error message.
-    log(L_ERROR,"Page fault! ( ");
-    if (present) {log(L_ERROR,"present ");}
-    if (rw) {log(L_ERROR,"read-only ");}
-    if (us) {log(L_ERROR,"user-mode ");}
-    if (reserved) {log(L_ERROR,"reserved ");}
-    if (id) {log(L_ERROR,"id : %d", id);}
-    log(L_ERROR,") at 0x");
-    log(L_ERROR, "%x", faulting_address);
-    log(L_ERROR,"\n");
+    log(L_ERROR, "PAGE-FAULT ( %s%s%s%s%s) at 0x%x",
+        regs.err_code & 0x1  ? "page-present " : "page-not-present ",
+        regs.err_code & 0x2  ? "write-on-read-only " : "",
+        regs.err_code & 0x4  ? "processor-was-in-user-mode " : "",
+        regs.err_code & 0x8  ? "overwritten-cpu-reserved-bits-of-page-entry " : "",
+        regs.err_code & 0x10 ? "instruction-fetch " : "",
+        faulting_address
+    );
     while(1);
 }
