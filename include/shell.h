@@ -1,14 +1,6 @@
 #ifndef SHELL_H
 #define SHELL_H
 
-#include <tty.h>
-#include <lib/string.h>
-#include <command.h>
-#include <session.h>
-#include <driver/keyboard.h>
-#include <process/process.h>
-#include <lib/file.h>
-
 #define WELCOME_MSG	"\t\t\t\t\tWelcome to GAT O.S.\n\tFor a list of availables commands \
 please type in help\n"
 
@@ -28,7 +20,7 @@ typedef struct {
  *	no vacio) y en cuyo caso, se guaradra en el buffer de la shell y si es
  *	necesario, manda la ejecucion de un programa.
  */
-void shell_update(int index);
+void shell_update();
 
 void shell_cleanScreen();
 

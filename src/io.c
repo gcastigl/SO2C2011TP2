@@ -13,7 +13,7 @@ void sysRead(int fd, void * buffer, u32int count) {
 		//COPIA DEL BUFFER DE TECLADO al BUFFER ENTREGADO
 		for (i = 0; i < count; i++) {
 			aux = (char*) buffer;
-			c = getKeyFromBuffer();
+			c = circularBuffer_get(&tty_getCurrentTTY()->input_buffer);
 			*(aux+i) = c;
 		}
 	} else if (fd >= MAX_TTYs) {
@@ -43,7 +43,7 @@ void sysWrite(int fd, void * buffer, u32int count) {
 	tty_write(tty, (char*) buffer, count);
 	video_setOffset(0);
 	if (tty->id == tty_getCurrentTTY()->id) {
-		video_write(tty->terminal, tty->offset + 1);
+		video_write(tty->screen, tty->offset + 1);
 	}
 }
 

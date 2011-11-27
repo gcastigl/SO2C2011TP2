@@ -57,8 +57,7 @@ u32int fifo_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 	sem_signal(&fifo->readers);
 	if (fifo->writers.count == 0) {
 		list_add(&fifo->waitingQueue, scheduler_getCurrentProcess());
-		scheduler_setStatus(scheduler_currentPID(), BLOCKED);
-		yield();
+		scheduler_blockCurrent(W_FIFO);
 	}
 	signalWriters(fifo);
 	//printf("[read] Lock value: %d\n", fifo->lock.count);
@@ -95,8 +94,7 @@ u32int fifo_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 	if (fifo->readers.count == 0) {
 		// Add current to the waiting list and block it
 		list_add(&fifo->waitingQueue, scheduler_getCurrentProcess());
-		scheduler_setStatus(scheduler_currentPID(), BLOCKED);
-		yield();
+		scheduler_blockCurrent(W_FIFO);
 	}
 	signalReaders(fifo);
 	memcpy(fifo->buff, buffer, size);

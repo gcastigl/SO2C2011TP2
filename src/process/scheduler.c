@@ -9,15 +9,14 @@ PRIVATE void killChildren(int pid);
  */
 PRIVATE void clean();
 
-PRIVATE PROCESS* allProcess[MAX_PROCESSES];
 
-PRIVATE int currentPID = 0;
+PRIVATE PROCESS* allProcess[MAX_PROCESSES];
+PRIVATE PROCESS* current;
+
 PRIVATE int schedulerActive = false;
 PRIVATE int usePriority;
 PRIVATE int count100;
 PRIVATE int firstTime = true;
-
-PRIVATE int lastProcessIndex;
 
 void scheduler_init(int withPriority) {
 	_cli();
@@ -28,7 +27,7 @@ void scheduler_init(int withPriority) {
     for (int i = 0; i < MAX_PROCESSES; i++) {
     	allProcess[i] = NULL;
     }
-    lastProcessIndex = 0;
+    current = NULL;
 	scheduler_schedule("Idle", &idle_cmd, 0, NULL, DEFAULT_STACK_SIZE, 0, BACKGROUND, READY, VERY_LOW);
 	_sti();
 }
@@ -78,14 +77,13 @@ void scheduler_schedule(char* name, int(*processFunc)(int, char**), int argc,
 	allProcess[i] = newProcess;
 		log(L_DEBUG, "%s is now on position: %d", name, i);
     process_initialize(newProcess, name, processFunc, argc, argv, stacklength,
-    		&clean, tty, groundness, status, priority, currentPID);
+    		&clean, tty, groundness, status, priority, (current == NULL) ? 0 : current->pid);
     _sti();
     if (groundness == FOREGROUND) {
-        PROCESS *p = scheduler_getProcess(currentPID);
-        if (p != NULL) {
-        	scheduler_setStatus(currentPID, BLOCKED);
-        	p->status = BLOCKED;
-            p->lastCalled = 0;
+        if (current != NULL) {
+            current->status = BLOCKED;
+            current->waitingFlags = W_CHILD;
+            current->lastCalled = 0;
             switchProcess();
         }
     }
@@ -100,7 +98,7 @@ int getNextProcess(int oldESP) {
     } else {
         firstTime = false;
     }
-    scheduler_setCurrent(next->pid);
+    scheduler_setCurrent(next);
     setFD(next->tty);				// Sets the sys write call output to the tty corresponding to the process
     return next->ESP;
 }
@@ -122,6 +120,7 @@ PRIVATE PROCESS* _nextTask(int withPriority) {
 			continue;
 		}
 		if (current->status == FINILIZED) {	// process is finalized, emty this slot
+		    process_finalize(current);
 			allProcess[i] = NULL;
 			continue;
 		}
@@ -146,21 +145,35 @@ PRIVATE PROCESS* _nextTask(int withPriority) {
 }
 
 void scheduler_setStatus(u32int pid, u32int status) {
+    _cli();
+    if (status == BLOCKED) {
+        log(L_ERROR, "trying to block a proces!!");
+        while(1);
+    }
 	for (int i = 0; i < MAX_PROCESSES; ++i) {
 		if (allProcess[i] != NULL && allProcess[i]->pid == pid) {
 			allProcess[i]->status = status;
+			allProcess[i]->waitingFlags= -1;
 			log(L_DEBUG, "(%s)%d now has status %s", allProcess[i]->name, pid,
 				(status == 0) ? "Blocked" : ((status == 1) ? "Ready" : "Running"));
+			break;
 		}
 	}
+    _sti();
+}
+
+void scheduler_blockCurrent(block_t waitFlag) {
+    _cli();
+    current->status = BLOCKED;
+    current->waitingFlags = waitFlag;
+    _sti();
+    yield();
 }
 
 PRIVATE void clean() {
-    PROCESS *temp = scheduler_getProcess(currentPID);
-    	log(L_DEBUG, "CLEAN! - name: %s pid: %d / parent: %d", temp->name, temp->pid, temp->parent);
-    temp->status = FINILIZED;
-	scheduler_setStatus(temp->parent, READY);
-    process_finalize(temp);
+    	log(L_DEBUG, "CLEAN! - name: %s pid: %d / parent: %d", current->name, current->pid, current->parent);
+    current->status = FINILIZED;
+	scheduler_setStatus(current->parent, READY);
     switchProcess();
 }
 
@@ -177,12 +190,11 @@ PROCESS *scheduler_getProcess(int pid) {
 }
 
 int scheduler_currentPID() {
-    return currentPID;
+    return current->pid;
 }
 
-void scheduler_setCurrent(int pid) {
-//	log(L_DEBUG, "current -> %d", pid);
-	currentPID = pid;
+void scheduler_setCurrent(PROCESS* p) {
+    current = p;
 }
 
 void kill(int pid) {
@@ -211,7 +223,7 @@ PRIVATE void killChildren(int pid) {
 }
 
 PROCESS *scheduler_getCurrentProcess() {
-    return scheduler_getProcess(currentPID);
+    return current;
 }
 
 PROCESS **scheduler_getAllProcesses() {

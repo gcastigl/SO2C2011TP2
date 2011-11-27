@@ -1,11 +1,7 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#include <tty.h>
-#include <shell.h>
-#include <driver/video.h>
-#include <lib/stdio.h>
-#include <lib/string.h>
+#include <defs.h>
 #include <access/user.h>
 
 #define NAME_MAX_LENGTH	20

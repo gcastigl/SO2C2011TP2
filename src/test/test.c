@@ -96,6 +96,114 @@ int infRecursion_cmd(int argc, char **argv) {
     infRecursion_cmd(argc, argv);
 }
 
+void testHeap() {
+    int a = kmalloc(8);
+    int b = kmalloc(8);
+    log(L_INFO, "kmalloc: 0x%x", a);
+    log(L_INFO, "kmalloc: 0x%x", b);
+    kfree((void*)a);
+    kfree((void*)b);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // =========================================================================
 //				Test for the FS

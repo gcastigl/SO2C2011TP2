@@ -29,6 +29,7 @@ void process_initialize(PROCESS* newProcess, char* name, int(*processFunc)(int, 
     newProcess->groundness = groundness;
     newProcess->parent = parentPID;			// POSSIBLE FIXME HERE...
     newProcess->status = status;
+    newProcess->waitingFlags = -1;
     for (int i = 0; i < MAX_FILES_PER_PROCESS; i++) {
     	newProcess->fd_table[i].mask = 0;
     }
