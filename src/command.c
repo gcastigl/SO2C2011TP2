@@ -119,7 +119,7 @@ int top_cmd(int argc, char**argv) {
     _top_cmd_print(scheduler_getAllProcesses(), execCount, RUNNING);
     _top_cmd_print(scheduler_getAllProcesses(), execCount, READY);
     printf("\n[BLOCKED]\n");
-    printf("User\tName\tPID\tStatus\tPriority\texecCount\n");
+    printf("User\tName\tPID\tStatus\tReason\tPriority\texecCount\n");
     _top_cmd_print(scheduler_getAllProcesses(), execCount, BLOCKED);
     return 0;
 }
@@ -127,11 +127,31 @@ int top_cmd(int argc, char**argv) {
 PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus) {
     char *status[] = {"Blocked", "Ready", "Running"};
     char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
+    char *blockType[] = {"FIFO", "INPUT", "CHILD", "????"};
+    char *nonBlockedProcessFormat = "%5s\t%5s\t%d\t%s\t%9s\t%d\n";
+    char *blockedProcessFormat =    "%5s\t%5s\t%d\t%s\t%5s\t%9s\t%d\n";
+
 	for (int i = 0; i < MAX_PROCESSES; i++) {
 		PROCESS* p = list[i];
 		if (p->status == pstatus) {
-//			log(L_DEBUG, "%s\t%d\t%s\t%s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
-			printf("%5s\t%5s\t%d\t%s\t%9s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
+		    if (p->status == BLOCKED) {
+                printf(blockedProcessFormat,
+                        user_getName(p->ownerUid),
+                        p->name,
+                        p->pid,
+                        status[p->status],
+                        (0 <= p->waitingFlags && p->waitingFlags < 4) ? blockType[p->waitingFlags] : blockType[3],
+                        priority[p->priority % 10],
+                        execCount[i]);
+		    } else {
+		        printf(nonBlockedProcessFormat,
+		                user_getName(p->ownerUid),
+		                p->name,
+		                p->pid,
+		                status[p->status],
+		                priority[p->priority % 10],
+		                execCount[i]);
+		    }
 		}
 	}
 }
