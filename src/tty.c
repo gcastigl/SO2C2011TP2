@@ -1,11 +1,13 @@
 #include <tty.h>
 
+extern void shell_update();
+void initTTY(int pid);
+
 PRIVATE TTY tty[MAX_TTYs];
 PRIVATE int inactiveTTYpriority = VERY_LOW;
 PRIVATE int activeTTYpriority = HIGH;
 PRIVATE int currentTTY = 0;
 PUBLIC int activeTTYs = 0;
-extern void shell_update(int index);
 
 void startTTYs() {
     char name[5];
@@ -16,7 +18,7 @@ void startTTYs() {
     }
 }
 
-int initTTY(int pid) {
+void initTTY(int pid) {
     log(L_DEBUG, "Starting tty %d", pid);
     int index = activeTTYs++;
     tty[index].id = index;
@@ -36,18 +38,20 @@ int initTTY(int pid) {
 	tty[index].currDirectory = root.inode;
 	strcpy(tty[index].currPath, root.name);
 	tty[index].currPathOffset = strlen(root.name);
-    return index;
+	if (index != 0) {// Leave only the first TTY active to do the login
+	    scheduler_blockCurrent(W_LOGIN);
+	}
 }
 
 void tty_setCurrent(int tty) {
 	_cli();
-	log(L_DEBUG, "switching ttys!");
     TTY* currTTY = tty_getCurrentTTY();
     setPriority(currTTY->pid, inactiveTTYpriority);
-	currentTTY = tty;
+    currentTTY = tty;
 	currTTY = tty_getCurrentTTY();
     setPriority(currTTY->pid, activeTTYpriority);
-	video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
+
+    video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
 	video_setOffset(0);
 	video_write(currTTY->screen, currTTY->offset);
 	_sti();
@@ -125,9 +129,9 @@ void tty_setFormat(TTY* tty, char format) {
 }
 
 int tty_p(int argc, char **argv) {
-    int index = initTTY(scheduler_currentPID());
+    initTTY(scheduler_currentPID());
     while(1) {
-        shell_update(index);
+        shell_update();
     }
     return 0;
 }
