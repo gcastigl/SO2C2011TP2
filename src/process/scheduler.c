@@ -55,10 +55,7 @@ PRIVATE void saveESP(int oldESP) {
     }
 	if (proc->status != FINALIZED) {
 		proc->ESP = oldESP;
-	} else {
-		log(L_DEBUG, "current process is finalized");
 	}
-
 }
 
 void scheduler_schedule(char* name, int(*processFunc)(int, char**), int argc,
@@ -149,7 +146,7 @@ void scheduler_setStatus(u32int pid, u32int status) {
 		if (allProcess[i] != NULL && allProcess[i]->pid == pid) {
 			allProcess[i]->status = status;
 			allProcess[i]->waitingFlags= -1;
-			log(L_DEBUG, "(%s)%d is now %s", allProcess[i]->name, pid, (status == 0) ? "Blocked" : ((status == 1) ? "Ready" : "Running"));
+			// log(L_DEBUG, "(%s)%d is now %s", allProcess[i]->name, pid, (status == 0) ? "Blocked" : ((status == 1) ? "Ready" : "Running"));
 			break;
 		}
 	}
@@ -162,7 +159,7 @@ void scheduler_blockCurrent(block_t waitFlag) {
 }
 
 PRIVATE void clean() {
-    	log(L_DEBUG, "CLEAN! - name: %s pid: %d / parent: %d", current->name, current->pid, current->parent);
+    	log(L_DEBUG, "finalized: %s (%d)", current->name, current->pid, current->parent);
     current->status = FINALIZED;
 	scheduler_setStatus(current->parent, READY);
     switchProcess();

@@ -117,7 +117,7 @@ void excecuteCmd(int cmd, TTY* tty) {
 		cmdLen = strlen(cmd_table[cmd].name);
         int background;
 		argv = getArguments(tty->buffer + cmdLen, &argc, &background);
-        log(L_DEBUG, "Running %s in %s", cmd_table[cmd].name, (background == true ? "background" : "foreground"));
+        // log(L_DEBUG, "Running %s in %s", cmd_table[cmd].name, (background == true ? "background" : "foreground"));
 		scheduler_schedule(cmd_table[cmd].name, cmd_table[cmd].func, argc, argv, DEFAULT_STACK_SIZE, tty_getCurrent(),
             (background == true ? BACKGROUND : FOREGROUND), READY, NORMAL);
 	}

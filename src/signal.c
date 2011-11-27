@@ -69,7 +69,7 @@ int signal(int signum) {
     PROCESS **processes = scheduler_getAllProcesses();
     for(int i = 0; i < MAX_PROCESSES; i++) {
         if (processes[i] != NULL && processes[i]->status == BLOCKED && processes[i]->waitingFlags == signum) {
-            log(L_DEBUG, "waking up %s / waiting: %d", processes[i]->name, processes[i]->waitingFlags);
+            // log(L_DEBUG, "waking up %s / waiting: %d", processes[i]->name, processes[i]->waitingFlags);
             scheduler_setStatus(processes[i]->pid, READY);
         }
     }

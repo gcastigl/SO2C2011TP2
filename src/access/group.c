@@ -67,11 +67,10 @@ PUBLIC boolean do_grouplist(callgroup_t *callgroups) {
 	char groupstring[128];
 	for (int i = 0; i < GROUP_MAX; ++i) {
 		group_string(i, groupstring);
-		log(L_DEBUG, "group %d: %s", i, groupstring);
+		// log(L_DEBUG, "group %d: %s", i, groupstring);
 	}
 
 	group_t *group = NULL;
-	log(L_DEBUG, "dogrouplist");
 	for (int i = 0; i < GROUP_MAX; ++i) {
 		group = group_get(i);
 		if (group == NULL) {
@@ -171,7 +170,7 @@ PUBLIC void group_init() {
 	char groupstring[128];
 	for (int i = 0; i < GROUP_MAX; ++i) {
 		group_string(i, groupstring);
-		log(L_DEBUG, "group %d: %s", i, groupstring);
+		// log(L_DEBUG, "group %d: %s", i, groupstring);
 	}
 }
 
