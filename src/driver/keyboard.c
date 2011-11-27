@@ -1,5 +1,6 @@
 #include <driver/keyboard.h>
 #include <signal.h>
+#include <util/logger.h>
 
 unsigned char lcase[60] =
 {
@@ -47,6 +48,7 @@ void handleScanCode(unsigned char scanCode) {
 		if (IS_BREAK(scanCode)) {
 			char c = translateSc(CLEAR_BREAK_BIT(scanCode));
 			putKeyInBuffer(c);
+			signal_keyPressed();
 		}
 	}
 }
@@ -116,6 +118,7 @@ int checkSpecialKey(unsigned char scanCode) {
 			kbFlags |= FN;
 			fbit = 1 << (scanCode - 0x3B);
 			fKeys |= fbit;
+            log(L_DEBUG, "turn ON F %d", fbit);
 			break;
 		case 0xBB:
 		case 0xBC:
@@ -129,12 +132,16 @@ int checkSpecialKey(unsigned char scanCode) {
 		case 0xC4:
 			// fbit = (1 << (scanCode - 0xBB)); // FIXME: why won't this work??
 			kbFlags &= ~FN;
-			fbit = -1; // turns off all F key flags
-			fKeys &= ~fbit;
+			fbit = 0; // turns off all F key flags
+			fKeys &= fbit;
+			log(L_DEBUG, "turn OFF all F keys");
 			break;
 		default:
 			ret = false;
 			break;
+	}
+	if (ret) {
+	    signal_specialKeyPressed();
 	}
 	return ret;
 	
