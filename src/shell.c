@@ -65,6 +65,7 @@ cmd_table_entry cmd_table[] = {
 	{"DMtest", 			"disk manager test", diskManagerTest},
 	{"pitest", 			"pipes test", pipeTest_cmd},
 	{"pageFault", 		"pageFault test", pageFault_cmd},
+    {"infRec", 		    "infinite recursion test", infRecursion_cmd},
 	{"", "", NULL}
 };
 

@@ -310,4 +310,10 @@ int pipeTest_cmd(int argc, char **argv);
 **/
 int getchar_cmd(int argc, char **argv);
 
+/** infRecursion_cmd
+ * 
+ * Función de prueba para una recursión infinita. Chequeo de Stack dinámico.
+ **/
+int infRecursion_cmd(int argc, char **argv);
+
 #endif

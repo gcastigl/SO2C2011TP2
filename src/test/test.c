@@ -92,6 +92,10 @@ int pageFault_cmd(int argc, char **argv) {
     return -1;
 }
 
+int infRecursion_cmd(int argc, char **argv) {
+    infRecursion_cmd(argc, argv);
+}
+
 
 // =========================================================================
 //				Test for the FS
