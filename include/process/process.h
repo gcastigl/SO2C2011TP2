@@ -6,10 +6,18 @@
 
 #define DEFAULT_STACK_SIZE 0x2000
 
+extern int read_eip();
 #define _EIP 	read_eip()
+extern int read_cs();
 #define _CS 	read_cs()
+extern int read_ss();
 #define _SS 	read_ss()
+extern int read_ds();
 #define _DS 	read_ds()
+extern int read_esp();
+#define _ESP 	read_esp()
+extern int read_ebp();
+#define _EBP 	read_ebp()
 
 #define INIFL 	0x200
 #define FP_SEG(fptr) 	((unsigned)((unsigned long)(fptr) >> 16))
@@ -85,5 +93,7 @@ void process_finalize(PROCESS* newProcess);
 u32int yield();
 
 u32int fork();
+
+PUBLIC void process_updateStack();
 
 #endif
