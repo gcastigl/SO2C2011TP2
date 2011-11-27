@@ -4,6 +4,7 @@
 #include <memory/frame.h>
 #include <memory/paging.h>
 #include <memory/kheap.h>
+#include <process/scheduler.h>
 
 // The kernel's page directory
 page_directory_t *kernel_directory=0;
@@ -121,5 +122,6 @@ void page_fault(registers_t regs)
         regs.err_code & 0x10 ? "instruction-fetch " : "",
         faulting_address
     );
-    while(1);
+    panic("Page fault", 1, false);
+    killCurrent();
 }
