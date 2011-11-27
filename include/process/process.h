@@ -24,7 +24,7 @@
 
 typedef enum {PNONE = 0, VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SKY_HIGH} priority_t;
 typedef enum {BACKGROUND = 0, FOREGROUND} 	            groundness_t;
-typedef enum {BLOCKED = 0, READY, RUNNING, FINILIZED} 	status_t;
+typedef enum {BLOCKED = 0, READY, RUNNING, FINALIZED} 	status_t;
 typedef enum {W_FIFO = 0, W_INPUT, W_CHILD, W_LOGIN} 	block_t;
 
 

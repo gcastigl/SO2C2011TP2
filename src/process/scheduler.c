@@ -53,7 +53,7 @@ PRIVATE void saveESP(int oldESP) {
     	log(L_ERROR, "current process is NULL!!");
     	return;
     }
-	if (proc->status != FINILIZED) {
+	if (proc->status != FINALIZED) {
 		proc->ESP = oldESP;
 	} else {
 		log(L_DEBUG, "current process is finalized");
@@ -119,7 +119,7 @@ PRIVATE PROCESS* _nextTask(int withPriority) {
 		if (current == NULL) {				// slot is empty...
 			continue;
 		}
-		if (current->status == FINILIZED) {	// process is finalized, emty this slot
+		if (current->status == FINALIZED) {	// process is finalized, emty this slot
 		    process_finalize(current);
 			allProcess[i] = NULL;
 			continue;
@@ -172,7 +172,7 @@ void scheduler_blockCurrent(block_t waitFlag) {
 
 PRIVATE void clean() {
     	log(L_DEBUG, "CLEAN! - name: %s pid: %d / parent: %d", current->name, current->pid, current->parent);
-    current->status = FINILIZED;
+    current->status = FINALIZED;
 	scheduler_setStatus(current->parent, READY);
     switchProcess();
 }
@@ -207,6 +207,7 @@ void kill(int pid) {
     	if (allProcess[i] != NULL && allProcess[i]->pid == pid) {
     	    killChildren(pid);
     		scheduler_setStatus(allProcess[i]->parent, READY);
+    		allProcess[i]->status = FINALIZED;
     		process_finalize(allProcess[i]);
     		allProcess[i] = NULL;
 		}
