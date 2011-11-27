@@ -45,6 +45,12 @@ void scheduler_setCurrent(PROCESS* p);
 **/
 void kill(int pid);
 
+/* killCurrent
+*
+* Mata el proceso actual
+**/
+void killCurrent();
+
 /* getCurrentProcess
 *
 * Devuelve el proceso actual
