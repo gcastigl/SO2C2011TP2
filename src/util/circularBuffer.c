@@ -4,7 +4,7 @@
 PRIVATE int _nextIndex(int current, int size);
 
 void circularBuffer_init(c_buffer_t* buffer, int bufferSize) {
-	buffer->buffer = kmalloc(bufferSize * sizeof(char));
+	buffer->buffer = malloc(bufferSize * sizeof(char));
 	buffer->size = bufferSize;
 	buffer->readPos = -1;
 	buffer->writePos = -1;

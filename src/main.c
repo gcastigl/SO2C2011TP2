@@ -2,9 +2,6 @@
 
 u32int initial_esp; // New global variable.
 
-PRIVATE void testSegmentationFault();
-PRIVATE void testHeap();
-
 int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
     _cli();
     initial_esp = initial_stack;
