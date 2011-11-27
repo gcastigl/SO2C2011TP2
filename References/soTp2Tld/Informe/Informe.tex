@@ -1,0 +1,184 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[a4paper,left=3cm,right=3cm]{geometry}
+\usepackage{inputenc}
+\usepackage{t1enc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[pdftex]{graphicx}
+\usepackage{textcomp}
+\usepackage{verbatim}
+\usepackage{longtable}
+
+
+\title	{
+	\begin{normalsize}SISTEMAS OPERATIVOS\\\end{normalsize}
+	\begin{normalsize}Trabajo Pr\'actico 2\\\end{normalsize}
+	 \vspace{20pt}
+	\textit{\textbf{Multitasker}}
+	}
+\author {
+	Hemilse Debrouvier(46.134), Jos\'e Indalecio Liendro (48.240) \\
+	\& Emmanuel Teisaire (48.019)
+	}
+\date	{\begin{small}28 de mayo de 2009\end{small}}
+
+\begin{document}
+
+\maketitle
+\def\thesubsection  {\arabic{section}.\alph{subsection}} 
+
+\begin{abstract}
+El presente informe tiene como objetivo explicitar detalles de la implementaci\'on de un \textit{Multitasker} en modo preemptivo para procesadores tipo \textit{Intel 80386} de 32 bits.\vspace{10pt}
+
+\textbf{Palabras Claves:} Multitasker, Scheduler,  modo preemptivo, paginaci\'on, TSS.
+\end{abstract}
+
+\section{Introducci\'on}
+Una de las principales caracter\'isticas de la arquitectura 80386 es la posibilidad de trabajar en modo multitarea, es decir, compartir el inico procesador entre distintos procesos con alg\'un tipo de prioridad en pequeÃ±os intervalos de tiempo, de manera de simular la simultaneidad de tareas. \vspace{20pt}
+
+El objeto principal de este trabajo es implementar un Multitasker, es decir el encargado de administrar los recursos del sistema entre distintos procesos. El mismo es preemptivo, lo que quiere decir que cualquier tarea puede ser desalojada por el procesador. El scheduler va a ser el encargado de administrar los procesos, y utilizar\'a como intervalos la duraci\'on entre cada interrupci\'on sobre el procesador producida por el timmer tick.\vspace{20pt}
+
+Este Multitasker es una expansi\'on de un kernell ya desarrollado, el cual cuenta dos system calls (write y read), a trav\'es de la interrupci\'on 80h, driver de video entre otras funcionalidades.\vspace{20pt}
+
+Cada proceso debe contar con un stack propio y privado, por otra parte el kernel necesita de un heap general. Lo cual conlleva administrar la memoria. Esto se realizar\'a a través del m\'odulo de paginaci\'on del microprocesador.\vspace{20pt}
+
+
+\section{Administraci\'on de procesos}
+
+Para representar los procesos utilizamos un arreglo de estructuras del tipo PROCESST.
+Esta estructura representa un proceso y se muestra a continuacion:
+
+\begin{verbatim}
+typedef struct
+{
+	int pid;
+	char name [MAXNAME];
+	int priority;
+	int tty;
+	int background; 
+	int lastCalled;
+	int sleep;
+	int blocked;
+	int parent;
+	int ESP;
+	int freeSlot;
+	int stackstart;
+	int stacksize; 
+	int cpu;
+	int countExec; 
+	void *info;
+} PROCESST;
+\end{verbatim} 
+
+Sus variables representan: 
+\begin{itemize}
+ 	\item pid: el pid del proceso
+	\item name: nombre interno que lo identifica
+	\item priority: la prioridad
+	\item tty: a que terminal corresponde
+	\item background: determina si el proceso corre en frontground o background
+	\item lastCalled: cuantas ciclos pasaron hasta que fue ejecutado nuevamente
+	\item sleep: indica si el proceso esta durmiendo
+	\item blocked: indica si el proceso esta bloqueado
+	\item parent: identifica quien es el proceso padre
+	\item ESP: representa el stack pointer
+	\item freeSlot: indica en el arreglo de procesos si esta presente o no 
+	\item stackstart: indica el comienzo del stack
+	\item stacksize: tamaño del stack
+	\item cpu: porcentaje de cpu
+	\item countExec: acumulador de ejeciones utilizado para calcular el porcentaje de cpu
+\end{itemize}
+
+Inicialmente se crea un proceso llamado \textit{init}, que es el que se va a ejecutar cuando no haya ningun otro proceso en ejecuci\'on. 
+La funci\'on \textit{createProcess} es la encargada de buscar una posici\'on libre en el arreglo de procesos, e inicializar la estructura que lo representa.
+
+\subsection{Procesos background -\&}
+
+Se puede colocar un proceso en background, esto es, el proceso continua la ejecuci\'on mientras que el shell se libera para otras actividades. Para colocarse un comando en background, se utiliza el simbolo \& al final del comando. Internamente para distinguir si un proceso esta en background o no, se utiliza el campo background de la estructura PROCCEST. Un ejemplo de proceso en background es el clock el cual muestra la hora en pantalla, ya que mientras se esta ejecutando pueden ingresarse comandos en la consola. La conmutaci\'on de tareas, permite que el usuario crea que ambos procesos se corren simult\'aneamente, mientras que internamente, el procesador atiende una tarea por vez un corto per\'iodo de tiempo y las va intercambiando.    
+
+\subsection{ Estados de los procesos}
+\begin{itemize}
+\item Ejecuci\'on:{el proceso se est\'a ejecutando actualmente. Se tiene una variable que almacena el pid del proceso en ejecuci\'on.}
+\item Listo: {el proceso est\'a listo para ser ejecutado, y se encuentra esperando que el planificador le asigne tiempo de procesador. Este estado se representa seteando la variable blocked del proceso en \textit{NOTBLOCKED} }
+\item Bloqueado: {el proceso no se puede ejecutar hasta que no se produzca determinado suceso,
+ como por ejemplo que se presione una tecla. Este estado se representa seteando la variable blocked del proceso. 
+Existen diversas razones por las que un proceso puede bloquearse, por eso se utilizan diferentes c\'odigos de bloqueo \textit{NOTBLOCKED},\textit{BLOCKED},\textit{CHILD\_WAIT} y \textit{SLEEPING.}}
+\end{itemize}
+
+\subsection{ Cambio de contexto}
+Una computadora que cuenta con un \'unico procesador no puede ejecutar m\'as de un proceso al mismo tiempo, por lo que es necesario simular la ejecuci\'on de m\'as de un proceso en simult\'aneo. Se utiliza la interrupci\'on de timer tick para realizar los intercambios de tareas.
+La rutina de cambio de contexto consiste en salvar el estado del proceso (todos los registros del procesador y los flags), seleccionar otro programa a ejecutar, luego restaurar el estado del proceso que se ejecutar\'a y finalmente continuar la ejecuci\'on del proceso seleccionado.
+       
+\section{Scheduler}
+
+
+\subsection{Sin prioridades}
+	El algoritmo que se utiliza para el scheduler cuando no se tienen en cuenta las prioridades es sencillo. B\'asicamente cada vez que debe elegir un proceso lo hace fij\'andose cu\'al es el que hace m\'as veces que no fue elegido. Cuando elige un proceso, le asigna $0$ al campo del proceso que corresponde a la \'ultima vez que fue ejecutado, y a todos los dem\'as procesos que est\'an listos para ejecutarse les suma 1 a dicho campo.
+
+\subsection{Con prioridades}
+	Cuando se tienen en cuenta las prioridades, el algoritmo es similar al anterior: elige al proceso que tiene mayor valor en el campo que indica la \'ultima vez que fue ejecutado, y luego le asigna a dicho campo el valor 0. La diferencia radica que a los dem\'as procesos no elegidos y listos para ejecutarse, en vez de sumarle 1 a ese campo le suma $4-'suprioridad'$, logrando que los procesos con mayor prioridad (menor valor de 'suprioridad') se ejecuten m\'as veces que los que tienen menor prioridad.
+
+
+
+\section{Administraci\'on de memoria}
+
+El manejo de memoria es a trav\'es de modo protegido, para lo cual se habilita la paginaci\'on a trav\'es de los registros cr3 y cr0 del microprocesador. El primero indica la procesador el lugar f\'isico de memoria donde se encuentra la tabla de directorios y sobre el segundo se enciende el bit m\'as significativo activando la paginaci\'on.\vspace{20pt}
+
+Para la implementaci\'on de la administraci\'on de memoria se han seguido tutoriales de James Molloy sobre el manejo de paginaci\'on y heap, a partir de los cuales se describen los puntos m\'as significativos.\vspace{20pt} 
+
+Se ha elegido guardar dos tablas de p\'aginas en el directorio de p\'aginas, una con las direcciones f\'isicas mientra que otra con las direcciones virtuales, de modo de tener acceso directo de lectura escritura sobre las mismas. Mientras que las f\'isicas son necesarias para el manejo propio del microprocesador. Esto resulta \'util por ejemplo para levantar o bajar p\'aginas al momento de cambiar de procesos para que estos no puedan acceder mutuamente a sus zonas de memoria(stacks). \vspace{20pt}
+
+\subsection{Alocaci\'on de memoria din\'amica}
+
+Se ha seguido el desarrollo de memoria din\'amica, es decir la implementaci\'on de malloc y free, lo cual le da mucha flexibilidad al manejo de memoria.\vspace{20pt}
+
+Para esto se considera a toda la memoria del heap divida en bloques de dos estados posibles, ocupados o libres. Inicialmente toda el heap es un solo bloque libre de 8Mb. Estos bloques se administran a traves de un arreglo ordenado en forma ascendente, lo cual ayuda a ubicar el bloque que m\'as se ajuste al solicitado.\vspace{20pt}
+
+
+\section{Terminales}
+
+Uno de los argregados sobre la primer versi\'on del kernel es el manejo de consolas o terminales, las cuales conforman un arreglo que mantiene principalmente buffer de video y teclado de cada terminal, adem\'as de atributos de configuraci\'on gr\'afica.\vspace{20pt}
+
+La manera de alternar entre terminales es atrav\'es de las teclas F1 hasta F5 inclusive.\vspace{20pt}
+
+Se indica en el pie de la pantalla, en la margen izquierda la terminal activa.\vspace{20pt}
+
+\section{System Calls}
+\subsection{killall}
+Dado un proceso se encarga de destruirlo, a \'el y a todos los procesos que son hijos. Internamente se setea la variable freeSlot de la estructura PROCESST, en FREE para determinar dentro del arreglo de procesos que este proceso ya no existe, y esa posici\'on puede ser utilizada para un nuevo proceso.  
+
+\subsection{exec}
+       Crea un nuevo proceso que ejecute determinada funci\'on. Recibe como par\'ametros el nombre de la funci\'on a ejecutar, un puntero a dicha funci\'on y un entero que indica si el proceso se ejecutar\'a o no en background.
+
+\subsection{sleep}
+	Esta llamada al sistema duerme a un proceso.
+
+\section{Programas de prueba}
+
+\subsection{top}
+Este proceso muestra a tiempo real un listado de los procesos que se est\'an ejecutando en el sistema, especificando adem\'as el procentaje de Cpu que est\'an utilizando.
+
+\subsection{chp}
+Se bajan paginas del proceso shell2 y luego se trata de leer de su stack. En consecuencia se produce una excepci\'on.
+
+\subsection{me}
+Muestra el manejo de memoria sobre el heap a traves de malloc y free.
+
+\subsection{parent}
+Basicamente crea un proceso hijo de un shell1 y éste lee del stack del proceso padre, es decir del shell1.
+
+
+\subsection{printStack} 
+Este proceso imprime la posici\'on de memoria donde comienza el stack para dicho proceso.
+
+
+\section{Referencias}
+
+\begin{itemize}
+ \item James Molloy.\textit{\underline{http:/www.jamesmolloy.co.uk/tutorial\_html/6.-Paging.html}}.Paging
+\item James Molloy.\textit{\underline{http://www.jamesmolloy.co.uk/tutorial\_html/7.-The20Heap.html}}.The Heap
+\end{itemize}
+
+\end{document}

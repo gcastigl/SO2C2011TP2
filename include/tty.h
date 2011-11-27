@@ -2,7 +2,7 @@
 #define TTY_H
 
 #include <defs.h>
-#include <lib/kheap.h>
+#include <memory/kheap.h>
 #include <fs/fs.h>
 #include <lib/stdlib.h>
 #include <driver/video.h>

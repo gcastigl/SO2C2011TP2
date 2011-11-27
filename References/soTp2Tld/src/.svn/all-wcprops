@@ -1,0 +1,119 @@
+K 25
+svn:wc:ra_dav:version-url
+V 26
+/svn/!svn/ver/94/trunk/src
+END
+time.c
+K 25
+svn:wc:ra_dav:version-url
+V 33
+/svn/!svn/ver/79/trunk/src/time.c
+END
+console.c
+K 25
+svn:wc:ra_dav:version-url
+V 36
+/svn/!svn/ver/79/trunk/src/console.c
+END
+loader.asm
+K 25
+svn:wc:ra_dav:version-url
+V 36
+/svn/!svn/ver/2/trunk/src/loader.asm
+END
+paging.c
+K 25
+svn:wc:ra_dav:version-url
+V 35
+/svn/!svn/ver/88/trunk/src/paging.c
+END
+libasm.asm
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/svn/!svn/ver/94/trunk/src/libasm.asm
+END
+kstart.asm
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/svn/!svn/ver/55/trunk/src/kstart.asm
+END
+video.c
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/svn/!svn/ver/79/trunk/src/video.c
+END
+shell.c
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/svn/!svn/ver/94/trunk/src/shell.c
+END
+pcihdr.c
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/svn/!svn/ver/2/trunk/src/pcihdr.c
+END
+libc.c
+K 25
+svn:wc:ra_dav:version-url
+V 33
+/svn/!svn/ver/79/trunk/src/libc.c
+END
+link.ld
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/svn/!svn/ver/27/trunk/src/link.ld
+END
+scheduler_prioridad.c
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/87/trunk/src/scheduler_prioridad.c
+END
+process.c
+K 25
+svn:wc:ra_dav:version-url
+V 36
+/svn/!svn/ver/94/trunk/src/process.c
+END
+scheduler.c
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/93/trunk/src/scheduler.c
+END
+kernel.c
+K 25
+svn:wc:ra_dav:version-url
+V 35
+/svn/!svn/ver/90/trunk/src/kernel.c
+END
+exceptions.c
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/!svn/ver/90/trunk/src/exceptions.c
+END
+stdio.c
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/svn/!svn/ver/79/trunk/src/stdio.c
+END
+ordered_array.c
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/56/trunk/src/ordered_array.c
+END
+kheap.c
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/svn/!svn/ver/86/trunk/src/kheap.c
+END

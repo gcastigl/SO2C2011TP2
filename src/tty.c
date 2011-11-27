@@ -1,4 +1,5 @@
 #include <tty.h>
+#include <util/logger.h>
 
 extern void shell_update();
 void initTTY(int pid);

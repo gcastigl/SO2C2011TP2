@@ -23,7 +23,6 @@ gcc -m32 -std=c99 -g -c ../src/lib/stdlib.c -o stdlib.o 				-I../include -fno-bu
 gcc -m32 -std=c99 -g -c ../src/lib/math.c -o math.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/lib/printf.c -o printf.o 			    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/lib/scanf.c -o scanf.o 				    -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -std=c99 -g -c ../src/lib/kheap.c -o kheap.o		 			-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/lib/unistd.c -o unistd.o 				-I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/lib/fifo.c -o fifo.o                     -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
@@ -41,8 +40,10 @@ gcc -m32 -std=c99 -g -c ../src/access/user.c -o user.o                  -I../inc
 gcc -m32 -std=c99 -g -c ../src/access/group.c -o group.o                -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/access/permission.c -o permission.o      -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
-gcc -m32 -std=c99 -g -c ../src/paging/paging.c -o paging.o              -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
-gcc -m32 -std=c99 -g -c ../src/paging/frame.c -o frame.o                -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/memory/paging.c -o paging.o                -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/memory/kheap.c -o kheap.o                -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/memory/ordered_array.c -o ordered_array.o                -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
+gcc -m32 -std=c99 -g -c ../src/memory/frame.c -o frame.o                -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 
 gcc -m32 -std=c99 -g -c ../src/process/process.c -o process.o           -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc
 gcc -m32 -std=c99 -g -c ../src/process/scheduler.c -o scheduler.o       -I../include -fno-builtin -fno-stack-protector -Wall -nostdlib -nostdinc

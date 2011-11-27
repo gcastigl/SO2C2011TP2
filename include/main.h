@@ -6,7 +6,7 @@
 #include <asm/libasm.h>
 #include <interrupts/interrupts.h>
 #include <fs/fs.h>
-#include <paging/paging.h>
+#include <memory/paging.h>
 
 #endif
 
