@@ -266,6 +266,8 @@ int chmod_cmd(int argc, char **argv);
 int chown_cmd(int argc, char **argv);
 int chgrp_cmd(int argc, char **argv);
 
+int nice_cmd(int argc, char **argv);
+
 // TESTS
 
 int pageFault_cmd(int argc, char **argv);
