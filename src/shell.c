@@ -15,20 +15,16 @@
 #define UPDATE_PROMPT(tty)	sprintf(shell_text, SHELL_PROMPT, session_getName(), tty + 1, \
 				tty_getTTY(tty)->currPath);
 
-void excecuteCmd(char* buffer);
+int shell_readCommand(TTY* tty);
+void excecuteCmd(int cmd, TTY* tty);
 int parse_cmd(char* buffer);
 char** getArguments(char* buffer, int* argc, int *background);
 void cleanBuffer(TTY* tty);
-void printShellLabel(int index);
-//FIXME: checkReset & checkTTY could be in a separated keyboard manager file
-void checkReset();
-void checkTTY();
+void printShellLabel(TTY* tty);
 
 static char shell_text[15];
 static char* argv[MAX_ARG_DIM];
 static char shellBuffer[TTY_BUFFER_SIZE];
-static int newTTY = -1;
-extern PUBLIC int activeTTYs;
 
 /*
  *	Tabla de comandos disponibles al usuario en esta shell
@@ -75,80 +71,56 @@ cmd_table_entry cmd_table[] = {
 	{"", "", NULL}
 };
 
-void shell_update(int index) {
-	checkReset();
-	checkTTY();
-	TTY* tty = tty_getCurrentTTY();
-	if (tty->id != index) {
-		return;
-	}
+void shell_update() {
+    // FIXME: not really nice...
+	TTY* tty = tty_getTTY(scheduler_getCurrentProcess()->tty);
 	if (!session_isLoggedIn()) {
 		session_login();
-		printShellLabel(index);
 	}
-	if (tty->offset == 0) {
-		printShellLabel(index);
-	}
-	if (circularBuffer_isEmpty(&tty->input_buffer)) {
-		return;
-	}
-	if (tty->bufferOffset >= TTY_BUFFER_SIZE) {
-		// TTY buffer is full
-		return;
-	}
-	char c = circularBuffer_get(&tty->input_buffer);
-	if (c == '\0') {
-		log(L_DEBUG, "ERROR, read null charecter!");
-	}
-	if (c == '\n') {
-		printf("\n");
-		excecuteCmd(tty->buffer);
-		printShellLabel(index);
-		cleanBuffer(tty);
-	} else if (c == '\b') {
-		if (tty->bufferOffset > 0) {
-			printf("%c", c);
-			tty->buffer[--tty->bufferOffset] = '\0';
-		}
-	} else {
-		printf("%c", c);
-		tty->buffer[tty->bufferOffset] = c;
-		tty->buffer[++tty->bufferOffset] = '\0';
-	}
+	int cmd = shell_readCommand(tty);
+    excecuteCmd(cmd, tty);
+    cleanBuffer(tty);
 }
+
+int shell_readCommand(TTY* tty) {
+    boolean validCmd;
+    int cmdIndex;
+    do {
+        tty_setFormatToCurrTTY(video_getFormattedColor(DEFAULT_COLOR_FG, DEFAULT_COLOR_BG)); // restore old format
+        printShellLabel(tty);
+        gets_max(tty->buffer, TTY_BUFFER_SIZE);
+        cmdIndex = parse_cmd(tty->buffer);
+        if (cmdIndex != -1) {
+            validCmd = true;
+        } else if (tty->buffer[0] != '\0') {
+            tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
+            printf("\n\tUnknown command\n");
+        }
+    } while(!validCmd);
+    return cmdIndex;
+}
+
 
 void shell_cleanScreen() {
-	TTY* tty = tty_getCurrentTTY();
-	tty_clean(tty);
-	video_setOffset(0);
-	video_write(tty->screen, TOTAL_VIDEO_SIZE);
+    TTY* tty = tty_getCurrentTTY();
+    tty_clean(tty);
+    video_setOffset(0);
+    video_write(tty->screen, TOTAL_VIDEO_SIZE);
 }
 
-/*
- *	Verifica si en el buffer recibido existe un comando valido, y de ser asi,
- *	lo invoca.
- *	Imprime en pantalla un cartel de error si no se pudo enontrar un comando
- *	 valido que concuerde con lo leido.
- */
-void excecuteCmd(char* buffer) {
+void excecuteCmd(int cmd, TTY* tty) {
 	int cmdLen, argc;
 	char **argv;
-	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
-	int cmdIndex = parse_cmd(buffer);
-	if (cmdIndex != -1) {
-		cmdLen = strlen(cmd_table[cmdIndex].name);
+	if (cmd != -1) {
+        tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
+		cmdLen = strlen(cmd_table[cmd].name);
         int background;
-		argv = getArguments(buffer + cmdLen, &argc, &background);
-        log(L_DEBUG, "Running %s in %s", cmd_table[cmdIndex].name, (background == true ? "background" : "foreground"));
-		scheduler_schedule(cmd_table[cmdIndex].name, cmd_table[cmdIndex].func, argc, argv, DEFAULT_STACK_SIZE, tty_getCurrent(),
+		argv = getArguments(tty->buffer + cmdLen, &argc, &background);
+        log(L_DEBUG, "Running %s in %s", cmd_table[cmd].name, (background == true ? "background" : "foreground"));
+		scheduler_schedule(cmd_table[cmd].name, cmd_table[cmd].func, argc, argv, DEFAULT_STACK_SIZE, tty_getCurrent(),
             (background == true ? BACKGROUND : FOREGROUND), READY, NORMAL);
-	} else if(buffer[0]!='\0') {
-		tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
-		printf("\n\tUnknown command\n");
 	}
-	tty_setFormatToCurrTTY(video_getFormattedColor(DEFAULT_COLOR_FG, DEFAULT_COLOR_BG)); // restore old format
 }
-
 
 int parse_cmd(char* buffer) {
 	int cmdLength = -1, aux;
@@ -210,33 +182,8 @@ int shell_getCmdIndex(char * cmdName) {
 	return -1;
 }
 
-void checkReset() {
-	if (IS_CTRL() && IS_ALT() && IS_DEL()) {
-		_reset();
-	}
-}
-
-void checkTTY() {
-	if (IS_CTRL() && newTTY == -1) {
-		int ttys = (activeTTYs > MAX_TTYs ? MAX_TTYs : activeTTYs);
-		for (int i = 0; i < ttys; ++i) {
-			if (F_PRESSED(i)) {
-				newTTY = i;
-				break;
-			}
-		}
-	}
-	if (!IS_CTRL() && newTTY != -1) {
-		if (newTTY != tty_getCurrent()) { // Do not switch to the same tty!
-			tty_setCurrent(newTTY);
-		}
-		newTTY = -1;
-	}
-}
-
-void printShellLabel(int index) {
-	UPDATE_PROMPT(index);
-	TTY* tty = tty_getTTY(index);
+void printShellLabel(TTY* tty) {
+	UPDATE_PROMPT(tty->id);
 	tty_setFormat(tty, video_getFormattedColor(CYAN, BLACK));
 	printf(shell_text);
 	tty_setFormat(tty, video_getFormattedColor(DEFAULT_COLOR_FG, DEFAULT_COLOR_BG));
