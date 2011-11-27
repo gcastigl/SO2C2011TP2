@@ -68,6 +68,7 @@ cmd_table_entry cmd_table[] = {
 	{"DMtest", 			"disk manager test", diskManagerTest},
 	{"pitest", 			"pipes test", pipeTest_cmd},
 	{"pageFault", 		"pageFault test", pageFault_cmd},
+    {"getchar",       "getchar test", getchar_cmd},
 	{"", "", NULL}
 };
 

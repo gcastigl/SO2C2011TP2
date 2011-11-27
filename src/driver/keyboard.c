@@ -38,9 +38,6 @@ unsigned char ucase[60] =
 
 void keyboard_init() {
 	fKeys = 0;
-	keyboard_buffer.from = 0;
-	keyboard_buffer.to = 0;
-	keyboard_buffer.buffer[0] = '\0';
 }
 
 void handleScanCode(unsigned char scanCode) {
@@ -146,34 +143,5 @@ int checkSpecialKey(unsigned char scanCode) {
 
 char translateSc(unsigned char scanCode) {
 	return SHIFT_PRESSED() ? ucase[scanCode] : lcase[scanCode];
-}
-
-int bufferIsEmpty() {
-	return keyboard_buffer.to == keyboard_buffer.from;
-}
-
-int bufferIsFull() {
-	int nextPos = keyboard_buffer.to + 1;
-	nextPos %= K_BUFFER_SIZE;
-	return nextPos == keyboard_buffer.from;
-}
-
-char getKeyFromBuffer() {
-	if (bufferIsEmpty()) {
-		return '\0';
-	}
-	char c = keyboard_buffer.buffer[keyboard_buffer.from];
-	keyboard_buffer.from++;
-	keyboard_buffer.from %= K_BUFFER_SIZE;
-	return c;
-}
-
-void putKeyInBuffer(char c) {
-	if (bufferIsFull()) {
-		return;
-	}
-	keyboard_buffer.buffer[keyboard_buffer.to] = c;
-	keyboard_buffer.to++;
-	keyboard_buffer.to %= K_BUFFER_SIZE;
 }
 
