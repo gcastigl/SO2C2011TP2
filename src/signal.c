@@ -3,6 +3,7 @@
 #include <util/circularBuffer.h>
 #include <tty.h>
 #include <process/process.h>
+#include <util/logger.h>
 
 void checkReset();
 void checkTTY();

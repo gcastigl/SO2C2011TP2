@@ -310,4 +310,8 @@ int pipeTest_cmd(int argc, char **argv);
 **/
 int getchar_cmd(int argc, char **argv);
 
+void testSegmentationFault();
+
+void testHeap();
+
 #endif

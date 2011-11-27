@@ -93,6 +93,24 @@ int pageFault_cmd(int argc, char **argv) {
 }
 
 
+void testSegmentationFault() {
+    u32int *ptr = (u32int*)0xA0000000;
+    u32int do_page_fault = *ptr;
+    do_page_fault = 1;
+}
+
+void testHeap() {
+    int a = kmalloc(8);
+    int b = kmalloc(8);
+    log(L_INFO, "kmalloc: 0x%x", a);
+    log(L_INFO, "kmalloc: 0x%x", b);
+    kfree((void*)a);
+    kfree((void*)b);
+}
+
+
+
+
 // =========================================================================
 //				Test for the FS
 // =========================================================================
