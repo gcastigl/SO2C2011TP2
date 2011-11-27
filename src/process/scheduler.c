@@ -145,28 +145,19 @@ PRIVATE PROCESS* _nextTask(int withPriority) {
 }
 
 void scheduler_setStatus(u32int pid, u32int status) {
-    _cli();
-    if (status == BLOCKED) {
-        log(L_ERROR, "trying to block a proces!!");
-        while(1);
-    }
 	for (int i = 0; i < MAX_PROCESSES; ++i) {
 		if (allProcess[i] != NULL && allProcess[i]->pid == pid) {
 			allProcess[i]->status = status;
 			allProcess[i]->waitingFlags= -1;
-			log(L_DEBUG, "(%s)%d now has status %s", allProcess[i]->name, pid,
-				(status == 0) ? "Blocked" : ((status == 1) ? "Ready" : "Running"));
+			log(L_DEBUG, "(%s)%d is now %s", allProcess[i]->name, pid, (status == 0) ? "Blocked" : ((status == 1) ? "Ready" : "Running"));
 			break;
 		}
 	}
-    _sti();
 }
 
 void scheduler_blockCurrent(block_t waitFlag) {
-    _cli();
     current->status = BLOCKED;
     current->waitingFlags = waitFlag;
-    _sti();
     yield();
 }
 
@@ -181,7 +172,6 @@ PROCESS *scheduler_getProcess(int pid) {
     // Search blocked processes
     for (int i = 0; i < MAX_PROCESSES; i++) {
 		if (allProcess[i] != NULL && allProcess[i]->pid == pid) {
-//			log(L_DEBUG, "process %d was found at pos %d", pid, i);
 			return allProcess[i];
 		}
     }
@@ -208,8 +198,6 @@ void kill(int pid) {
     	    killChildren(pid);
     		scheduler_setStatus(allProcess[i]->parent, READY);
     		allProcess[i]->status = FINALIZED;
-    		process_finalize(allProcess[i]);
-    		allProcess[i] = NULL;
 		}
     }
 }
