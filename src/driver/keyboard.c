@@ -41,6 +41,7 @@ void keyboard_init() {
 	keyboard_buffer.from = 0;
 	keyboard_buffer.to = 0;
 	keyboard_buffer.buffer[0] = '\0';
+    log(L_INFO, "keyboard initialized");
 }
 
 void handleScanCode(unsigned char scanCode) {
