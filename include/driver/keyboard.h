@@ -12,7 +12,7 @@
 
 #define CLEAR_BREAK_BIT(A)	((A) & 0x7F)
 #define SHIFT_PRESSED() 	(kbFlags & UCASE)
-#define IS_MAKE(A) 			((A) & 0x80)
+#define IS_BREAK(A) 		((A) & 0x80)
 #define IS_ESCAPE()			(kbFlags & ESCAPE)
 #define IS_CTRL() 			(kbFlags & CTRL)
 #define IS_ALT() 			(kbFlags & ALT)

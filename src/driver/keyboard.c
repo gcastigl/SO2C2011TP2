@@ -43,10 +43,9 @@ void keyboard_init() {
 }
 
 void handleScanCode(unsigned char scanCode) {
-	char c;
 	if (!checkSpecialKey(scanCode)) {
-		if (IS_MAKE(scanCode)) {
-			c = translateSc(CLEAR_BREAK_BIT(scanCode));
+		if (IS_BREAK(scanCode)) {
+			char c = translateSc(CLEAR_BREAK_BIT(scanCode));
 			putKeyInBuffer(c);
 		}
 	}
@@ -172,6 +171,5 @@ void putKeyInBuffer(char c) {
 	keyboard_buffer.buffer[keyboard_buffer.to] = c;
 	keyboard_buffer.to++;
 	keyboard_buffer.to %= K_BUFFER_SIZE;
-	signal_keyPressed();
 }
 
