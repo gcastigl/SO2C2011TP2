@@ -28,12 +28,6 @@ typedef struct {
 	char fgColor;
 } TTY;
 
-/* initTTY
-*
-* Inicializa una TTY
-**/
-int initTTY();
-
 /* tty_setCurrent
 *
 * Recibe como parametros:
