@@ -43,7 +43,7 @@ void keyboard_init() {
 
 void handleScanCode(unsigned char scanCode) {
 	if (!checkSpecialKey(scanCode)) {
-		if (IS_BREAK(scanCode)) {
+		if (!IS_BREAK(scanCode)) {
 			char c = translateSc(CLEAR_BREAK_BIT(scanCode));
 			signal_keyPressed(c);
 		}
