@@ -13,7 +13,6 @@ void circularBuffer_init(c_buffer_t* buffer, int bufferSize) {
 
 boolean circularBuffer_add(c_buffer_t* buffer, char c) {
 	if (circularBuffer_isFull(buffer)) {
-		log(L_ERROR, "buffer is full!!");
 		return false;
 	}
 	buffer->count++;
@@ -24,10 +23,8 @@ boolean circularBuffer_add(c_buffer_t* buffer, char c) {
 
 char circularBuffer_get(c_buffer_t* buffer) {
 	if (circularBuffer_isEmpty(buffer)) {
-		log(L_ERROR, "buffer is empty!!");
 		return '\0';
 	}
-	log(L_DEBUG, "GET KEY FROM BUFFER!");
 	buffer->count--;
 	buffer->readPos = _nextIndex(buffer->readPos, buffer->size);
 	return buffer->buffer[buffer->readPos];
@@ -50,3 +47,4 @@ void circularBuffer_clear(c_buffer_t* buffer) {
 	buffer->writePos = -1;
 	buffer->count = 0;
 }
+
