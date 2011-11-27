@@ -23,4 +23,6 @@ boolean circularBuffer_isFull(c_buffer_t* buffer);
 
 void circularBuffer_clear(c_buffer_t* buffer);
 
+int circularBuffer_count(c_buffer_t* buffer);
+
 #endif

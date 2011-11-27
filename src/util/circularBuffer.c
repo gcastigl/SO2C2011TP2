@@ -48,3 +48,6 @@ void circularBuffer_clear(c_buffer_t* buffer) {
 	buffer->count = 0;
 }
 
+int circularBuffer_count(c_buffer_t* buffer) {
+    return buffer->size;
+}
