@@ -45,6 +45,9 @@ void initTTY(int pid) {
 }
 
 void tty_setCurrent(int tty) {
+    if (tty == tty_getCurrent()) {
+        return;
+    }
 	_cli();
     TTY* currTTY = tty_getCurrentTTY();
     setPriority(currTTY->pid, inactiveTTYpriority);

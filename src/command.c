@@ -335,7 +335,7 @@ int ls_cmd(int argc, char **argv) {
 }
 
 PRIVATE char* _ls_cmd_EndingString(u32int fileType) {
-	log(L_DEBUG, "%x - %x", fileType, FS_DIRECTORY);
+	// log(L_DEBUG, "%x - %x", fileType, FS_DIRECTORY);
 	if (fileType == FS_DIRECTORY) {
 		return "/";
 	}

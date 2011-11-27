@@ -195,7 +195,7 @@ PUBLIC void user_init() {
     char userstring[128];
     for (int i = 0; i < USER_MAX; ++i) {
         user_string(i, userstring);
-        log(L_DEBUG, "user %d: %s", i, userstring);
+        // log(L_DEBUG, "user %d: %s", i, userstring);
     }
 
     kfree(etcnode);

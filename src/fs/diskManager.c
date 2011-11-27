@@ -32,10 +32,10 @@ u32int _availableMem(iNodeDisk* inode);
 PRIVATE disk_strategy strategy;
 
 void diskManager_init(u32int strategyType) {
-	log(L_DEBUG, "Using block size: %d", DISK_BLOCK_SIZE_BYTES);
-	log(L_DEBUG, "iNodeDisk size: %d", sizeof(iNodeDisk));
-	log(L_DEBUG, "DiskPage size: %d", sizeof(DiskPage));
-	log(L_DEBUG, "FileHeader size: %d\n", sizeof(FileHeader));
+	// log(L_DEBUG, "Using block size: %d", DISK_BLOCK_SIZE_BYTES);
+	// log(L_DEBUG, "iNodeDisk size: %d", sizeof(iNodeDisk));
+	// log(L_DEBUG, "DiskPage size: %d", sizeof(DiskPage));
+	// log(L_DEBUG, "FileHeader size: %d\n", sizeof(FileHeader));
 	switch(strategyType) {
 		case S_DIRECT_ACCESS:
 			strategy.write = ata_write;
