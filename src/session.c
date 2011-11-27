@@ -1,4 +1,10 @@
 #include <session.h>
+#include <tty.h>
+#include <shell.h>
+#include <driver/video.h>
+#include <lib/stdio.h>
+#include <lib/string.h>
+#include <signal.h>
 
 PRIVATE user_t *currentUser = NULL;
 
@@ -37,6 +43,7 @@ void session_login() {
     } while(!session_isLoggedIn());
 
     printf("\nLogged in as: %s\n", session_getName());
+    signal(W_LOGIN);
 }
 
 int session_isLoggedIn() {
