@@ -47,8 +47,7 @@ void handleScanCode(unsigned char scanCode) {
 	if (!checkSpecialKey(scanCode)) {
 		if (IS_BREAK(scanCode)) {
 			char c = translateSc(CLEAR_BREAK_BIT(scanCode));
-			putKeyInBuffer(c);
-			signal_keyPressed();
+			signal_keyPressed(c);
 		}
 	}
 }

@@ -10,24 +10,30 @@ void checkTTY();
 
 static int newTTY = -1;
 
-void signal_keyPressed() {
+void signal_keyPressed(char c) {
 	TTY* tty = tty_getCurrentTTY();
-	char c = getKeyFromBuffer();
-	PROCESS** all = scheduler_getAllProcesses();
-	// If there is a process child of current TTY, give input to that process
-	// else give input to current TTY
-	for (int i = 0; i < MAX_PROCESSES; i++) {
-		PROCESS* p = all[i];
-		if (p != NULL && p->status == BLOCKED && p->waitingInfo == W_INPUT) {
-			log(L_DEBUG, "Sending  input to process: %s", p->name);
-			return;
-		}
-	}
-    circularBuffer_add(&tty->input_buffer , c);
-	PROCESS* tty_process = scheduler_getProcess(tty ->pid);
-    if (tty_process->status == BLOCKED && tty_process->waitingFlags == W_INPUT) {
-        // Only notify tty if it is waiting for an input!
-        scheduler_setStatus(tty_getCurrentTTY()->pid, READY);
+
+    PROCESS* tty_process = scheduler_getProcess(tty ->pid);
+	PROCESS** allProc = scheduler_getAllProcesses();
+    if (tty_process->status == BLOCKED) {
+        if (tty_process->waitingFlags == W_CHILD) {
+            // Current TTY is waiting for a child, see if any child is waiting for input
+            for (int i = 0; i < MAX_PROCESSES; i++) {
+                PROCESS* p = allProc[i];
+                if (p != NULL && p->tty == tty->id &&
+                        p->status == BLOCKED && p->waitingFlags == W_INPUT) {
+                    circularBuffer_add(&tty->input_buffer , c);
+                    scheduler_setStatus(p->pid, READY);
+                    log(L_DEBUG, "Sending  input to process: %s", p->name);
+                    return;
+                }
+            }
+        }
+        circularBuffer_add(&tty->input_buffer , c);
+        if (tty_process->waitingFlags == W_INPUT) {
+            // if Current TTY is waiting for input, then wake it up
+            scheduler_setStatus(tty_getCurrentTTY()->pid, READY);
+        }
     }
 }
 
