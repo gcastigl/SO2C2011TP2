@@ -118,7 +118,6 @@ int checkSpecialKey(unsigned char scanCode) {
 			kbFlags |= FN;
 			fbit = 1 << (scanCode - 0x3B);
 			fKeys |= fbit;
-            log(L_DEBUG, "turn ON F %d", fbit);
 			break;
 		case 0xBB:
 		case 0xBC:
@@ -134,7 +133,6 @@ int checkSpecialKey(unsigned char scanCode) {
 			kbFlags &= ~FN;
 			fbit = 0; // turns off all F key flags
 			fKeys &= fbit;
-			log(L_DEBUG, "turn OFF all F keys");
 			break;
 		default:
 			ret = false;
