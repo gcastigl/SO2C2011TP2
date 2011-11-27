@@ -3,4 +3,8 @@
 
 void signal_keyPressed();
 
+void signal_specialKeyPressed();
+
+int signal(int signum);
+
 #endif

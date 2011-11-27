@@ -34,7 +34,7 @@ PROCESS* scheduler_getProcess(int pid);
 **/
 int scheduler_currentPID();
 
-void scheduler_setCurrent(int pid);
+void scheduler_setCurrent(PROCESS* p);
 
 /* kill
 *
@@ -73,5 +73,7 @@ void scheduler_schedule(char* name, int(*processFunc)(int, char**), int argc,
         char** argv, int stacklength, int tty, int groundness, int status, int priority);
 
 u32int scheduler_activeProcesses();
+
+void scheduler_blockCurrent(block_t waitFlag);
 
 #endif
