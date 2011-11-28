@@ -1,12 +1,14 @@
 #include <process/process.h>
 #include <session.h>
 #include <util/logger.h>
+#include <process/scheduler.h>
+#include <lib/stdlib.h>
+#include <memory/paging.h>
 
 extern int loadStackFrame();
 int getNextPID();
 PRIVATE int nextPID = 0;
 
-// POSSIBLE FIXME: too many arguments!
 void process_initialize(PROCESS* newProcess, char* name, int(*processFunc)(int, char**),
 		int argc, char** argv, int stacklength, void(*cleaner)(void),
 		int tty, int groundness, int status, int priority, int parentPID) {
@@ -21,13 +23,14 @@ void process_initialize(PROCESS* newProcess, char* name, int(*processFunc)(int, 
     newProcess->ownerUid = session_getEuid();
     newProcess->pid = getNextPID();
     newProcess->stacksize = stacklength;
-    newProcess->stack = (int) kmalloc(stacklength);
+    newProcess->stack = (int) kmalloc_a(stacklength);
+    log(L_DEBUG, "%s starts at 0x%x to 0x%x", name, newProcess->stack, newProcess->stack + stacklength - 1); 
     newProcess->ESP = loadStackFrame(processFunc, newProcess->stack + stacklength - 1, argc, newProcess->argv, cleaner);
     newProcess->tty = tty;
     newProcess->lastCalled = 0;
     newProcess->priority = priority;
     newProcess->groundness = groundness;
-    newProcess->parent = parentPID;			// POSSIBLE FIXME HERE...
+    newProcess->parent = parentPID;
     newProcess->status = status;
     newProcess->waitingFlags = -1;
     for (int i = 0; i < MAX_FILES_PER_PROCESS; i++) {
@@ -65,4 +68,51 @@ int getNextPID() {
 u32int yield() {
     _SysCall(SYSTEM_YIELD);
     return 0;
+}
+
+PUBLIC void _expandStack() {
+    _cli();
+    PROCESS *proc = scheduler_getCurrentProcess();
+    int esp = _ESP;
+    int newSize = DEFAULT_STACK_SIZE + proc->stacksize;
+    void *new_stack_start = (void *)kmalloc_a(newSize);
+    int offset = (int)new_stack_start - proc->stack;
+    void *old_stack_start = (void*)proc->stack;
+
+    memcpy(new_stack_start, old_stack_start, proc->stacksize);
+    
+    // Backtrace through the original stack, copying new values into
+    // the new stack.
+    for (int i = (u32int)new_stack_start + proc->stacksize; i > (u32int)new_stack_start; i -= 4) {
+        u32int tmp = * (u32int*)i;
+        // If the value of tmp is inside the range of the old stack, assume it is a base pointer
+        // and remap it. This will unfortunately remap ANY value in this range, whether they are
+        // base pointers or not.
+        if ((proc->stack < tmp) && ((proc->stack + proc->stacksize) < esp)) {
+            tmp = tmp + offset;
+            u32int *tmp2 = (u32int*)i;
+            *tmp2 = tmp;
+        }
+    }
+
+    kfree((void*)proc->stack);
+    proc->stack = (int)new_stack_start;
+    proc->stacksize = newSize;
+    proc->ESP = proc->ESP + offset;
+    _sti();
+    __asm volatile("mov %0, %%esp" : : "r" (proc->ESP + offset));
+}
+
+PUBLIC void process_checkStack() {
+    PROCESS *proc = scheduler_getCurrentProcess();
+    if (proc == NULL)
+        return;
+    if (proc->pid > MAX_TTYs)
+        log(L_INFO, "Process %s: ESP: 0x%x stackStart: 0x%x", proc->name, proc->ESP, proc->stack);
+  
+    if (proc->ESP < proc->stack + 0x500) {
+        log(L_INFO, "Expanding stack(0x%x @ 0x%x) for %s", proc->stack, proc->name);
+        _expandStack();
+        log(L_INFO, "EXPANDED stack(0x%x) for %s", proc->stack, proc->name);
+    }
 }

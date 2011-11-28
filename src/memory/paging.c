@@ -16,8 +16,7 @@ page_directory_t *current_directory=0;
 extern u32int placement_address;
 extern heap_t *kheap;
 
-void paging_init()
-{
+void paging_init() {
     // The size of physical memory. For the moment we 
     // assume it is 16MB big.
     u32int mem_end_page = 0x1000000;
@@ -50,8 +49,7 @@ void paging_init()
     // Allocate a lil' bit extra so the kernel heap can be
     // initialised properly.
     i = 0;
-    while (i < placement_address+PAGE_SIZE)
-    {
+    while (i < placement_address+PAGE_SIZE) {
         // Kernel code is readable but not writeable from userspace.
         alloc_frame( get_page(i, 1, kernel_directory), 0, 0);
         i += PAGE_SIZE;
@@ -65,14 +63,13 @@ void paging_init()
     registerInterruptHandler(14, page_fault);
 
     // Now, enable paging!
-    switch_page_directory(kernel_directory);
+    paging_enable(kernel_directory);
 
     // Initialise the kernel heap.
     kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xCFFFF000, 0, 0);
 }
 
-void switch_page_directory(page_directory_t *dir)
-{
+void paging_enable(page_directory_t *dir) {
     current_directory = dir;
     __asm volatile("mov %0, %%cr3":: "r"(&dir->tablesPhysical));
     u32int cr0;
@@ -81,34 +78,27 @@ void switch_page_directory(page_directory_t *dir)
     __asm volatile("mov %0, %%cr0":: "r"(cr0));
 }
 
-page_t *get_page(u32int address, int make, page_directory_t *dir)
-{
+page_t *get_page(u32int address, int make, page_directory_t *dir) {
     // Turn the address into an index.
     address /= PAGE_SIZE;
     // Find the page table containing this address.
     u32int table_idx = address / PAGE_COUNT;
 
-    if (dir->tables[table_idx]) // If this table is already assigned
-    {
+    if (dir->tables[table_idx]) { // If this table is already assigned
         return &dir->tables[table_idx]->pages[address%PAGE_COUNT];
-    }
-    else if(make)
-    {
+    } else if(make) {
         u32int tmp;
         dir->tables[table_idx] = (page_table_t*)kmalloc_ap(sizeof(page_table_t), &tmp);
         memset(dir->tables[table_idx], 0, PAGE_SIZE);
         dir->tablesPhysical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
         return &dir->tables[table_idx]->pages[address%PAGE_COUNT];
-    }
-    else
-    {
+    } else {
         return 0;
     }
 }
 
 
-void page_fault(registers_t regs)
-{
+void page_fault(registers_t regs) {
     // A page fault has occurred.
     // The faulting address is stored in the CR2 register.
     u32int faulting_address;

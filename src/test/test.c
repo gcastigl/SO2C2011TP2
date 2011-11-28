@@ -93,6 +93,8 @@ int pageFault_cmd(int argc, char **argv) {
 }
 
 int infRecursion_cmd(int argc, char **argv) {
+    unsigned int a = 60000;
+    while (a--);
     infRecursion_cmd(argc, argv);
     return 0;
 }
@@ -106,7 +108,15 @@ void testHeap() {
     kfree((void*)b);
 }
 
+extern PUBLIC void _expandStack();
 
+int testExpandStack_cmd(int argc, char **argv) {
+    log(L_INFO, "Expanding stack... Current ESP is 0x%x", _ESP);
+    _expandStack();
+    log(L_INFO, "Stack expanded... Current ESP is 0x%x", _ESP);
+    printf("Stack expanded...\n");
+    return 0;
+}
 
 
 
@@ -115,6 +125,8 @@ void testHeap() {
 
 
 
+/////////////////// WAAAAARRRNINNNNGGGG!!!!! ////////////////////////////
+/////////////////// YOU'R EDITOR MAY DIE!!!! ////////////////////////////
 
 
 
@@ -187,6 +199,7 @@ void testHeap() {
 
 
 
+//// YOU'VE BEEN WARNED! /////
 
 
 

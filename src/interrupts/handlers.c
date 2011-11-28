@@ -55,7 +55,7 @@ void timerTickHandler(registers_t regs) {
     	ticksSinceLasfFlush = 0;
     }
     if (scheduler_isActive() && taskSwitch) {
-		switchProcess();
+        switchProcess();
     }
 }
 
@@ -116,18 +116,18 @@ void isr_handler(registers_t regs) {
         handler(regs);
     } else if (regs.int_no < 32) {
         log(L_ERROR, "%s (%d): \n\
- ds: %d\n\
- edi: %d\n\
- esi: %d\n\
- ebp: %d\n\
- esp: %d\n\
- ebx: %d\n\
- edx: %d\n\
- ecx: %d\n\
- eax: %d\n\
- eip: %d\n\
- cs: %d\n\
- ss: %d", exceptionString[regs.int_no], regs.err_code, regs.ds, \
+ ds: %x\n\
+ edi: %x\n\
+ esi: %x\n\
+ ebp: %x\n\
+ esp: %x\n\
+ ebx: %x\n\
+ edx: %x\n\
+ ecx: %x\n\
+ eax: %x\n\
+ eip: %x\n\
+ cs: %x\n\
+ ss: %x", exceptionString[regs.int_no], regs.err_code, regs.ds, \
 regs.edi, regs.esi, regs.ebp, regs.esp, regs.ebx, regs.edx, regs.ecx,\
 regs.eax, regs.eip, regs.cs, regs.ss);
         panic(exceptionString[regs.int_no], 1, true);

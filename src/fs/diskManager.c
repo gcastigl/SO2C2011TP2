@@ -339,7 +339,6 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 
 PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSector, u32int initialOffset) {
 		log(L_DEBUG, "\nReserving %d blocks....", blocks);
-	_cli();
 	DiskPage currPage;
 	int previousSector, previousOffset, currSector, currOffset;
 	int disk = ATA0;
@@ -398,11 +397,9 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSecto
 		page->totalLength = 0;
 		_freeMemory(page);
 		errno = E_OUT_OF_MEMORY;
-		_sti();
 		return -1;
 	}
 		// log(L_DEBUG, "finished reserving mem: %d", block[0]);
-	_sti();
 	return 0;
 }
 

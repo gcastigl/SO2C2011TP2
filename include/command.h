@@ -308,6 +308,8 @@ int getchar_cmd(int argc, char **argv);
  **/
 int infRecursion_cmd(int argc, char **argv);
 
+int testExpandStack_cmd(int argc, char **argv);
+
 void testHeap();
 
 #endif
