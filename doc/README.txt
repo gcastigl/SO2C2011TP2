@@ -2,6 +2,21 @@ Set up:
     go to your home folder and create / set your .mtoolsrc file to: 
         drive a: file="**path to the folder**/SO2C2011TP2/img/tpe.img" exclusive 
 
+
+0xC0000000  
+    Kernel code, data, bss, etc.
+    Probably too much but, hey, we might see a 256MB kernel one day.
+0xD0000000  
+    Kernel heap
+0xE0000000  
+    Space reserved for device drivers
+0xF0000000
+    Some physical memory (useful for video memory access)
+    Page directory and page tables of the current process
+
+
+
+
 cosas a tener:
 
 struct proceso {

@@ -195,8 +195,7 @@ void scheduler_setCurrent(PROCESS* p) {
             downPages(current);
         }
         current = p;
-        log(L_DEBUG, "process switched to %s", current->name);
-        //upPages(current);
+        upPages(current);
     }
 }
 
@@ -310,34 +309,20 @@ void flushPages	( PROCESS *process , int action )
 
     if (process == NULL)
         return;
-	log(L_DEBUG, "flushing pages for %s", process->name);
 
 	pages = process->stacksize / 0x1000; // cuantas paginas tiene ese proceso
-	log(L_DEBUG, "flushing %d pages", pages);
 	//direccion de memoria donde comienza el stack ( operacion inversa de create process )
 	mem_dir = process->stack;
-	log(L_DEBUG, "stack start 0x%x", mem_dir);
 	for( p=0; p< pages ; ++p ) {
-	    log(L_ERROR, "1");
 		page = get_page( mem_dir,0,current_directory );
-		log(L_ERROR, "2 0x%x : %d", page, page->present);
-		__asm volatile("sti");
-		p=p+0;
 		page->present = action ; // DISABLE or ENABLE
-		__asm volatile("cli");
-		log(L_ERROR, "3");
-		log(L_DEBUG, "page at 0x%x is now %s", mem_dir, action ? "Up" : "Down");
-		log(L_ERROR, "4");
 		mem_dir += 0x1000; 	// 4kb step!
-		log(L_ERROR, "5");
 	}
-	log(L_ERROR, "1");
 	if(process->parent > 1)
 	{
 		proc_parent = scheduler_getProcess(process->parent);
 		flushPages( proc_parent, action );
 	}
-	log(L_DEBUG, "");
 }
 
 void downPages( PROCESS *p )
