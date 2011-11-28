@@ -69,7 +69,7 @@ u32int yield() {
     return 0;
 }
 
-PRIVATE void _expandStack() {
+PUBLIC void _expandStack() {
     _cli();
     PROCESS *proc = scheduler_getCurrentProcess();
     int esp = _ESP;
