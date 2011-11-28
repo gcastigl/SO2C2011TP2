@@ -73,10 +73,9 @@ PUBLIC void _expandStack() {
     _cli();
     PROCESS *proc = scheduler_getCurrentProcess();
     int esp = _ESP;
-    int offset = DEFAULT_STACK_SIZE;
-    int newSize = offset + proc->stacksize;
+    int newSize = DEFAULT_STACK_SIZE + proc->stacksize;
     void *new_stack_start = (void *)kmalloc_a(newSize);
-
+    int offset = (int)new_stack_start - proc->stack;
     void *old_stack_start = (void*)proc->stack;
 
     memcpy(new_stack_start, old_stack_start, proc->stacksize);
@@ -89,7 +88,7 @@ PUBLIC void _expandStack() {
         // If the value of tmp is inside the range of the old stack, assume it is a base pointer
         // and remap it. This will unfortunately remap ANY value in this range, whether they are
         // base pointers or not.
-        if (( esp < tmp) && (tmp < esp))
+        if ((proc->stack < tmp) && ((proc->stack + proc->stacksize) < esp))
         {
           tmp = tmp + offset;
           u32int *tmp2 = (u32int*)i;
@@ -97,10 +96,10 @@ PUBLIC void _expandStack() {
         }
       }
 
-    kfree(old_stack_start);
+    kfree((void*)proc->stack);
     proc->stack = (int)new_stack_start;
     proc->stacksize = newSize;
-    proc->ESP = esp + offset;
+    proc->ESP = proc->ESP + offset;
     _sti();
 }
 
