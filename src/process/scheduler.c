@@ -7,6 +7,8 @@ PRIVATE PROCESS* _nextTask(int withPriority);
 PRIVATE void saveESP(int oldESP);
 PRIVATE void killChildren(int pid);
 PRIVATE void showPages(PROCESS *process);
+PRIVATE void showAllProcessInfo();
+PRIVATE void showStackInfo(PROCESS *process);
 void downPages(PROCESS *p);
 void upPages(PROCESS *p);
 /*
@@ -109,6 +111,8 @@ int getNextProcess(int oldESP) {
     next->lastCalled = 0;
     if (!firstTime) {
         saveESP(oldESP); 			// en el oldESP esta el stack pointer del proceso
+        log(L_INFO, "%s: ESPa: 0x%x", current->name, current->ESP);
+        log(L_INFO, "%s: ESPb: 0x%x", current->name, current->ESP);
     } else {
         firstTime = false;
     }
@@ -223,7 +227,23 @@ PRIVATE void showPages(PROCESS *process) {
         }
 		mem_dir += PAGE_SIZE; 	// 4kb step!
 	}
+    log(L_INFO, "Paging: %d pages %d/%d (up/down)", pages, up, down);
     log(L_INFO, "Process %s has %d pages %d/%d (up/down)", process->name, pages, up, down);
+
+PRIVATE void showStackInfo(PROCESS *process) {
+    log(L_INFO, "Stack: start: 0x%x end: 0x%x size: 0x%x ESP: 0x%x", process->stack, process->stack + process->stacksize - 1, process->stacksize, process->ESP);
+}
+
+PRIVATE void showAllProcessInfo() {
+    log(L_INFO, "-------------------------SHOWING ALL PROCESSES PAGES-------------------------");
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        if (allProcess[i] != NULL) {
+            log(L_INFO, "%s %s Info:", (current == allProcess[i] ? "Current process" : "Process"), allProcess[i]->name);
+            showPages(allProcess[i]);
+            showStackInfo(allProcess[i]);
+        }
+    }
+    log(L_INFO, "--------------------FINISHED SHOWING ALL PROCESSES PAGES---------------------");
 }
 
 void kill(int pid) {
