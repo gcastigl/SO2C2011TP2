@@ -8,6 +8,7 @@
 
 enum LogLevel {L_FATAL, L_ERROR, L_INFO, L_DEBUG, L_TRACE};
 #define LOG_LEVEL L_DEBUG
+#define ASSERT(b) ((b) ? (void)0 : log(L_ERROR, "There was an assertion error."))
 /**
  * @param level a level of type Level
  * @param fmt a format like printf

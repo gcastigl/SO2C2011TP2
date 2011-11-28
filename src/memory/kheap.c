@@ -96,7 +96,7 @@ static void expand(u32int new_size, heap_t *heap)
     }
 
     // Make sure we are not overreaching ourselves.
-    ASSERT(heap->start_address+new_size <= heap->max_address);
+    ASSERT(heap->start_address + new_size <= heap->max_address);
 
     // This should always be on a page boundary.
     u32int old_size = heap->end_address-heap->start_address;

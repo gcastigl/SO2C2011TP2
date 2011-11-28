@@ -4,6 +4,7 @@
 
 #include <memory/ordered_array.h>
 #include <memory/kheap.h>
+#include <util/logger.h>
 
 s8int standard_lessthan_predicate(type_t a, type_t b)
 {

@@ -89,10 +89,8 @@ void scheduler_schedule(char* name, int(*processFunc)(int, char**), int argc,
     _sti();
     if (groundness == FOREGROUND) {
         if (current != NULL) {
-            current->status = BLOCKED;
-            current->waitingFlags = W_CHILD;
             current->lastCalled = 0;
-            switchProcess();
+            scheduler_blockCurrent(W_CHILD);
         }
     }
 }
