@@ -143,7 +143,9 @@ void page_fault(registers_t regs) {
         regs.err_code & PAGE_INST_FETCH ? "instruction-fetch " : "",
         faulting_address
     );
-    _logDirectory(current_directory);
+    tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
+    _logPage(*get_page(faulting_address, 0, current_directory), faulting_address<<22, faulting_address<<12);
+    printf("Page fault @ 0x%x! killing current process\n", faulting_address);
     panic("Page fault", 1, false);
     killCurrent();
 }
