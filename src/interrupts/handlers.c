@@ -55,7 +55,8 @@ void timerTickHandler(registers_t regs) {
     	ticksSinceLasfFlush = 0;
     }
     if (scheduler_isActive() && taskSwitch) {
-		switchProcess();
+        //~ process_updateStack();
+        switchProcess();
     }
 }
 

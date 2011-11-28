@@ -1,6 +1,8 @@
 #include <process/process.h>
 #include <session.h>
 #include <util/logger.h>
+#include <process/scheduler.h>
+#include <lib/stdlib.h>
 
 extern int loadStackFrame();
 int getNextPID();
@@ -21,7 +23,8 @@ void process_initialize(PROCESS* newProcess, char* name, int(*processFunc)(int, 
     newProcess->ownerUid = session_getEuid();
     newProcess->pid = getNextPID();
     newProcess->stacksize = stacklength;
-    newProcess->stack = (int) kmalloc(stacklength);
+    newProcess->stack = (int) kmalloc_a(stacklength);
+    log(L_DEBUG, "%s starts at 0x%x to 0x%x", name, newProcess->stack, newProcess->stack + stacklength - 1); 
     newProcess->ESP = loadStackFrame(processFunc, newProcess->stack + stacklength - 1, argc, newProcess->argv, cleaner);
     newProcess->tty = tty;
     newProcess->lastCalled = 0;
@@ -61,4 +64,50 @@ int getNextPID() {
 u32int yield() {
     _SysCall(SYSTEM_YIELD);
     return 0;
+}
+
+PRIVATE void _expandStack() {
+    _cli();
+    PROCESS *proc = scheduler_getCurrentProcess();
+    int esp = _ESP;
+    int offset = DEFAULT_STACK_SIZE;
+    int newSize = offset + proc->stacksize;
+    void *new_stack_start = (void *)kmalloc_a(newSize);
+
+    void *old_stack_start = (void*)proc->stack;
+
+    memcpy(new_stack_start, old_stack_start, proc->stacksize);
+    
+      // Backtrace through the original stack, copying new values into
+      // the new stack.
+      for(int i = (u32int)new_stack_start; i > (u32int)new_stack_start-newSize; i -= 4)
+      {
+        u32int tmp = * (u32int*)i;
+        // If the value of tmp is inside the range of the old stack, assume it is a base pointer
+        // and remap it. This will unfortunately remap ANY value in this range, whether they are
+        // base pointers or not.
+        if (( esp < tmp) && (tmp < esp))
+        {
+          tmp = tmp + offset;
+          u32int *tmp2 = (u32int*)i;
+          *tmp2 = tmp;
+        }
+      }
+
+    kfree(old_stack_start);
+    proc->stack = (int)new_stack_start;
+    proc->stacksize = newSize;
+    proc->ESP = esp + offset;
+    _sti();
+}
+
+PUBLIC void process_updateStack() {
+    PROCESS *proc = scheduler_getCurrentProcess();
+    if (proc == NULL)
+        return;
+    if ((proc->stack - proc->ESP) > (proc->stacksize / 2)) {
+        log(L_INFO, "Expanding stack(0x%x) for %s", proc->stack, proc->name);
+        _expandStack();
+        log(L_INFO, "EXPANDED stack(0x%x) for %s", proc->stack, proc->name);
+    }
 }

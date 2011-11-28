@@ -93,7 +93,10 @@ int pageFault_cmd(int argc, char **argv) {
 }
 
 int infRecursion_cmd(int argc, char **argv) {
+    unsigned int a = 60000;
+    while (a--);
     infRecursion_cmd(argc, argv);
+    return -1;
 }
 
 void testHeap() {
