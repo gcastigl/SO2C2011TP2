@@ -82,4 +82,6 @@ u32int scheduler_activeProcesses();
 
 void scheduler_blockCurrent(block_t waitFlag);
 
+void scheduler_finalizeCurrent();
+
 #endif
