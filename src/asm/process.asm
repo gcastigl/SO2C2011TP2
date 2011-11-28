@@ -80,7 +80,7 @@ loadStackFrame:
     mov ebx, ebp
     mov ebp, esp
 
-    mov eax, [esp + 8] ; Stack start
+    mov eax, [ebp + 8] ; Stack start
     mov esp, eax ; new stack
 
     mov eax, [ebp + 16] ; argv
