@@ -104,12 +104,20 @@ PRIVATE void _expandStack() {
     _sti();
 }
 
-PUBLIC void process_updateStack() {
+PUBLIC void process_checkStack() {
     PROCESS *proc = scheduler_getCurrentProcess();
     if (proc == NULL)
         return;
-    if ((proc->stack - proc->ESP) > (proc->stacksize / 2)) {
-        log(L_INFO, "Expanding stack(0x%x) for %s", proc->stack, proc->name);
+    if (proc->pid > MAX_TTYs)
+        log(L_INFO, "Process %s: ESP: 0x%x stackStart: 0x%x", proc->name, proc->ESP, proc->stack);
+/*    if (proc->ESP < proc->stack + 0x500) {
+        registers_t regs;
+        regs.esp = proc->ESP;
+        panic("asdasdasd", 1, true);
+    }
+*/    
+    if (proc->ESP < proc->stack + 0x500) {
+        log(L_INFO, "Expanding stack(0x%x @ 0x%x) for %s", proc->stack, proc->name);
         _expandStack();
         log(L_INFO, "EXPANDED stack(0x%x) for %s", proc->stack, proc->name);
     }
