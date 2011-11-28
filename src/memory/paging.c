@@ -65,13 +65,13 @@ void paging_init()
     registerInterruptHandler(14, page_fault);
 
     // Now, enable paging!
-    switch_page_directory(kernel_directory);
+    paging_enable(kernel_directory);
 
     // Initialise the kernel heap.
     kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xCFFFF000, 0, 0);
 }
 
-void switch_page_directory(page_directory_t *dir)
+void paging_enable(page_directory_t *dir)
 {
     current_directory = dir;
     __asm volatile("mov %0, %%cr3":: "r"(&dir->tablesPhysical));
