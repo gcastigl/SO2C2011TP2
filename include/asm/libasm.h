@@ -76,4 +76,17 @@ int _tscGetCpuSpeed();
 int _msrGetCpuSpeed();
 void _debug (void);
 
+int read_cs();
+int read_ss();
+int read_ds();
+int read_esp();
+int read_ebp();
+
+#define _EIP    read_eip()
+#define _CS     read_cs()
+#define _SS     read_ss()
+#define _DS     read_ds()
+#define _ESP    read_esp()
+#define _EBP    read_ebp()
+
 #endif
