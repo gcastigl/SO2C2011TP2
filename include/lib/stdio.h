@@ -4,8 +4,11 @@
 #include <varargs.h>
 #include <stdarg.h>
 
-
 #define F_PRECISION	6
+
+typedef struct {
+	int fd;
+} FILE;
 
 char getchar();
 
@@ -34,6 +37,8 @@ int gets(char* ans);
 int getd(int* n);
 int getf(double* n);
 
+int gets_max(char* str, int maxLen);
+
 int parseHexa(char c);
 int isDigit(char c);
 int isNumber(char c);
@@ -41,5 +46,19 @@ char toLower(char c);
 int digits(int n);
 
 char* itoa(int i);
+
+// =========================================
+// 		Character input/output
+// =========================================
+
+//fclose
+//fopen
+
+
+char fgetc(FILE* steam);
+
+void fprintf(FILE* steam, char* tpt, ...);
+
+int fclose(FILE *stream);
 
 #endif //STDIO_H

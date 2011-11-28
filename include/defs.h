@@ -38,7 +38,6 @@
 typedef enum { false = 0, true } boolean;
 
 #define NULL	((void *)0)
-#define ASSERT(b) 
 
 #define ERROR -1
 
@@ -50,52 +49,49 @@ typedef unsigned char   u8int;
 typedef          char   s8int;
 typedef void*           type_t;
 
+#define SYSTEM_READ     3
+#define SYSTEM_WRITE    4
+#define SYSTEM_OPEN     5
+#define SYSTEM_YIELD    6
+#define SYSTEM_CLOSE	7
 
-#define SYSTEM_READ		3
-#define SYSTEM_WRITE	4
+#define SYSTEM_USERLIST     9
+#define SYSTEM_USERADD      10
+#define SYSTEM_USERDEL      11
+#define SYSTEM_USERSETGID   12
+#define SYSTEM_GROUPLIST    15
+#define SYSTEM_GROUPADD     16
+#define SYSTEM_GROUPDEL     17
 
-#define STD_IN		0
-#define STD_OUT		1
-#define STD_ERROR	2
+#define SYSTEM_CHMOD        20
 
+#define MAX_TTYs		    1
+
+// File descriptors for STD in-out-error
+#define STD_IN		MAX_TTYs + 0
+#define STD_OUT		MAX_TTYs + 1
+#define STD_ERROR	MAX_TTYs + 2
+
+// Keyboard buffer size
 #define K_BUFFER_SIZE	10
 
 // ERROR CODES
-#define	E_DIR_EXISTS		1
-#define E_DIR_FULL			2
-#define	E_FILE_EXISTS		3
-#define E_OUT_OF_MEMORY		4
-#define E_CORRUPTED_FILE	5
-#define E_INVALID_ARG		6
+#define	E_DIR_EXISTS		-1
+#define E_DIR_FULL			-2
+#define	E_FILE_EXISTS		-3
+#define E_OUT_OF_MEMORY		-4
+#define E_CORRUPTED_FILE	-5
+#define E_INVALID_ARG		-6
+#define E_ACCESS			-7
+#define E_FILE_NOT_EXISTS	-8
+#define E_DIR_NOT_EXISTS	-9
+#define E_MAX_FD_REACHED	-10
 
-// FIXME: this should not be here!!
-typedef struct page
-{
-  int present	: 1; //	Pagina presente en memoria
-  int rw	: 1; // Read-Only si esta apagado o bien Read-Write 
-  int user	: 1; // si esta apagado nivel de Supervisor
-  int accessed	: 1; // indica si la pagina ha sido accedida desde el ultimo refresco 
-  int dirty	: 1; // indica si la pagina ha sido escrita desde el ultimo refresco 
-  int unused	: 7; // bits reservados
-  int frame	: 20;// Frame Address ( corridos 12 bits hacia la derecha )
-} page_t;
-
-// Estructura de tabla de paginas
-
-typedef struct page_table
-{
-   page_t pages[1024];
-} page_table_t;
-
-// Estructura de pagina de directorios
-
-typedef struct page_dir
-{
-    page_table_t *tables[1024]; // punteros a las tablas de paginas
-    int tablesPhysical[1024];   // direcciones físicas de las tablas de paginas
-} page_directory_t;
+#define MAX_NAME_LENGTH		24
 
 int errno;
+
+#define OK 0
 
 #pragma pack (1) 		/* Alinear las siguiente estructuras a 1 byte */
 

@@ -1,4 +1,5 @@
 #include <lib/stdio.h>
+#include <lib/unistd.h>
 #include <lib/string.h>
 #include <lib/math.h>
 #include <main.h>
@@ -9,10 +10,10 @@ char getchar() {
 
 char getc(int fd) {
 	char c;
-	while(bufferIsEmpty()) {
-		// WAIT...
+	if (!tty_hasInput(tty_getCurrentTTY())) {
+	    scheduler_blockCurrent(W_INPUT);
 	}
-	__read(fd, &c, 1);
+	read(fd, &c, 1);
 	return c;
 }
 
@@ -49,6 +50,7 @@ int sscanf(char *stream, char *format, ...) {
                         j++;
                     }
                     *integer = iTmp*iTmp2;
+                    break;
                 case 'u':
                     uinteger = va_arg(ap, unsigned int *);
                     iTmp = 0;
@@ -142,21 +144,41 @@ int parseHexa(char c) {
 }
 
 int gets(char* ans) {
-	char c;
-	int index = 0;
-	do {
-		c = getchar();
-		if (c != '\b' || (c == '\b' && index > 0)) {
-			if (c == '\b') {
-				ans[index--] = '\0';
-			} else {
-				ans[index++] = c;
-			}
-			putchar(c);
-		}
-	} while(c != '\n');
-	ans[index - 1] = '\0';
-	return (index - 1) == 0 ? 0 : 1;
+    return gets_max(ans, -1);
+}
+
+int gets_max(char* str, int maxLen) {
+    char c;
+    int index = 0;
+    int tab = false;
+    do {
+        c = getchar();
+        if (c != '\b' || (c == '\b' && index > 0)) {
+            if (c == '\b') {
+                if (tab) {
+                    // TODO: finish tab erasing...!!
+                    str[index--] = '\0';
+                } else {
+                    str[index--] = '\0';
+                }
+            } else {
+                str[index++] = c;
+                if (c == '\t') {
+                    tab = true;
+                } else {
+                    tab = false;
+                }
+            }
+            putchar(c);
+        }
+    } while(c != '\n' && (maxLen == -1 || --maxLen > 0));
+    if (maxLen == 0) {
+        while(c != '\n') {
+            c = getchar();
+        }
+    }
+    str[index - 1] = '\0';
+    return (index - 1) == 0 ? 0 : 1;
 }
 
 int getd(int* n) {

@@ -1,7 +1,9 @@
 #include <interrupts/interrupts.h>
 
-extern int schedulerActive;
 extern void switchProcess(void);
+int taskSwitch = true;
+static int ticksSinceLasfFlush = 0;
+
 char *exceptionString[32] = {
     "Division by zero exception",
     "Debug exception",
@@ -37,13 +39,23 @@ char *exceptionString[32] = {
     "Reserved"
 };
 
+void disableTaskSwitch() {
+    taskSwitch = false;
+}
+
+void enableTaskSwitch() {
+    taskSwitch = true;
+}
+
 //Timer Tick
 void timerTickHandler(registers_t regs) {
     _increaseTTCounter();
-    if (schedulerActive == true) {
-        if ((_getTTCounter() % 2)) {
-            switchProcess();
-        }
+    if (ticksSinceLasfFlush++ >= TICKS_PER_FLUSH) {
+    	cache_flush();
+    	ticksSinceLasfFlush = 0;
+    }
+    if (scheduler_isActive() && taskSwitch) {
+        switchProcess();
     }
 }
 
@@ -52,29 +64,74 @@ void keyboardHandler(registers_t regs) {
 	handleScanCode(_port_in(0x60));
 }
 
-void systemCallHandler(int sysCallNumber, void ** args) {
+
+void *systemCallHandler(int sysCallNumber, void ** args) {
+    void *ret = NULL;
 	switch(sysCallNumber) {
+		case SYSTEM_USERLIST:
+			do_userlist((calluser_t *)args[0]);
+			break;
+		case SYSTEM_USERADD:
+			do_useradd(args[0], args[1]);
+			break;
+		case SYSTEM_USERDEL:
+			do_userdel(args[0]);
+			break;
+		case SYSTEM_GROUPLIST:
+			do_grouplist((callgroup_t *)args[0]);
+			break;
+		case SYSTEM_GROUPADD:
+			do_groupadd(args[0], args[1]);
+			break;
+		case SYSTEM_GROUPDEL:
+			do_groupdel(args[0]);
+			break;
+		case SYSTEM_USERSETGID:
+			do_usersetgid(args[0], (int) args[1]);
+			break;
 		case SYSTEM_WRITE:
 			sysWrite((int) args[0], args[1], (int)args[2]);
 			break;
 		case SYSTEM_READ:
 			sysRead((int) args[0], args[1],(int)args[2]);
 			break;
+		case SYSTEM_YIELD:
+            switchProcess();
+            break;
+        case SYSTEM_OPEN:
+            ret = (void*)sysOpen((char*)args[0], (int)args[1], (int)args[2]);
+            break;
+        case SYSTEM_CLOSE:
+            ret = (void*)sysClose((char*)args[0], (int)args[1], (int)args[2]);
+            break;
 	}
+	
+    return ret;
 }
-
 // This gets called from our ASM interrupt handler stub.
 void isr_handler(registers_t regs) {
-    
-    if (regs.int_no < 32) {
-        panic(exceptionString[regs.int_no], 1, true);
-    }
-    /*
-    if (interruptHandlers[regs.int_no] != 0) {
+    if (interruptHandlers[regs.int_no] != 0)
+    {
         isr_t handler = interruptHandlers[regs.int_no];
         handler(regs);
+    } else if (regs.int_no < 32) {
+        log(L_ERROR, "%s (%d): \n\
+ ds: %x\n\
+ edi: %x\n\
+ esi: %x\n\
+ ebp: %x\n\
+ esp: %x\n\
+ ebx: %x\n\
+ edx: %x\n\
+ ecx: %x\n\
+ eax: %x\n\
+ eip: %x\n\
+ cs: %x\n\
+ ss: %x", exceptionString[regs.int_no], regs.err_code, regs.ds, \
+regs.edi, regs.esi, regs.ebp, regs.esp, regs.ebx, regs.edx, regs.ecx,\
+regs.eax, regs.eip, regs.cs, regs.ss);
+        panic(exceptionString[regs.int_no], 1, true);
     }
-    */
 }
 
 // This gets called from our ASM interrupt handler stub.

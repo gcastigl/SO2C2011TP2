@@ -2,19 +2,36 @@
 #define STDLIB_H
 
 #include <defs.h>
+#include <memory/kheap.h>
 
-/*
 void* malloc(u32int neededMem);
+
+void free(void * pointer);
 
 void* calloc(u32int size);
 
-void free(void * pointer);
-*/
 void memcpy(void* to, void* from, u32int count);
 
+/* panic
+*
+* Recibe como parametros:
+* - Mensaje
+* - Línea
+* - Lock
+*
+* Muestra el mensaje 'msg' en la línea 'line' y si lock es true, haltea
+**/
 void panic(char* msg, int line, int lock);
 
-void* realloc(void* ptr, int newsize);
+/* atoi
+*
+* Recibe como parametros:
+* - String
+*
+* Devuelve el valor numérico del string dado
+**/
+int atoi(const char *str);
+int htoi(const char *str);
 
 #endif
 

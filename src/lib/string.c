@@ -1,4 +1,5 @@
 #include <lib/string.h>
+#include <lib/stdlib.h>
 
 u32int strlen(char* string) {
 	u32int count = 0;
@@ -19,9 +20,8 @@ int strcmp(const char * s1, const char * s2) {
 
 int strncmp(char * s1, char * s2, unsigned int n) {
 	int ret = 0;
-	int i;
 	
-	for(i=0;ret == 0 && i<=n && (*s1 != '\0' || *s2 != '\0'); i++)
+	for(int i = 0; ret == 0 && i <= n && (*s1 != '\0' || *s2 != '\0'); i++)
 		ret = *s1 - *s2;
 		
 	return ret;
@@ -54,20 +54,19 @@ void *memset(void *s, int c, u32int n) {
 }
 
 void strncpy(char *to, const char *from, int size) {
-	while(size < 0) {
+	while(size--) {
 		*to++ = *from++;
-		size--;
 	}
 	*to = '\0';
 }
 
-int strIndexOf(char* str, char c, int startIndex) {
+int strindex(char* str, char c, int offset) {
 	boolean searchBackwards = false;
-	if (startIndex < 0) {	// searching backwards...
-		startIndex = -startIndex;
+	if (offset < 0) {	// searching backwards...
+		offset = -offset;
 		searchBackwards = true;
 	}
-	int i = startIndex;
+	int i = offset;
 	while(str[i] != '\0' && i >= 0) {
 		if (str[i] == c) {
 			return i;
@@ -86,4 +85,64 @@ int strContains(char* str, char c) {
 		}
 	}
 	return false;
+}
+
+int strspn(const char *string, const char *in) {
+	register const char *s1, *s2;
+
+	for (s1 = string; *s1; s1++) {
+		for (s2 = in; *s2 && *s2 != *s1; s2++)
+			/* EMPTY */;
+		if (*s2 == '\0')
+			break;
+	}
+	return s1 - string;
+}
+
+char *strtok(register char *string, const char *separators) {
+	register char *s1, *s2;
+	static char *savestring = NULL;
+
+	if (string == NULL) {
+		string = savestring;
+		if (string == NULL)
+			return (char *) NULL;
+	}
+
+	s1 = string + strspn(string, separators);
+	if (*s1 == '\0') {
+		savestring = NULL;
+		return (char *) NULL;
+	}
+
+	s2 = strpbrk(s1, separators);
+	if (s2 != NULL)
+		*s2++ = '\0';
+	savestring = s2;
+	return s1;
+}
+
+char *strpbrk(register const char *string, register const char *brk) {
+	register const char *s1;
+
+	while (*string) {
+		for (s1 = brk; *s1 && *s1 != *string; s1++)
+			/* EMPTY */;
+		if (*s1)
+			return (char *) string;
+		string++;
+	}
+	return (char *) NULL;
+}
+
+int strreplace(char* str, char replace, char replacement) {
+	int replaces = 0;
+	while(*str != '\0') {
+		if (*str == replace) {
+			*str = replacement;
+			replaces++;
+		}
+		str++;
+	}
+	return replaces;
 }

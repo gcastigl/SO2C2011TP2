@@ -2,53 +2,84 @@
 #define PROCESS_H
 
 #include <defs.h>
-#include <lib/kheap.h>
+#include <memory/kheap.h>
 
-#define MAX_PROCESS_NAME 	32
-#define MAX_PROCESSES		64
-#define MAX_ARG             32
-#define FREE 1
+#define DEFAULT_STACK_SIZE 0x2000
 
-enum {READY, BLOCKED, CHILD_WAIT, SLEEPING, RUNNING};
-enum {BACKGROUND, FOREGROUND};
+#define INIFL 	0x200
+#define FP_SEG(fptr) 	((unsigned)((unsigned long)(fptr) >> 16))
+#define FP_OFF(fptr)	((unsigned)(fptr))
+
+// I think there is one like this already defined...
+#define MAX_PROCESS_NAME 		16
+#define MAX_PROCESSES			32
+#define MAX_ARG             	16
+#define P_RATIO             	2
+#define MAX_FILES_PER_PROCESS	10
+
+typedef enum {PNONE = 0, VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SKY_HIGH} priority_t;
+typedef enum {BACKGROUND = 0, FOREGROUND} 	            groundness_t;
+typedef enum {BLOCKED = 0, READY, RUNNING, FINALIZED} 	status_t;
+typedef enum {W_FIFO = 0, W_INPUT, W_CHILD, W_SEM, W_LOGIN} 	block_t;
+
 
 typedef struct {
-	int pid;
-	char name [MAX_PROCESS_NAME];
-	int priority;
-	int tty;
-	int foreground; 
-	int lastCalled;
-	int sleep;
-	int status;
-	int parent;
-	int ESP;
-	int freeSlot;
-	int stackstart;
-	int stacksize;
-	int cpu;
-	int countExec; //Acumulador de ejecuciones utilizado para calcular el porcentaje de cpu
+	char name[MAX_NAME_LENGTH];
+	u32int mask;	// inode type
+	u32int count;	// number of links
+	u32int inode;	// inode number
+	u32int mode;
+	u32int offset;
+	u32int length;
+} file_descriptor_entry;
+
+typedef struct {
+	char name[MAX_PROCESS_NAME];
+	// Permission
+	int ownerUid;
+	// Memory status
 	int argc;
-	char * argv[MAX_ARG];
-	void *info;
+	char *argv[MAX_ARG];
+	int ESP;
+	int stacksize;
+	int stack;
+	// Process state
+	int pid;
+	int parent;
+	groundness_t groundness;
+	priority_t priority;
+	status_t status;
+	int lastCalled;
+	block_t waitingFlags;
+	// I/O
+	int tty;
+	file_descriptor_entry fd_table[MAX_FILES_PER_PROCESS];
 } PROCESS;
 
-typedef struct {
-	int EDI, ESI, EBP, ESP, EBX, EDX, ECX, EAX,  EIP, CS, EFLAGS;
-	void*retaddr;
-	int argc;
-	char** argv;
-} STACK_FRAME;
+/* createProcess
+*
+* Recibe como parametros:
+* - Nombre del proceso
+* - Función a ejecutar (proceso)
+* - Cantidad de argumentos
+* - Argumentos
+* - Largo del stack
+* - TTY que lo está creando
+* - Groundness (Foreground/Background)
+* - Status en el cual inicializarlo
+* - Prioridad del proceso para el scheduler
+* - pid del proceso padre
+**/
+void process_initialize(PROCESS* newProcess, char* name, int(*processFunc)(int, char**),
+		int argc, char** argv, int stacklength, void(*cleaner)(void),
+		int tty, int groundness, int status, int priority, int parentPID);
 
-void createProcessAt(char* name, int (*processFunc)(int,char**),int tty, int argc,
-    char** argv, int stacklength, int priority, int isFront, int status);
+void process_finalize(PROCESS* newProcess);
 
-int getPID(void);
-PROCESS* getProcessByPID(int pid);
-PROCESS* getNextTask(void);
-void initScheduler(void);
+u32int yield();
 
-// Processes
-int idle(int argc, char **argv);
+u32int fork();
+
+PUBLIC void process_checkStack();
 
 #endif

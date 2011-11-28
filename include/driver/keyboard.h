@@ -12,20 +12,13 @@
 
 #define CLEAR_BREAK_BIT(A)	((A) & 0x7F)
 #define SHIFT_PRESSED() 	(kbFlags & UCASE)
-#define IS_MAKE(A) 			((A) & 0x80)
+#define IS_BREAK(A) 		((A) & 0x80)
 #define IS_ESCAPE()			(kbFlags & ESCAPE)
 #define IS_CTRL() 			(kbFlags & CTRL)
 #define IS_ALT() 			(kbFlags & ALT)
 #define IS_DEL() 			(kbFlags & DEL)
 #define F_PRESSED(i) 		((fKeys >> (i)) & 1)
 
-typedef struct {
-	int from;
-	int to;
-	char buffer[K_BUFFER_SIZE]; 
-} K_BUFFER;
-
-K_BUFFER keyboard_buffer;
 char kbFlags;
 char fKeys;
 
@@ -33,11 +26,7 @@ void handleScanCode(unsigned char scanCode);
 int checkSpecialKey(unsigned char scanCode);
 char translateSc(unsigned char scanCode);
 
-void putKeyInBuffer(char c);
-char getKeyFromBuffer();
 void keyboard_init();
-int bufferIsEmpty();
-int keyboard_getPressedFkey();
 
 #endif
 

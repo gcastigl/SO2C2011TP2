@@ -1,141 +1,122 @@
 #include <process/process.h>
+#include <session.h>
+#include <util/logger.h>
+#include <process/scheduler.h>
+#include <lib/stdlib.h>
+#include <memory/paging.h>
 
-extern PROCESS process[];
-extern int nextPID; 
-extern int currentPID;
-int count100 = 1;
-
-int schedulerActive = false;
-
-void clean(void);
 extern int loadStackFrame();
-void saveESP(int oldESP);
-extern int getNextPID();
+int getNextPID();
+PRIVATE int nextPID = 0;
 
-void createProcessAt(char* name, int (*processFunc)(int,char**),int tty, int argc,
-	char** argv, int stacklength, int priority, int isFront, int status) {
-	PROCESS* newProcess;
-	void* stack = kmalloc_a(stacklength);
-	int i;
-	for(i = 0; i < MAX_PROCESSES;i++) {
-		if(process[i].freeSlot == 1)
-			break;
-	}
-	
-	if (i == MAX_PROCESSES) {
+void process_initialize(PROCESS* newProcess, char* name, int(*processFunc)(int, char**),
+		int argc, char** argv, int stacklength, void(*cleaner)(void),
+		int tty, int groundness, int status, int priority, int parentPID) {
+    for (int i = 0; i < argc; i++) {
+    	int len = strlen(argv[i]) + 1;
+    	log(L_DEBUG, "argument %d has %d bytes", i, len);
+        newProcess->argv[i] = (char*) kmalloc(len);
+        memcpy(newProcess->argv[i], argv[i], len);
+    }
+    newProcess->argc = argc;
+    memcpy(newProcess->name, name, strlen(name) + 1);
+    newProcess->ownerUid = session_getEuid();
+    newProcess->pid = getNextPID();
+    newProcess->stacksize = stacklength;
+    newProcess->stack = (int) kmalloc_a(stacklength);
+    log(L_DEBUG, "%s starts at 0x%x to 0x%x", name, newProcess->stack, newProcess->stack + stacklength - 1); 
+    newProcess->ESP = loadStackFrame(processFunc, newProcess->stack + stacklength - 1, argc, newProcess->argv, cleaner);
+    newProcess->tty = tty;
+    newProcess->lastCalled = 0;
+    newProcess->priority = priority;
+    newProcess->groundness = groundness;
+    newProcess->parent = parentPID;
+    newProcess->status = status;
+    newProcess->waitingFlags = -1;
+    for (int i = 0; i < MAX_FILES_PER_PROCESS; i++) {
+    	newProcess->fd_table[i].mask = 0;
+    }
+	log(L_DEBUG, "Creating new process: %s - PID: %d. Parent: %d\n", newProcess->name, newProcess->pid, newProcess->parent);
+}
+
+void process_finalize(PROCESS* newProcess) {
+    for (int i = 0; i < newProcess->argc; i++) {
+        kfree(newProcess->argv[i]);
+    }
+    kfree((void*) (newProcess->stack));
+    kfree(newProcess);
+}
+
+int setPriority(int pid, int newPriority) {
+    PROCESS *p = scheduler_getProcess(pid);
+    if (p == NULL) {
+    	log(L_ERROR, "could not set priority %d to pid %d", newPriority, pid);
+    	return -1;
+    }
+    if (p->pid == 0 && newPriority == 0) {
+        log(L_ERROR, "trying to remove priority from idle process! (Not allowed)");
+        return -1;
+    }
+    p->priority = newPriority;
+    return 0;
+}
+
+int getNextPID() {
+    return nextPID++;
+}
+
+u32int yield() {
+    _SysCall(SYSTEM_YIELD);
+    return 0;
+}
+
+PUBLIC void _expandStack() {
+    PROCESS *proc = scheduler_getCurrentProcess();
+    int esp = _ESP;
+    int newSize = DEFAULT_STACK_SIZE + proc->stacksize;
+    void *new_stack_start = (void *)kmalloc_a(newSize);
+    int offset = (int)new_stack_start - proc->stack;
+    void *old_stack_start = (void*)proc->stack;
+
+    memcpy(new_stack_start, old_stack_start, proc->stacksize);
+    
+      // Backtrace through the original stack, copying new values into
+      // the new stack.
+      for(int i = (u32int)new_stack_start; i > (u32int)new_stack_start-newSize; i -= 4)
+      {
+        u32int tmp = * (u32int*)i;
+        // If the value of tmp is inside the range of the old stack, assume it is a base pointer
+        // and remap it. This will unfortunately remap ANY value in this range, whether they are
+        // base pointers or not.
+        if ((proc->stack < tmp) && ((proc->stack + proc->stacksize) < esp))
+        {
+          tmp = tmp + offset;
+          u32int *tmp2 = (u32int*)i;
+          *tmp2 = tmp;
+        }
+      }
+
+    kfree((void*)proc->stack);
+    proc->stack = (int)new_stack_start;
+    proc->stacksize = newSize;
+    proc->ESP = proc->ESP + offset;
+}
+
+PUBLIC void process_checkStack() {
+    PROCESS *proc = scheduler_getCurrentProcess();
+    if (proc == NULL)
         return;
-	}
-	
-    newProcess = &process[i];
-	
-	for (i=0;i<argc;i++){
-	    newProcess->argv[i]=(char*)kmalloc(strlen(argv[i])+1);
-	    strcpy(newProcess->argv[i],argv[i]);
-	}
-	
-	newProcess->pid = getNextPID();
-	newProcess->foreground = isFront;
-	newProcess->priority = priority;
-	memcpy(newProcess->name, name, strlen(name) + 1);
-	newProcess->sleep = 0;
-	newProcess->status = status;
-	newProcess->tty = tty;
-	newProcess->lastCalled = 0;
-	newProcess->stacksize = stacklength;
-	newProcess->stackstart = (int) stack;
-	newProcess->freeSlot = 0;
-	newProcess->ESP = loadStackFrame(processFunc, newProcess->stackstart, argc, newProcess->argv, clean);
-	newProcess->parent = currentPID;
-	if(isFront && currentPID >= 1 && 0) {
-		PROCESS* proc = getProcessByPID(currentPID);
-		proc->status = BLOCKED;
-		newProcess->parent = currentPID;
-	}
-}
-
-PROCESS* getNextTask(void) {
-    int i;
-    int nextReady = 0, taskLevel = 0;
-    PROCESS *proc;
-
-    for (i = 1; i < MAX_PROCESSES; i++) {
-        proc=&process[i];
-	
-        if ((proc->freeSlot != FREE)) {
-            if (proc->lastCalled>=taskLevel) {
-                nextReady=i;
-                taskLevel=proc->lastCalled;
-            }
-            proc->lastCalled++;
-        } else if ((proc->freeSlot != FREE)) {
-            if (--(proc->sleep) == 0)
-                proc->status = READY;
-    	}
-
-    	if (count100 == 100) {
-            proc->cpu = proc->countExec;
-            proc->countExec = 0;
-	    }
+    if (proc->pid > MAX_TTYs)
+        log(L_INFO, "Process %s: ESP: 0x%x stackStart: 0x%x", proc->name, proc->ESP, proc->stack);
+/*    if (proc->ESP < proc->stack + 0x500) {
+        registers_t regs;
+        regs.esp = proc->ESP;
+        panic("asdasdasd", 1, true);
     }
-
-    if ((++count100) > 100) {
-        process[0].cpu = process[0].countExec;
-        process[0].countExec = 0;
-        count100 = 1;
+*/    
+    if (proc->ESP < proc->stack + 0x500) {
+        log(L_INFO, "Expanding stack(0x%x @ 0x%x) for %s", proc->stack, proc->name);
+        _expandStack();
+        log(L_INFO, "EXPANDED stack(0x%x) for %s", proc->stack, proc->name);
     }
-    process[nextReady].countExec++;
-    process[nextReady].lastCalled = 0;
-
-    return &process[nextReady];
-
-    //notar que si no hay procesos disponibles, retornara &processes[0], o sea init :)
-
-}
-
-int getNextProcess(int oldESP) {
-    PROCESS *proc;
-    saveESP(oldESP); // el oldESP esta el stack pointer del proceso
-    proc = getNextTask();
-    
-    downPages(currentPID);     // baja las paginas del proceso viejo y todos sus ancestros
-    currentPID = proc->pid;
-    upPages(currentPID);     // levanta las paginas de este proceso y la de sus ancestros
-    
-    return proc->ESP;
-}
-
-void saveESP (int oldESP) {
-    PROCESS *proc;
-    proc = getProcessByPID(currentPID);
-    
-    proc->ESP = oldESP;
-    return;
-}
-
-void initScheduler(void) {
-	int i;
-    for (i = 0; i < MAX_PROCESSES; i++) {
-        process[i].freeSlot = FREE;
-    }
-    schedulerActive = true;
-}
-
-void clean(void) {   
-    PROCESS *temp;
-	int i;
-	//Obtengo el proceso actual
-    temp = getProcessByPID (currentPID);
-
-	temp->freeSlot = FREE;
-
-	kfree((void*)temp->stackstart-temp->stacksize+1);
-	
-	for (i=0;i<temp->argc;i++)
-	  kfree((void*)temp->argv[i]);
-}
-
-//Processes
-
-int idle(int argc, char **argv) {
-    while(1);
 }

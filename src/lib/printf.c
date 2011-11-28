@@ -1,22 +1,22 @@
 #include <lib/stdio.h>
+#include <lib/unistd.h>
 #include <main.h>
 
-static void prints(char * string);
+static void prints(char * string, int padding);
+static char *numberBaseNtoString(unsigned int number, int base, char * out);
 
-static char * numberBaseNtoString(unsigned int number, int base, char * out);
-
-static int currentFd;
+PRIVATE int currentFd;
 
 void setFD(int fileDescriptor) {
 	currentFd = fileDescriptor;
 }
 
 void putchar(char c) {
-    __write(currentFd, &c, 1);
+    write(currentFd, &c, 1);
 }
 
 void printf(char * formatString, ...) {
-    int integer;
+    int integer, padding;
     unsigned int unsigenedInteger;
     char * string;
     char out[40];
@@ -26,6 +26,15 @@ void printf(char * formatString, ...) {
     while (*formatString != '\0') {
         if (*formatString == '%') {
             formatString++;
+            padding = -1;
+            if (isNumber(*formatString)) {
+            	padding = (*formatString - '0');
+            	formatString++;
+            	if (isNumber(*formatString)) {
+            		padding = padding * 10 + (*(formatString) - '0');
+            		formatString++;
+            	}
+            }
             switch (*formatString) {
                 case 'c':
                     c = va_arg(args, int);
@@ -33,7 +42,7 @@ void printf(char * formatString, ...) {
                     break;
                 case 's':
                     string = va_arg(args, char *);
-                    prints(string);
+                    prints(string, padding);
                     break;
                 case 'd':
                     integer = va_arg(args, int);
@@ -41,20 +50,20 @@ void printf(char * formatString, ...) {
                         integer = -integer;
                         putchar('-');
                     }
-                    prints(numberBaseNtoString(integer, 10, out));
+                    prints(numberBaseNtoString(integer, 10, out), padding);
                     break;
                 case 'u':
                     unsigenedInteger = va_arg(args, unsigned int);
-                    prints(numberBaseNtoString(unsigenedInteger, 10, out));
+                    prints(numberBaseNtoString(unsigenedInteger, 10, out), padding);
                     break;
                 case 'o':
                     integer = va_arg(args, unsigned int);
-                    prints(numberBaseNtoString(integer, 8, out));
+                    prints(numberBaseNtoString(integer, 8, out), padding);
                     break;
                 case 'x':
                 case 'p':
                     unsigenedInteger = va_arg(args, unsigned int);
-                    prints(numberBaseNtoString(unsigenedInteger, 16, out));
+                    prints(numberBaseNtoString(unsigenedInteger, 16, out), padding);
                     break;
                 case '%':
                     putchar('%');
@@ -68,11 +77,16 @@ void printf(char * formatString, ...) {
     va_end(args);
 }
 
-static void prints(char * string) {
-    while (*string != '\0') {
-        putchar(*string);
-        string++;
+static void prints(char * string, int padding) {
+    int lenght = strlen(string);
+    if (padding == -1 || lenght <= padding) {
+    	write(currentFd, string, lenght);
+    } else if (lenght > padding){
+    	write(currentFd, string, padding);
     }
+	while(padding != -1 && lenght++ <= padding) {
+		putchar(' ');
+	}
 }
 
 static char* numberBaseNtoString(unsigned int number, int base, char * out) {
@@ -166,4 +180,24 @@ char* itoa(int i) {
     *--p = '-';
   }
   return p;
+}
+
+char fgetc(FILE* steam) {
+	char c;
+	read(steam->fd, &c, 1);
+	return c;
+}
+
+void fprintf(FILE* stream, char* tpt, ...) {
+	int size = strlen(tpt);
+	log(L_DEBUG, "writing %s to %d / %d bytes", tpt, stream->fd, size);
+	write(stream->fd, tpt, size);
+}
+
+int fclose(FILE *stream) {
+	// free(stream);
+	log(L_DEBUG, "Closing the steam... sendiong EOF");
+	char c = EOF;
+	write(stream->fd, &c, 1);
+	return 0;
 }

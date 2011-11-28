@@ -1,4 +1,6 @@
 #include <driver/keyboard.h>
+#include <signal.h>
+#include <util/logger.h>
 
 unsigned char lcase[60] =
 {
@@ -36,17 +38,14 @@ unsigned char ucase[60] =
 
 void keyboard_init() {
 	fKeys = 0;
-	keyboard_buffer.from = 0;
-	keyboard_buffer.to = 0;
-	keyboard_buffer.buffer[0] = '\0';
+    log(L_INFO, "keyboard initialized");
 }
 
 void handleScanCode(unsigned char scanCode) {
-	char c;
 	if (!checkSpecialKey(scanCode)) {
-		if (IS_MAKE(scanCode)) {
-			c = translateSc(CLEAR_BREAK_BIT(scanCode));
-			putKeyInBuffer(c);
+		if (!IS_BREAK(scanCode)) {
+			char c = translateSc(CLEAR_BREAK_BIT(scanCode));
+			signal_keyPressed(c);
 		}
 	}
 }
@@ -129,47 +128,21 @@ int checkSpecialKey(unsigned char scanCode) {
 		case 0xC4:
 			// fbit = (1 << (scanCode - 0xBB)); // FIXME: why won't this work??
 			kbFlags &= ~FN;
-			fbit = -1; // turns off all F key flags
-			fKeys &= ~fbit;
+			fbit = 0; // turns off all F key flags
+			fKeys &= fbit;
 			break;
 		default:
 			ret = false;
 			break;
+	}
+	if (ret) {
+	    signal_specialKeyPressed();
 	}
 	return ret;
 	
 }
 
 char translateSc(unsigned char scanCode) {
-		return SHIFT_PRESSED() ? ucase[scanCode] : lcase[scanCode];
-}
-
-int bufferIsEmpty() {
-	return keyboard_buffer.to == keyboard_buffer.from;
-}
-
-int bufferIsFull() {
-	int nextPos = keyboard_buffer.to + 1;
-	nextPos %= K_BUFFER_SIZE;
-	return nextPos == keyboard_buffer.from;
-}
-
-char getKeyFromBuffer() {
-	if (bufferIsEmpty()) {
-		return '\0';
-	}
-	char c = keyboard_buffer.buffer[keyboard_buffer.from];
-	keyboard_buffer.from++;
-	keyboard_buffer.from %= K_BUFFER_SIZE;
-	return c;
-}
-
-void putKeyInBuffer(char c) {
-	if (bufferIsFull()) {
-		return;
-	}
-	keyboard_buffer.buffer[keyboard_buffer.to] = c;
-	keyboard_buffer.to++;
-	keyboard_buffer.to %= K_BUFFER_SIZE;
+	return SHIFT_PRESSED() ? ucase[scanCode] : lcase[scanCode];
 }
 

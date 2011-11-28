@@ -2,25 +2,24 @@
 #define TTY_H
 
 #include <defs.h>
-#include <lib/kheap.h>
+#include <memory/kheap.h>
 #include <fs/fs.h>
 #include <lib/stdlib.h>
 #include <driver/video.h>
+#include <process/process.h>
+#include <util/circularBuffer.h>
 
-#define MAX_TTYs		8
-
-#define TTY_BUFFER_SIZE	10
-
-typedef struct {
-	int buffer[TTY_BUFFER_SIZE];
-	int head;
-	int tail;
-} BUFFERTYPE;
+#define TTY_INPUT_BUFFER_SIZE	10
+#define TTY_BUFFER_SIZE			128
 
 typedef struct {
-	char* terminal;
+    int id;
+    int pid;
+	char* screen;
 	int offset;
-	BUFFERTYPE buffer;
+	c_buffer_t input_buffer;
+	char buffer[TTY_BUFFER_SIZE];
+    int bufferOffset;
 	u32int currDirectory;
 	char currPath[64];
 	int currPathOffset;
@@ -29,24 +28,94 @@ typedef struct {
 	char fgColor;
 } TTY;
 
-void tty_init();
-
+/* tty_setCurrent
+*
+* Recibe como parametros:
+* - TTY
+*
+* Setea la TTY actual
+**/
 void tty_setCurrent(int tty);
 
+/* tty_getCurrent
+*
+* Devuelve el número de TTY actual
+**/
 int tty_getCurrent();
 
+/* tty_getCurrentTTY
+*
+* Devuelve la TTY actual
+**/
 TTY* tty_getCurrentTTY();
 
 void tty_getCurrentNode(fs_node_t* node);
 
+PUBLIC void tty_setCurrentNode(fs_node_t node);
+
+/* tty_getTTY
+*
+* Recibe como parametros:
+* - Índice
+*
+* Devuelve la TTY 'index'
+**/
 TTY* tty_getTTY(int index);
 
+/* tty_write
+*
+* Recibe como parametros:
+* - TTY
+* - Buffer
+* - Cantidad
+*
+* Escribe en la tty 'tty' el contenido del buffer hasta 'size' caracteres
+**/
 void tty_write(TTY* tty, char* buffer, u32int size);
 
+boolean tty_hasInput(TTY* tty);
+
+/* tty_clean
+*
+* Recibe como parametros:
+* - TTY
+*
+* Límpia la pantalla de la tty
+**/
 void tty_clean(TTY* tty);
 
+/* tty_setFormatToCurrTTY
+*
+* Recibe como parametros:
+* - format
+*
+* Setea el formato a la TTY actual
+**/
 void tty_setFormatToCurrTTY(char format);
 
+void tty_setFormat(TTY* tty, char format);
+
+/* tty_getFormatToCurrTTY
+*
+* Devuelve el formato de la TTy actual
+**/
 char tty_getCurrTTYFormat();
+
+
+/* startTTYs
+*
+* Inicializa las TTYs
+**/
+void startTTYs();
+
+/* tty_p
+*
+* Recibe como parametros:
+* - Cantidad de argumentos
+* - Argumentos
+*
+* Proceso TTY
+**/
+int tty_p(int argc, char **argv);
 
 #endif

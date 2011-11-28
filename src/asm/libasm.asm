@@ -161,13 +161,14 @@ _SysCall:
 	pusha
 
 	mov eax, [ebp + 8] ; Syscall number
-	mov ebx, [ebp + 12]; file descriptor
-	mov ecx, [ebp + 16]; buffer
-	mov edx, [ebp + 20]; count
+	mov ebx, [ebp + 12]; param 1
+	mov ecx, [ebp + 16]; param 2
+	mov edx, [ebp + 20]; param 3
 	
 	int 80h
-
+	mov [ebp + 8], eax
 	popa
+	mov eax, [ebp+8]
 	mov esp, ebp
 	pop ebp
 	ret

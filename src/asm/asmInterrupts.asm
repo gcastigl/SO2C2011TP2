@@ -6,53 +6,57 @@ GLOBAL	_getTTCounter
 common ttcounter 4
 
 _increaseTTCounter:				; increase ticks
-	push ebp
-	mov ebp, esp
-	
-	push eax
-	mov eax, [ttcounter]
-	inc eax
-	mov [ttcounter], eax
-	pop eax
+    push ebp
+    mov ebp, esp
+    
+    push eax
+    mov eax, [ttcounter]
+    inc eax
+    mov [ttcounter], eax
+    pop eax
 
-	mov esp, ebp
-	pop ebp
-	ret
+    mov esp, ebp
+    pop ebp
+    ret
 
 _getTTCounter:
-	push ebp
-	mov ebp, esp
-	mov eax, [ttcounter]
-	mov esp, ebp
-	pop ebp
-	ret
+    push ebp
+    mov ebp, esp
+    mov eax, [ttcounter]
+    mov esp, ebp
+    pop ebp
+    ret
 
 _systemCallHandler:				; Handler de INT 80h
-	push ebp
-	mov ebp, esp			;StackFrame
-	
-	push edx
-	push ecx
-	push ebx
-	
-	push esp				; Puntero al array de argumentos
-	push eax				; Numero de Systemcall
-	mov		ax, 10h			; a utilizar.
-	mov		ds, ax
-	mov		es, ax
-	call systemCallHandler
-	mov	al,20h			; Envio de EOI generico al PIC
-	out	20h,al
-	pop eax
-	pop esp
+    push ebp
+    mov ebp, esp			;StackFrame
+    
+    push edx
+    push ecx
+    push ebx
+    
+    push esp				; Puntero al array de argumentos
+    push eax				; Numero de Systemcall
+    mov		ax, 0x10			; a utilizar.
+    mov     ss, ax
+    mov		ds, ax
+    mov		es, ax
+    call systemCallHandler
+    push eax
+    mov	al,20h			; Envio de EOI generico al PIC
+    out	20h,al
+    
+    pop eax
+    pop ebx
+    pop esp
 
-	pop ebx
-	pop ecx
-	pop edx
-	
-	mov esp, ebp
-	pop ebp
-	iret
+    pop ebx
+    pop ecx
+    pop edx
+    
+    mov esp, ebp
+    pop ebp
+    iret
 
 ;;;;;;;;;; NEW STUFF
 
