@@ -8,7 +8,6 @@ extern int loadStackFrame();
 int getNextPID();
 PRIVATE int nextPID = 0;
 
-// POSSIBLE FIXME: too many arguments!
 void process_initialize(PROCESS* newProcess, char* name, int(*processFunc)(int, char**),
 		int argc, char** argv, int stacklength, void(*cleaner)(void),
 		int tty, int groundness, int status, int priority, int parentPID) {
@@ -30,7 +29,7 @@ void process_initialize(PROCESS* newProcess, char* name, int(*processFunc)(int, 
     newProcess->lastCalled = 0;
     newProcess->priority = priority;
     newProcess->groundness = groundness;
-    newProcess->parent = parentPID;			// POSSIBLE FIXME HERE...
+    newProcess->parent = parentPID;
     newProcess->status = status;
     newProcess->waitingFlags = -1;
     for (int i = 0; i < MAX_FILES_PER_PROCESS; i++) {
@@ -52,6 +51,10 @@ int setPriority(int pid, int newPriority) {
     if (p == NULL) {
     	log(L_ERROR, "could not set priority %d to pid %d", newPriority, pid);
     	return -1;
+    }
+    if (p->pid == 0 && newPriority == 0) {
+        log(L_ERROR, "trying to remove priority from idle process! (Not allowed)");
+        return -1;
     }
     p->priority = newPriority;
     return 0;

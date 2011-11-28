@@ -7,8 +7,8 @@ PRIVATE PROCESS* _nextTask(int withPriority);
 PRIVATE void saveESP(int oldESP);
 PRIVATE void killChildren(int pid);
 
-void downPages( PROCESS *p );
-void upPages( PROCESS *p );
+void downPages(PROCESS *p);
+void upPages(PROCESS *p);
 /*
  * Función cementerio al cual van a parar todos los procesos una vez que terminan
  */
@@ -26,6 +26,7 @@ PRIVATE int firstTime = true;
 extern page_directory_t *current_directory;
 extern u32int initial_esp;
 PRIVATE void move_stack(void *new_stack_start, u32int size);
+PRIVATE int idle_cmd(int argc, char **argv);
 
 void scheduler_init(int withPriority) {
     _cli();
@@ -42,6 +43,12 @@ void scheduler_init(int withPriority) {
     scheduler_schedule("Idle", &idle_cmd, 0, NULL, DEFAULT_STACK_SIZE, 0, BACKGROUND, READY, VERY_LOW);
     _sti();
 }
+
+PRIVATE int idle_cmd(int argc, char **argv) {
+    while(1) {}
+    return 0;
+}
+
 
 void scheduler_setActive(boolean active) {
     schedulerActive = active;
@@ -79,11 +86,12 @@ void scheduler_schedule(char* name, int(*processFunc)(int, char**), int argc,
     }
     if (i == MAX_PROCESSES) {
         log(L_ERROR, "Could not create process %s. Max processes reached!", name);
+        _sti();
         return;
     }
     PROCESS* newProcess = (PROCESS*)kmalloc(sizeof(PROCESS));
     allProcess[i] = newProcess;
-        log(L_DEBUG, "%s is now on position: %d", name, i);
+    log(L_DEBUG, "%s is now on position: %d", name, i);
     process_initialize(newProcess, name, processFunc, argc, argv, stacklength,
             &clean, tty, groundness, status, priority, (current == NULL) ? 0 : current->pid);
     _sti();
@@ -168,7 +176,7 @@ void scheduler_blockCurrent(block_t waitFlag) {
 }
 
 PRIVATE void clean() {
-        log(L_DEBUG, "finalized: %s (%d)", current->name, current->pid, current->parent);
+    log(L_DEBUG, "finalized: %s (%d)", current->name, current->pid, current->parent);
     current->status = FINALIZED;
     scheduler_setStatus(current->parent, READY);
     switchProcess();
@@ -301,8 +309,7 @@ PRIVATE void move_stack(void *new_stack_start, u32int size)
 // a partir de un proceso dado setea como presentes o ausentes todas las paginas de un proceso ademas 
 // de las paginas de sus ancestros
 
-void flushPages	( PROCESS *process , int action )
-{
+void flushPages	(PROCESS *process , int action) {
 	PROCESS *proc_parent;
 	int pages, mem_dir, p;
 	page_t *page;
@@ -313,27 +320,24 @@ void flushPages	( PROCESS *process , int action )
 	pages = process->stacksize / PAGE_SIZE; // cuantas paginas tiene ese proceso
 	//direccion de memoria donde comienza el stack ( operacion inversa de create process )
 	mem_dir = process->stack;
-	for( p=0; p< pages ; ++p ) {
-		page = get_page( mem_dir,0,current_directory );
-		page->present = action ; // DISABLE or ENABLE
+	for (p = 0; p < pages; ++p) {
+		page = get_page(mem_dir, 0, current_directory);
+		page->present = action; // DISABLE or ENABLE
 		mem_dir += PAGE_SIZE; 	// 4kb step!
 	}
-	if(process->parent > 1)
-	{
+	if (process->parent > 1) {
 		proc_parent = scheduler_getProcess(process->parent);
 		flushPages( proc_parent, action );
 	}
 }
 
-void downPages( PROCESS *p )
-{
-  flushPages( p, 0 );
+void downPages(PROCESS *p) {
+  flushPages(p, 0);
   // Bajo las paginas del proceso actual que pasa a ser antiguo
 }
 
-void upPages( PROCESS *p )
-{
-  flushPages( p, 1 );
+void upPages(PROCESS *p) {
+  flushPages(p, 1);
   // levanto las paginas del proceso actual
 }
 

@@ -96,7 +96,7 @@ int infRecursion_cmd(int argc, char **argv) {
     unsigned int a = 60000;
     while (a--);
     infRecursion_cmd(argc, argv);
-    return -1;
+    return 0;
 }
 
 void testHeap() {
@@ -115,6 +115,8 @@ void testHeap() {
 
 
 
+/////////////////// WAAAAARRRNINNNNGGGG!!!!! ////////////////////////////
+/////////////////// YOU'R EDITOR MAY DIE!!!! ////////////////////////////
 
 
 
@@ -187,8 +189,7 @@ void testHeap() {
 
 
 
-
-
+//// YOU'VE BEEN WARNED! /////
 
 
 
