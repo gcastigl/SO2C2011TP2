@@ -18,6 +18,8 @@ PRIVATE int usePriority;
 PRIVATE int count100;
 PRIVATE int firstTime = true;
 
+PRIVATE int idle_cmd(int argc, char **argv);
+
 void scheduler_init(int withPriority) {
 	_cli();
 	// move_stack((void*)0xE0000000, 0x2000);
@@ -31,6 +33,12 @@ void scheduler_init(int withPriority) {
 	scheduler_schedule("Idle", &idle_cmd, 0, NULL, DEFAULT_STACK_SIZE, 0, BACKGROUND, READY, VERY_LOW);
 	_sti();
 }
+
+PRIVATE int idle_cmd(int argc, char **argv) {
+    while(1) {}
+    return 0;
+}
+
 
 void scheduler_setActive(boolean active) {
 	schedulerActive = active;

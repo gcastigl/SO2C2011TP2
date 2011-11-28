@@ -177,12 +177,6 @@ int kill_cmd(int argc, char**argv) {
     return 0;
 }
 
-int idle_cmd(int argc, char **argv) {
-    while(1) {}
-    return 0;
-}
-
-
 // Permissions
 int shell_useradd(int argc, char **argv) {
 	if (argc != 2) {
