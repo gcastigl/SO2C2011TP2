@@ -397,11 +397,25 @@ int rm_cmd(int argc, char **argv) {
         } else if (!permission_file_hasAccess(node, W_BIT)){
         	err = "Don't have write access";
         }
+        int removed = 0;
+        if (err == NULL) {
+            removed = removedir_fs(&current, node->inode);
+        }
+		switch(removed) {
+		case 0:
+		       // OK
+		    break;
+		case E_FILE_NOT_EXISTS:
+		    err = "No such file or directory";
+		    break;
+		case E_ACCESS:
+		    err = "No such file or directory";
+		    break;
+		}
         if (err != NULL) {
-			printf("rm: cannot remove \"%s\": %s\n", argv[0], err);
+            printf("rm: cannot remove \"%s\": %s\n", argv[0], err);
             return -1;
         }
-		int removed = removedir_fs(&current, node->inode);
         	log(L_DEBUG, "rm: remove file returned: %d", removed);
 		kfree(node);
 	}
