@@ -71,6 +71,7 @@ u32int yield() {
 }
 
 PUBLIC void _expandStack() {
+    _cli();
     PROCESS *proc = scheduler_getCurrentProcess();
     int esp = _ESP;
     int newSize = DEFAULT_STACK_SIZE + proc->stacksize;
@@ -98,7 +99,8 @@ PUBLIC void _expandStack() {
     proc->stack = (int)new_stack_start;
     proc->stacksize = newSize;
     proc->ESP = proc->ESP + offset;
-    __asm volatile("mov %0, %%esp" : : "r" (proc->ESP));
+    _sti();
+    __asm volatile("mov %0, %%esp" : : "r" (proc->ESP + offset));
 }
 
 PUBLIC void process_checkStack() {
