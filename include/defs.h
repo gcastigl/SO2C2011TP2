@@ -82,7 +82,7 @@ typedef void*           type_t;
 #define E_OUT_OF_MEMORY		-4
 #define E_CORRUPTED_FILE	-5
 #define E_INVALID_ARG		-6
-#define E_ACCESS			-7
+#define E_ACCESS            -7
 #define E_FILE_NOT_EXISTS	-8
 #define E_DIR_NOT_EXISTS	-9
 #define E_MAX_FD_REACHED	-10
