@@ -31,19 +31,17 @@ PRIVATE void move_stack(void *new_stack_start, u32int size);
 PRIVATE int idle_cmd(int argc, char **argv);
 
 void scheduler_init(int withPriority) {
-    _cli();
     log(L_DEBUG, "PRE. ESP:0x%x, EBP:0x%x", _ESP, _EBP);
     //move_stack((void*)0xE0000000, 0x2000);
     log(L_DEBUG, "POST. ESP:0x%x, EBP:0x%x", _ESP, _EBP);
     count100 = 0;
     usePriority = withPriority;
-    schedulerActive = true;
     for (int i = 0; i < MAX_PROCESSES; i++) {
         allProcess[i] = NULL;
     }
     current = NULL;
     scheduler_schedule("Idle", &idle_cmd, 0, NULL, DEFAULT_STACK_SIZE, 0, BACKGROUND, READY, VERY_LOW);
-    _sti();
+    schedulerActive = true;
 }
 
 PRIVATE int idle_cmd(int argc, char **argv) {
@@ -81,14 +79,18 @@ PRIVATE void saveESP(int oldESP) {
 void scheduler_schedule(char* name, int(*processFunc)(int, char**), int argc,
         char** argv, int stacklength, int tty, int groundness, int status, int priority) {
     // Check if max process reached
-    _cli();
+    if (schedulerActive) {
+        _cli();
+    }
     int i = 0;
     while (allProcess[i] != NULL && i < MAX_PROCESSES) {
         i++;
     }
     if (i == MAX_PROCESSES) {
         log(L_ERROR, "Could not create process %s. Max processes reached!", name);
-        _sti();
+        if (schedulerActive) {
+            _sti();
+        }
         return;
     }
     PROCESS* newProcess = (PROCESS*)kmalloc(sizeof(PROCESS));
@@ -96,7 +98,9 @@ void scheduler_schedule(char* name, int(*processFunc)(int, char**), int argc,
     log(L_DEBUG, "%s is now on position: %d", name, i);
     process_initialize(newProcess, name, processFunc, argc, argv, stacklength,
             &clean, tty, groundness, status, priority, (current == NULL) ? 0 : current->pid);
-    _sti();
+    if (schedulerActive) {
+        _sti();
+    }
     if (groundness == FOREGROUND) {
         if (current != NULL) {
             current->lastCalled = 0;
