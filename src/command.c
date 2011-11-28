@@ -302,35 +302,36 @@ int cd_cmd(int argc, char **argv) {
 }
 
 int ls_cmd(int argc, char **argv) {
+    boolean showHidden = false;
+    if (argc == 1 && strcmp(argv[0], "-a") == 0) {
+        showHidden = true;
+    }
+    log(L_DEBUG, "showhidde: %d", showHidden);
     u32int currentiNode = tty_getCurrentTTY()->currDirectory;
     fs_node_t current;
     fs_getFsNode(&current, currentiNode);
     int i = 0;
     fs_node_t *node = NULL;
     char perm[MASK_STRING_LEN];
-    if (argc == 0) {
         while ((node = readdir_fs(&current, i)) != NULL) {                 // get directory i
         	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
-            mask_string(node->mask, perm);
-            /*log(L_DEBUG, "%s\t%s\t%s\t%s%s\n",
+            if (node->name[0] != '.' || (node->name[0] == '.' && showHidden)) {
+                if (showHidden) {
+                    if (i == 0) strcpy(node->name, "."); else if (i == 1) strcpy(node->name, "..");
+                } else if (i < 2) {i = 2; continue;}
+                mask_string(node->mask, perm);
+                printf("%s\t%5s\t%5s",
                     perm,
                     user_getName(node->uid),
-                    group_getName(node->gid),
+                    group_getName(node->gid));
+                _ls_cmd_setColor(FILE_TYPE(node->mask));
+                printf("\t%s%s\n",
                     node->name,
-                    (FILE_TYPE(node->mask) == FS_DIRECTORY) ? "/": "");*/
-            printf("%s\t%5s\t%5s",
-				perm,
-				user_getName(node->uid),
-				group_getName(node->gid));
-        	_ls_cmd_setColor(FILE_TYPE(node->mask));
-            printf("\t%s%s\n",
-                node->name,
-                _ls_cmd_EndingString(FILE_TYPE(node->mask))
-            );
+                    _ls_cmd_EndingString(FILE_TYPE(node->mask))
+                );
+            }
             i++;
         }
-    }
-    // while(1);
     return 0;
 }
 
