@@ -56,7 +56,7 @@ void paging_init();
    Causes the specified page directory to be loaded into the
    CR3 register.
 **/
-void switch_page_directory(page_directory_t *new);
+void paging_enable(page_directory_t *new);
 
 /**
    Retrieves a pointer to the page required.

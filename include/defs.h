@@ -38,7 +38,6 @@
 typedef enum { false = 0, true } boolean;
 
 #define NULL	((void *)0)
-#define ASSERT(b) 
 
 #define ERROR -1
 
