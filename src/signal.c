@@ -73,7 +73,7 @@ void checkTTY() {
 
 void checkKill(char c) {
     if (IS_CTRL() && c == 'c') {
-        scheduler_finalizeCurrent();
+        killCurrent();
     }
 }
 

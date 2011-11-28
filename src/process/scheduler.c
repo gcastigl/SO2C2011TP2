@@ -187,14 +187,6 @@ void scheduler_blockCurrent(block_t waitFlag) {
     yield();
 }
 
-void scheduler_finalizeCurrent() {
-    if (current->parent == 0) {
-        // Parent pid 0 means, TTY o idle process (can not be killed)
-        return;
-    }
-    clean();
-}
-
 PRIVATE void clean() {
     log(L_DEBUG, "finalized: %s (%d)", current->name, current->pid, current->parent);
     current->status = FINALIZED;
