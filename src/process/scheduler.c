@@ -312,13 +312,13 @@ void flushPages	( PROCESS *process , int action )
     if (process == NULL)
         return;
 
-	pages = process->stacksize / 0x1000; // cuantas paginas tiene ese proceso
+	pages = process->stacksize / PAGE_SIZE; // cuantas paginas tiene ese proceso
 	//direccion de memoria donde comienza el stack ( operacion inversa de create process )
 	mem_dir = process->stack;
 	for( p=0; p< pages ; ++p ) {
 		page = get_page( mem_dir,0,current_directory );
 		page->present = action ; // DISABLE or ENABLE
-		mem_dir += 0x1000; 	// 4kb step!
+		mem_dir += PAGE_SIZE; 	// 4kb step!
 	}
 	if(process->parent > 1)
 	{
