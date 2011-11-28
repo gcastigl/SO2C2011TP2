@@ -126,7 +126,7 @@ int top_cmd(int argc, char**argv) {
 
 PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus) {
     char *status[] = {"Blocked", "Ready", "Running"};
-    char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
+    char *priority[] = {"No Priority", "Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
     char *blockType[] = {"FIFO", "INPUT", "CHILD", "SEMAPHORE", "LOGIN", "????"};
     char *nonBlockedProcessFormat = "%5s\t%5s\t%d\t%s\t%9s\t%d\n";
     char *blockedProcessFormat =    "%5s\t%5s\t%d\t%s\t%5s\t%9s\t%d\n";
@@ -717,7 +717,7 @@ int mv_cmd(int argc, char **argv) {
 }
 
 int nice_cmd(int argc, char **argv) {
-    char *priorityName[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
+    char *priorityName[] = {"No priority", "Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
     if (argc == 0) {
         char* pname = priorityName[scheduler_getCurrentProcess()->priority];
         printf("Current priority: %s\n", pname);
