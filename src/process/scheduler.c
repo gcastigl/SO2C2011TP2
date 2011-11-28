@@ -112,10 +112,12 @@ int getNextProcess(int oldESP) {
     if (!firstTime) {
         saveESP(oldESP); 			// en el oldESP esta el stack pointer del proceso
         log(L_INFO, "%s: ESPa: 0x%x", current->name, current->ESP);
+        process_checkStack();
         log(L_INFO, "%s: ESPb: 0x%x", current->name, current->ESP);
     } else {
         firstTime = false;
     }
+    
     scheduler_setCurrent(next);
     setFD(next->tty);				// Sets the sys write call output to the tty corresponding to the process
     return next->ESP;
@@ -208,7 +210,7 @@ void scheduler_setCurrent(PROCESS* p) {
         }
         current = p;
         upPages(current);
-        showPages(current);
+        //showAllProcessInfo();
     }
 }
 
@@ -228,7 +230,7 @@ PRIVATE void showPages(PROCESS *process) {
 		mem_dir += PAGE_SIZE; 	// 4kb step!
 	}
     log(L_INFO, "Paging: %d pages %d/%d (up/down)", pages, up, down);
-    log(L_INFO, "Process %s has %d pages %d/%d (up/down)", process->name, pages, up, down);
+}
 
 PRIVATE void showStackInfo(PROCESS *process) {
     log(L_INFO, "Stack: start: 0x%x end: 0x%x size: 0x%x ESP: 0x%x", process->stack, process->stack + process->stacksize - 1, process->stacksize, process->ESP);
