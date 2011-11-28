@@ -127,7 +127,7 @@ int top_cmd(int argc, char**argv) {
 PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus) {
     char *status[] = {"Blocked", "Ready", "Running"};
     char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
-    char *blockType[] = {"FIFO", "INPUT", "CHILD", "????"};
+    char *blockType[] = {"FIFO", "INPUT", "CHILD", "SEMAPHORE", "LOGIN", "????"};
     char *nonBlockedProcessFormat = "%5s\t%5s\t%d\t%s\t%9s\t%d\n";
     char *blockedProcessFormat =    "%5s\t%5s\t%d\t%s\t%5s\t%9s\t%d\n";
 
@@ -140,7 +140,7 @@ PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus) {
                         p->name,
                         p->pid,
                         status[p->status],
-                        (0 <= p->waitingFlags && p->waitingFlags < 4) ? blockType[p->waitingFlags] : blockType[3],
+                        (0 <= p->waitingFlags && p->waitingFlags <= 4) ? blockType[p->waitingFlags] : blockType[5],
                         priority[p->priority % 10],
                         execCount[i]);
 		    } else {
@@ -707,4 +707,34 @@ int mv_cmd(int argc, char **argv) {
 		}
 	}
 	return 0;
+}
+
+int nice_cmd(int argc, char **argv) {
+    char *priorityName[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
+    if (argc == 0) {
+        char* pname = priorityName[scheduler_getCurrentProcess()->priority];
+        printf("Current priority: %s\n", pname);
+        return 0;
+    } else if (argc == 2) {
+        int pid = atoi(argv[0]);
+        int priority = atoi(argv[1]);
+        if (0 < priority || priority < 6) {
+            PROCESS* p = scheduler_getProcess(pid);
+            if (p != NULL) {
+                setPriority(p->pid, priority);
+                char* pname = priorityName[p->priority];
+                printf("nice: %s now has priority: %s\n", p->name, pname);
+            } else {
+                printf("nice: Could not process with pid: %d", pid);
+                return -1;
+            }
+            return 0;
+        } else {
+            printf("nice: Invalid priority %d. Priority must be between 0 and 6");
+            return -1;
+        }
+    } else {
+        printf("nice: Run COMMAND with an adjusted niceness, which affects process scheduling");
+    }
+    return -1;
 }

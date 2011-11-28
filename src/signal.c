@@ -3,6 +3,7 @@
 #include <util/circularBuffer.h>
 #include <tty.h>
 #include <process/process.h>
+#include <session.h>
 #include <util/logger.h>
 
 void checkReset();
@@ -49,6 +50,9 @@ void checkReset() {
 }
 
 void checkTTY() {
+    if (!session_isLoggedIn()) {
+        return;
+    }
 	if (IS_CTRL() && newTTY == -1) {
 		for (int i = 0; i < MAX_TTYs; ++i) {
 			if (F_PRESSED(i)) {

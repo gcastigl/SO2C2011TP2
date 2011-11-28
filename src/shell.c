@@ -63,6 +63,7 @@ cmd_table_entry cmd_table[] = {
     {"chgrp", 			"usage: GROUPNAME FILE", chgrp_cmd},
     {"cache", 			"prints the fs cache status", cacheStatus_cmd},
     {"random", 			HELP_RANDOM, random_cmd},
+    {"nice",            "Run COMMAND with an adjusted niceness, which affects process scheduling", nice_cmd},
     // TESTS ====================================================================
     {"pfiles", 			"prints the files opened by the current process", pfiles},
     {"DMtest", 			"disk manager test", diskManagerTest},

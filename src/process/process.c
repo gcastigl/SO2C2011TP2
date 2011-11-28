@@ -44,13 +44,14 @@ void process_finalize(PROCESS* newProcess) {
     kfree(newProcess);
 }
 
-void setPriority(int pid, int newPriority) {
+int setPriority(int pid, int newPriority) {
     PROCESS *p = scheduler_getProcess(pid);
     if (p == NULL) {
     	log(L_ERROR, "could not set priority %d to pid %d", newPriority, pid);
-    	return;
+    	return -1;
     }
     p->priority = newPriority;
+    return 0;
 }
 
 int getNextPID() {

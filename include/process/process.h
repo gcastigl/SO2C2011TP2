@@ -33,7 +33,7 @@ extern int read_ebp();
 typedef enum {PNONE = 0, VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SKY_HIGH} priority_t;
 typedef enum {BACKGROUND = 0, FOREGROUND} 	            groundness_t;
 typedef enum {BLOCKED = 0, READY, RUNNING, FINALIZED} 	status_t;
-typedef enum {W_FIFO = 0, W_INPUT, W_CHILD, W_LOGIN} 	block_t;
+typedef enum {W_FIFO = 0, W_INPUT, W_CHILD, W_SEM, W_LOGIN} 	block_t;
 
 
 typedef struct {
@@ -64,7 +64,6 @@ typedef struct {
 	status_t status;
 	int lastCalled;
 	block_t waitingFlags;
-	int waitingInfo;
 	// I/O
 	int tty;
 	file_descriptor_entry fd_table[MAX_FILES_PER_PROCESS];

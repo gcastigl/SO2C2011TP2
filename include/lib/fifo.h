@@ -13,10 +13,11 @@
 
 typedef struct {
 	char buff[PIPE_BUF];
-	List waitingQueue;
 	semaphore_t readers;
 	semaphore_t writers;
 	semaphore_t lock;
+    List waitingWriters;
+    List waitingReaders;
 	int inode;
 	int offset;
 	int lenght;

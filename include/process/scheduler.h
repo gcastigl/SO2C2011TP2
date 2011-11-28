@@ -65,7 +65,7 @@ PROCESS *scheduler_getCurrentProcess();
 *
 * Setea una nueva prioridad para el pid dado
 **/
-void setPriority(int pid, int newPriority);
+int setPriority(int pid, int newPriority);
 
 void scheduler_setStatus(u32int pid, u32int status);
 
