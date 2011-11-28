@@ -108,6 +108,15 @@ void testHeap() {
     kfree((void*)b);
 }
 
+extern PUBLIC void _expandStack();
+
+int testExpandStack_cmd(int argc, char **argv) {
+    printf("Expanding stack...\n");
+    _expandStack();
+    printf("Stack expanded...\n");
+    return 0;
+}
+
 
 
 

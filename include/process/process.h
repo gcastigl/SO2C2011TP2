@@ -80,6 +80,6 @@ u32int yield();
 
 u32int fork();
 
-PUBLIC void process_updateStack();
+PUBLIC void process_checkStack();
 
 #endif

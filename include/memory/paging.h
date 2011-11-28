@@ -15,9 +15,11 @@ typedef struct page
     u32int present    : 1;   // Page present in memory
     u32int rw         : 1;   // Read-only if clear, readwrite if set
     u32int user       : 1;   // Supervisor level only if clear
+    u32int reservedA  : 2;
     u32int accessed   : 1;   // Has the page been accessed since last refresh?
     u32int dirty      : 1;   // Has the page been written to since last refresh?
-    u32int unused     : 7;   // Amalgamation of unused and reserved bits
+    u32int reservedB  : 2;
+    u32int unused     : 3;   // Amalgamation of unused and reserved bits
     u32int frame      : 20;  // Frame address (shifted right 12 bits)
 } page_t;
 
