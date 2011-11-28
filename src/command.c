@@ -679,26 +679,29 @@ int cp_cmd(int argc, char **argv) {
 	if (argc == 2) {
 		char* source = argv[0];
 		char* dest = argv[1];
-		fs_node_t current, *destNode, *sourceNode;
+		fs_node_t current, *sourceNode;
 		fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
 		sourceNode = finddir_fs(&current, source);
 		if (sourceNode != NULL) {
-			errno = 0;
-			int created = createdir_fs(&current, dest, FILE_TYPE(sourceNode->mask));
-			if (created == -1) {
-				if (errno == E_FILE_EXISTS)
-					printf("cp: Destination file: %s already exists",  dest);
-				else
-					printf("cp: Error creating destination file. errno = %d",  errno);
-				kfree(sourceNode);
-				return -1;
-			}
-			destNode = finddir_fs(&current, dest);
-			printf("destination node: %s\n", destNode->name);
-			fs_clone(sourceNode, destNode);
-			kfree(sourceNode);
-			kfree(destNode);
-			return 0;
+		    char* err = NULL;
+		    errno = 0;
+		    fs_clone(&current, sourceNode, dest);
+		    switch(errno) {
+                case 0:
+                    // OK
+                    break;
+                case E_FILE_EXISTS:
+                    err = "file already exists";
+                    break;
+                default:
+                    err = "no se que paso!";
+                    log(L_ERROR, "no se q paso: %d", errno);
+		    }
+		    if (err != NULL) {
+		        printf("cp: could not copy %s: %s", source, err);
+		        return -1;
+		    }
+		    return 0;
 		} else {
 			printf("cp: Source file: %s does not exists\n", source);
 		}

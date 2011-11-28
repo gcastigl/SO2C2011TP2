@@ -394,28 +394,38 @@ PUBLIC void fs_setFileGid(u32int inode, int gid) {
     }
 }
 
-PUBLIC void fs_clone(fs_node_t *toClone, fs_node_t *target) {
-	int index1 = _indexOf(toClone->inode);
-	int index2 = _indexOf(target->inode);
-	if (index1 == -1 || index2 == -1) {
-		log(L_ERROR, "could not load inode: %d / %d", toClone->inode, target->inode);
+PUBLIC void fs_clone(fs_node_t *folder, fs_node_t *node, char *name) {
+    if (FILE_TYPE(folder->mask) != FS_DIRECTORY) {
+        errno = E_INVALID_ARG;
+        return;
+    }
+    int created = fs_createdir(folder, name, FILE_TYPE(node->mask));
+    if (created == -1) {
+        return;
+    }
+    fs_node_t* destNode = finddir_fs(folder, name);
+
+	int index = _indexOf(destNode->inode);
+	if (index == -1) {
+		log(L_ERROR, "could not load inode: %d / %d", node->inode, destNode->inode);
 		return;
 	}
-	iNode *inode = &inodes[index2];
-	inode->flags = toClone->flags;
-	inode->impl = toClone->impl;
-	inode->mask = toClone->mask;
-	strcpy(inode->name, target->name);
+	iNode *inode = &inodes[index];
+	inode->flags = node->flags;
+	inode->impl = node->impl;
+	strcpy(inode->name, destNode->name);
 	errno = 0;
-	diskManager_writeInode(inode, target->inode);
+	diskManager_writeInode(inode, destNode->inode);
 	if (errno != 0) {
 		log(L_ERROR, "Could not write inode to disk, errno %d", errno);
+		return;
 	}
 	u8int buff[512];
 	int offset = 0;
 	int read;
-	while((read = fs_read(toClone, offset, 512, buff)) != 0) {
-		fs_write(target, offset, 512, buff);
+	while((read = fs_read(node, offset, 512, buff)) != 0) {
+		fs_write(destNode, offset, 512, buff);
 		offset += read;
 	}
+    kfree(destNode);
 }
