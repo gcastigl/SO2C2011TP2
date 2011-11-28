@@ -303,35 +303,33 @@ int cd_cmd(int argc, char **argv) {
 
 int ls_cmd(int argc, char **argv) {
     boolean showHidden = false;
+    int i = 2;
     if (argc == 1 && strcmp(argv[0], "-a") == 0) {
         showHidden = true;
+        i = 0;
     }
-    log(L_DEBUG, "showhidde: %d", showHidden);
-    u32int currentiNode = tty_getCurrentTTY()->currDirectory;
-    fs_node_t current;
-    fs_getFsNode(&current, currentiNode);
-    int i = 0;
-    fs_node_t *node = NULL;
+    fs_node_t current, *node;
     char perm[MASK_STRING_LEN];
-        while ((node = readdir_fs(&current, i)) != NULL) {                 // get directory i
-        	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
-            if (node->name[0] != '.' || (node->name[0] == '.' && showHidden)) {
-                if (showHidden) {
-                    if (i == 0) strcpy(node->name, "."); else if (i == 1) strcpy(node->name, "..");
-                } else if (i < 2) {i = 2; continue;}
-                mask_string(node->mask, perm);
-                printf("%s\t%5s\t%5s",
-                    perm,
-                    user_getName(node->uid),
-                    group_getName(node->gid));
-                _ls_cmd_setColor(FILE_TYPE(node->mask));
-                printf("\t%s%s\n",
-                    node->name,
-                    _ls_cmd_EndingString(FILE_TYPE(node->mask))
-                );
+    fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
+    while ((node = readdir_fs(&current, i)) != NULL) {                 // get directory i
+        tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
+        if (node->name[0] != '.' || (node->name[0] == '.' && showHidden)) {
+            if (showHidden) {
+                if (i == 0) strcpy(node->name, "."); else if (i == 1) strcpy(node->name, "..");
             }
-            i++;
+            mask_string(node->mask, perm);
+            printf("%s\t%5s\t%5s",
+                perm,
+                user_getName(node->uid),
+                group_getName(node->gid));
+            _ls_cmd_setColor(FILE_TYPE(node->mask));
+            printf("\t%s%s\n",
+                node->name,
+                _ls_cmd_EndingString(FILE_TYPE(node->mask))
+            );
         }
+        i++;
+    }
     return 0;
 }
 
