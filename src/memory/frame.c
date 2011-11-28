@@ -61,7 +61,8 @@ PUBLIC void alloc_frame(page_t *page, int is_kernel, int is_writeable)
         u32int idx = first_frame();
         if (idx == (u32int)-1)
         {
-            // PANIC! no free frames!!
+            log(L_ERROR, "No free frames!");
+            __asm volatile("hlt");
         }
         set_frame(idx*0x1000);
         page->present = 1;
