@@ -3,6 +3,7 @@
 #include <util/logger.h>
 #include <process/scheduler.h>
 #include <lib/stdlib.h>
+#include <memory/paging.h>
 
 extern int loadStackFrame();
 int getNextPID();
