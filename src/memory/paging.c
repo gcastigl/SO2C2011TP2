@@ -67,6 +67,35 @@ void paging_init() {
 
     // Initialise the kernel heap.
     kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xCFFFF000, 0, 0);
+
+void _logPage(page_t page, int i, int j) {
+    log(L_INFO, "%d:%d (0x%x): f:0x%x ( %s%s%s%s) r:0x%x",
+        i,
+        j,
+        (i<<22)|(j<<12),
+        page.frame,
+        page.present ? "present " : "not-present ",
+        page.accessed ? "accessed " : "",
+        page.dirty ? "dirty " : "",
+        page.rw ? "read-write " : "",
+        page.unused
+    );
+}
+
+void _logTable(page_table_t *table, int i) {
+    if (table != NULL) {
+        for (int j = 0; j < PAGE_COUNT; ++j) {
+            _logPage(table->pages[j], i, j);
+        }
+    } else {
+        //log(L_INFO, "%d: UNMAPPED", i);
+    }
+}
+
+void _logDirectory(page_directory_t *dir) {
+    for (int i = 0; i < PAGE_TABLE_COUNT; ++i) {
+        _logTable(dir->tables[i], i);
+    }
 }
 
 void paging_enable(page_directory_t *dir) {
@@ -90,7 +119,7 @@ page_t *get_page(u32int address, int make, page_directory_t *dir) {
         u32int tmp;
         dir->tables[table_idx] = (page_table_t*)kmalloc_ap(sizeof(page_table_t), &tmp);
         memset(dir->tables[table_idx], 0, PAGE_SIZE);
-        dir->tablesPhysical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
+        dir->tablesPhysical[table_idx] = tmp | (PAGE_PRESENT | PAGE_READWRITE | PAGE_USERMODE);
         return &dir->tables[table_idx]->pages[address%PAGE_COUNT];
     } else {
         return 0;
@@ -105,13 +134,14 @@ void page_fault(registers_t regs) {
     __asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
     // The error code gives us details of what happened.
     log(L_ERROR, "PAGE-FAULT ( %s%s%s%s%s) at 0x%x",
-        regs.err_code & 0x1  ? "page-present " : "page-not-present ",
-        regs.err_code & 0x2  ? "write-on-read-only " : "",
-        regs.err_code & 0x4  ? "processor-was-in-user-mode " : "",
-        regs.err_code & 0x8  ? "overwritten-cpu-reserved-bits-of-page-entry " : "",
-        regs.err_code & 0x10 ? "instruction-fetch " : "",
+        regs.err_code & PAGE_PRESENT    ? "page-present " : "page-not-present ",
+        regs.err_code & PAGE_READWRITE  ? "write-on-read-only " : "",
+        regs.err_code & PAGE_USERMODE   ? "processor-was-in-user-mode " : "",
+        regs.err_code & PAGE_CORRUPTED  ? "overwritten-cpu-reserved-bits-of-page-entry " : "",
+        regs.err_code & PAGE_INST_FETCH ? "instruction-fetch " : "",
         faulting_address
     );
+    _logDirectory(current_directory);
     panic("Page fault", 1, false);
     killCurrent();
 }
