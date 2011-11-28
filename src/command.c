@@ -126,7 +126,7 @@ int top_cmd(int argc, char**argv) {
 
 PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus) {
     char *status[] = {"Blocked", "Ready", "Running"};
-    char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
+    char *priority[] = {"No Priority", "Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
     char *blockType[] = {"FIFO", "INPUT", "CHILD", "SEMAPHORE", "LOGIN", "????"};
     char *nonBlockedProcessFormat = "%5s\t%5s\t%d\t%s\t%9s\t%d\n";
     char *blockedProcessFormat =    "%5s\t%5s\t%d\t%s\t%5s\t%9s\t%d\n";
@@ -176,12 +176,6 @@ int kill_cmd(int argc, char**argv) {
     }
     return 0;
 }
-
-int idle_cmd(int argc, char **argv) {
-    while(1) {}
-    return 0;
-}
-
 
 // Permissions
 int shell_useradd(int argc, char **argv) {
@@ -302,35 +296,34 @@ int cd_cmd(int argc, char **argv) {
 }
 
 int ls_cmd(int argc, char **argv) {
-    u32int currentiNode = tty_getCurrentTTY()->currDirectory;
-    fs_node_t current;
-    fs_getFsNode(&current, currentiNode);
-    int i = 0;
-    fs_node_t *node = NULL;
+    boolean showHidden = false;
+    int i = 2;
+    if (argc == 1 && strcmp(argv[0], "-a") == 0) {
+        showHidden = true;
+        i = 0;
+    }
+    fs_node_t current, *node;
     char perm[MASK_STRING_LEN];
-    if (argc == 0) {
-        while ((node = readdir_fs(&current, i)) != NULL) {                 // get directory i
-        	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
+    fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
+    while ((node = readdir_fs(&current, i)) != NULL) {                 // get directory i
+        tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
+        if (node->name[0] != '.' || (node->name[0] == '.' && showHidden)) {
+            if (showHidden) {
+                if (i == 0) strcpy(node->name, "."); else if (i == 1) strcpy(node->name, "..");
+            }
             mask_string(node->mask, perm);
-            /*log(L_DEBUG, "%s\t%s\t%s\t%s%s\n",
-                    perm,
-                    user_getName(node->uid),
-                    group_getName(node->gid),
-                    node->name,
-                    (FILE_TYPE(node->mask) == FS_DIRECTORY) ? "/": "");*/
             printf("%s\t%5s\t%5s",
-				perm,
-				user_getName(node->uid),
-				group_getName(node->gid));
-        	_ls_cmd_setColor(FILE_TYPE(node->mask));
+                perm,
+                user_getName(node->uid),
+                group_getName(node->gid));
+            _ls_cmd_setColor(FILE_TYPE(node->mask));
             printf("\t%s%s\n",
                 node->name,
                 _ls_cmd_EndingString(FILE_TYPE(node->mask))
             );
-            i++;
         }
+        i++;
     }
-    // while(1);
     return 0;
 }
 
@@ -404,11 +397,25 @@ int rm_cmd(int argc, char **argv) {
         } else if (!permission_file_hasAccess(node, W_BIT)){
         	err = "Don't have write access";
         }
+        int removed = 0;
+        if (err == NULL) {
+            removed = removedir_fs(&current, node->inode);
+        }
+		switch(removed) {
+		case 0:
+		       // OK
+		    break;
+		case E_FILE_NOT_EXISTS:
+		    err = "No such file or directory";
+		    break;
+		case E_ACCESS:
+		    err = "No such file or directory";
+		    break;
+		}
         if (err != NULL) {
-			printf("rm: cannot remove \"%s\": %s\n", argv[0], err);
+            printf("rm: cannot remove \"%s\": %s\n", argv[0], err);
             return -1;
         }
-		int removed = removedir_fs(&current, node->inode);
         	log(L_DEBUG, "rm: remove file returned: %d", removed);
 		kfree(node);
 	}
@@ -710,7 +717,7 @@ int mv_cmd(int argc, char **argv) {
 }
 
 int nice_cmd(int argc, char **argv) {
-    char *priorityName[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
+    char *priorityName[] = {"No priority", "Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
     if (argc == 0) {
         char* pname = priorityName[scheduler_getCurrentProcess()->priority];
         printf("Current priority: %s\n", pname);

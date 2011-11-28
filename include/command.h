@@ -112,16 +112,6 @@ int format(int argc, char **argv);
 **/
 int logout(int argc, char **argv);
 
-/* idle_cmd
-*
-* Recibe como parametros:
-* - Cantidad de Argumentos
-* - Argumentos
-*
-* Proceso idle
-**/
-int idle_cmd(int argc, char **argv);
-
 /* top_cmd
 *
 * Recibe como parametros:

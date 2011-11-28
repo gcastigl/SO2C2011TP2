@@ -26,6 +26,7 @@ PRIVATE int firstTime = true;
 extern page_directory_t *current_directory;
 extern u32int initial_esp;
 PRIVATE void move_stack(void *new_stack_start, u32int size);
+PRIVATE int idle_cmd(int argc, char **argv);
 
 void scheduler_init(int withPriority) {
     _cli();
@@ -42,6 +43,12 @@ void scheduler_init(int withPriority) {
     scheduler_schedule("Idle", &idle_cmd, 0, NULL, DEFAULT_STACK_SIZE, 0, BACKGROUND, READY, VERY_LOW);
     _sti();
 }
+
+PRIVATE int idle_cmd(int argc, char **argv) {
+    while(1) {}
+    return 0;
+}
+
 
 void scheduler_setActive(boolean active) {
     schedulerActive = active;

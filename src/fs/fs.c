@@ -198,7 +198,7 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 	u32int i, offset, inodeNumber = -1;
 
 	i = 0;
-	offset = 3 * (sizeof(u32int) + MAX_NAME_LENGTH); // skip "/", "." and ".."
+	offset = (sizeof(u32int) + MAX_NAME_LENGTH); // skip "/", "." and ".."
 	while (i <= index && offset < length) {
 		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
 		//	log(L_DEBUG, "file: %s - %d", contents + offset + sizeof(u32int), inodeNumber);
@@ -263,10 +263,9 @@ PRIVATE u32int fs_removedir(fs_node_t* node, u32int inode) {
 		log(L_DEBUG, "removing inode: %d, length: %d", inode, inodes[index].length);
 	char contents[inodes[index].length];
 	diskManager_readContents(node->inode, contents, inodes[index].length, 0);
-	int offset = 0, readinode;
+	int offset = 3 * (MAX_NAME_LENGTH + sizeof(u32int)), readinode;
 	while (offset < inodes[index].length) {
 		memcpy(&readinode, contents + offset, sizeof(u32int));
-		//	log(L_DEBUG, "delete: read inode %d - %s", readinode, contents + offset + sizeof(u32int));
 		if (readinode == inode) {
 			readinode = -1;
 			memcpy(contents + offset, &readinode, sizeof(u32int));

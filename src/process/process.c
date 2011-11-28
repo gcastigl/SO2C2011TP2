@@ -53,6 +53,10 @@ int setPriority(int pid, int newPriority) {
     	log(L_ERROR, "could not set priority %d to pid %d", newPriority, pid);
     	return -1;
     }
+    if (p->pid == 0 && newPriority == 0) {
+        log(L_ERROR, "trying to remove priority from idle process! (Not allowed)");
+        return -1;
+    }
     p->priority = newPriority;
     return 0;
 }
