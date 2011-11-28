@@ -70,7 +70,8 @@ cmd_table_entry cmd_table[] = {
     {"pitest", 			"pipes test", pipeTest_cmd},
     {"pageFault", 		"pageFault test", pageFault_cmd},
     {"infRec", 		    "infinite recursion test", infRecursion_cmd},
-    {"getchar",       "getchar test", getchar_cmd},
+    {"expStack",        "expand stack test", testExpandStack_cmd},
+    {"getchar",         "getchar test", getchar_cmd},
     {"", "", NULL}
 };
 
