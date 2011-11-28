@@ -197,6 +197,11 @@ void kill(int pid) {
     }
 }
 
+void killCurrent() {
+    kill(current->pid);
+    switchProcess();
+}
+
 PRIVATE void killChildren(int pid) {
 	log(L_DEBUG, "killing child process PID: %d", pid);
     for (int i = 0; i < MAX_PROCESSES; i++) {

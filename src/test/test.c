@@ -92,11 +92,8 @@ int pageFault_cmd(int argc, char **argv) {
     return -1;
 }
 
-
-void testSegmentationFault() {
-    u32int *ptr = (u32int*)0xA0000000;
-    u32int do_page_fault = *ptr;
-    do_page_fault = 1;
+int infRecursion_cmd(int argc, char **argv) {
+    infRecursion_cmd(argc, argv);
 }
 
 void testHeap() {
@@ -107,6 +104,103 @@ void testHeap() {
     kfree((void*)a);
     kfree((void*)b);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

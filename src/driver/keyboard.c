@@ -38,11 +38,12 @@ unsigned char ucase[60] =
 
 void keyboard_init() {
 	fKeys = 0;
+    log(L_INFO, "keyboard initialized");
 }
 
 void handleScanCode(unsigned char scanCode) {
 	if (!checkSpecialKey(scanCode)) {
-		if (IS_BREAK(scanCode)) {
+		if (!IS_BREAK(scanCode)) {
 			char c = translateSc(CLEAR_BREAK_BIT(scanCode));
 			signal_keyPressed(c);
 		}

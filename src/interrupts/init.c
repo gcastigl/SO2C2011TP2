@@ -15,10 +15,11 @@ void registerInterruptHandler(u8int number, isr_t handler) {
 // Initialisation routine - zeroes all the interrupt service routines,
 // initializes the GDT and IDT.
 void init_descriptor_tables() {
-   // Initialise the global descriptor table.
-   init_gdt();
-   init_idt();
-   initBasicHandlers();
+    // Initialise the global descriptor table.
+    init_gdt();
+    init_idt();
+    initBasicHandlers();
+    log(L_INFO, "descriptor_tables initialized");
 }
 
 void initBasicHandlers() {
