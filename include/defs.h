@@ -65,7 +65,7 @@ typedef void*           type_t;
 
 #define SYSTEM_CHMOD        20
 
-#define MAX_TTYs		    4
+#define MAX_TTYs		    1
 
 // File descriptors for STD in-out-error
 #define STD_IN		MAX_TTYs + 0
