@@ -1,8 +1,7 @@
 #include <memory/frame.h>
 
 // function to set a bit in the frames bitset
-PUBLIC void set_frame(u32int frame_addr)
-{
+PUBLIC void set_frame(u32int frame_addr) {
     u32int frame = frame_addr/0x1000;
     u32int idx = INDEX_FROM_BIT(frame);
     u32int off = OFFSET_FROM_BIT(frame);
@@ -10,8 +9,7 @@ PUBLIC void set_frame(u32int frame_addr)
 }
 
 // function to clear a bit in the frames bitset
-PUBLIC void clear_frame(u32int frame_addr)
-{
+PUBLIC void clear_frame(u32int frame_addr) {
     u32int frame = frame_addr/0x1000;
     u32int idx = INDEX_FROM_BIT(frame);
     u32int off = OFFSET_FROM_BIT(frame);
@@ -19,8 +17,7 @@ PUBLIC void clear_frame(u32int frame_addr)
 }
 
 // function to test if a bit is set.
-PUBLIC u32int test_frame(u32int frame_addr)
-{
+PUBLIC u32int test_frame(u32int frame_addr) {
     u32int frame = frame_addr/0x1000;
     u32int idx = INDEX_FROM_BIT(frame);
     u32int off = OFFSET_FROM_BIT(frame);
@@ -28,19 +25,14 @@ PUBLIC u32int test_frame(u32int frame_addr)
 }
 
 // function to find the first free frame.
-PUBLIC u32int first_frame()
-{
+PUBLIC u32int first_frame() {
     u32int i, j;
-    for (i = 0; i < INDEX_FROM_BIT(nframes); i++)
-    {
-        if (frames[i] != 0xFFFFFFFF) // nothing free, exit early.
-        {
+    for (i = 0; i < INDEX_FROM_BIT(nframes); i++) {
+        if (frames[i] != 0xFFFFFFFF) { // nothing free, exit early.
             // at least one bit is free here.
-            for (j = 0; j < 32; j++)
-            {
+            for (j = 0; j < 32; j++) {
                 u32int toTest = 0x1 << j;
-                if ( !(frames[i]&toTest) )
-                {
+                if (!(frames[i]&toTest)) {
                     return i*4*8+j;
                 }
             }
@@ -50,17 +42,12 @@ PUBLIC u32int first_frame()
 }
 
 // Function to allocate a frame.
-PUBLIC void alloc_frame(page_t *page, int is_kernel, int is_writeable)
-{
-    if (page->frame != 0)
-    {
+PUBLIC void alloc_frame(page_t *page, int is_kernel, int is_writeable) {
+    if (page->frame != 0) {
         return;
-    }
-    else
-    {
+    } else {
         u32int idx = first_frame();
-        if (idx == (u32int)-1)
-        {
+        if (idx == (u32int)-1) {
             log(L_ERROR, "No free frames!");
             __asm volatile("hlt");
         }
@@ -73,15 +60,11 @@ PUBLIC void alloc_frame(page_t *page, int is_kernel, int is_writeable)
 }
 
 // Function to deallocate a frame.
-PUBLIC void free_frame(page_t *page)
-{
+PUBLIC void free_frame(page_t *page) {
     u32int frame;
-    if (!(frame=page->frame))
-    {
+    if (!(frame=page->frame)) {
         return;
-    }
-    else
-    {
+    } else {
         clear_frame(frame);
         page->frame = 0x0;
     }
