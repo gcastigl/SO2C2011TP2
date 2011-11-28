@@ -6,7 +6,7 @@
 PRIVATE PROCESS* _nextTask(int withPriority);
 PRIVATE void saveESP(int oldESP);
 PRIVATE void killChildren(int pid);
-
+PRIVATE void showPages(PROCESS *process);
 void downPages(PROCESS *p);
 void upPages(PROCESS *p);
 /*
@@ -204,7 +204,26 @@ void scheduler_setCurrent(PROCESS* p) {
         }
         current = p;
         upPages(current);
+        showPages(current);
     }
+}
+
+PRIVATE void showPages(PROCESS *process) {
+    page_t* page;
+    int pages = process->stacksize / PAGE_SIZE; // cuantas paginas tiene ese proceso
+    int up = 0, down = 0;
+	//direccion de memoria donde comienza el stack ( operacion inversa de create process )
+	int mem_dir = process->stack;
+	for (int p = 0; p < pages; ++p) {
+		page = get_page(mem_dir, 0, current_directory);
+		if (page->present) {
+            up++;
+        } else {
+            down++;
+        }
+		mem_dir += PAGE_SIZE; 	// 4kb step!
+	}
+    log(L_INFO, "Process %s has %d pages %d/%d (up/down)", process->name, pages, up, down);
 }
 
 void kill(int pid) {
