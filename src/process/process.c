@@ -71,6 +71,7 @@ u32int yield() {
 }
 
 PUBLIC void _expandStack() {
+    _cli();
     PROCESS *proc = scheduler_getCurrentProcess();
     int esp = _ESP;
     int newSize = DEFAULT_STACK_SIZE + proc->stacksize;
@@ -80,26 +81,26 @@ PUBLIC void _expandStack() {
 
     memcpy(new_stack_start, old_stack_start, proc->stacksize);
     
-      // Backtrace through the original stack, copying new values into
-      // the new stack.
-      for(int i = (u32int)new_stack_start; i > (u32int)new_stack_start-newSize; i -= 4)
-      {
+    // Backtrace through the original stack, copying new values into
+    // the new stack.
+    for (int i = (u32int)new_stack_start + proc->stacksize; i > (u32int)new_stack_start; i -= 4) {
         u32int tmp = * (u32int*)i;
         // If the value of tmp is inside the range of the old stack, assume it is a base pointer
         // and remap it. This will unfortunately remap ANY value in this range, whether they are
         // base pointers or not.
-        if ((proc->stack < tmp) && ((proc->stack + proc->stacksize) < esp))
-        {
-          tmp = tmp + offset;
-          u32int *tmp2 = (u32int*)i;
-          *tmp2 = tmp;
+        if ((proc->stack < tmp) && ((proc->stack + proc->stacksize) < esp)) {
+            tmp = tmp + offset;
+            u32int *tmp2 = (u32int*)i;
+            *tmp2 = tmp;
         }
-      }
+    }
 
     kfree((void*)proc->stack);
     proc->stack = (int)new_stack_start;
     proc->stacksize = newSize;
     proc->ESP = proc->ESP + offset;
+    _sti();
+    __asm volatile("mov %0, %%esp" : : "r" (proc->ESP + offset));
 }
 
 PUBLIC void process_checkStack() {
@@ -108,12 +109,7 @@ PUBLIC void process_checkStack() {
         return;
     if (proc->pid > MAX_TTYs)
         log(L_INFO, "Process %s: ESP: 0x%x stackStart: 0x%x", proc->name, proc->ESP, proc->stack);
-/*    if (proc->ESP < proc->stack + 0x500) {
-        registers_t regs;
-        regs.esp = proc->ESP;
-        panic("asdasdasd", 1, true);
-    }
-*/    
+  
     if (proc->ESP < proc->stack + 0x500) {
         log(L_INFO, "Expanding stack(0x%x @ 0x%x) for %s", proc->stack, proc->name);
         _expandStack();

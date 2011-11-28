@@ -8,10 +8,12 @@
 
 void checkReset();
 void checkTTY();
+void checkKill(char c) ;
 
 static int newTTY = -1;
 
 void signal_keyPressed(char c) {
+    checkKill(c);
 	TTY* tty = tty_getCurrentTTY();
 
     PROCESS* tty_process = scheduler_getProcess(tty ->pid);
@@ -69,6 +71,12 @@ void checkTTY() {
 	}
 }
 
+void checkKill(char c) {
+    if (IS_CTRL() && c == 'c') {
+        scheduler_finalizeCurrent();
+    }
+}
+
 int signal(int signum) {
     PROCESS **processes = scheduler_getAllProcesses();
     for(int i = 0; i < MAX_PROCESSES; i++) {
@@ -79,3 +87,4 @@ int signal(int signum) {
     }
     return 0;
 }
+

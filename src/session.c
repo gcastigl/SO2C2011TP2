@@ -37,7 +37,7 @@ void session_login() {
                 tty_setCurrentNode(*user_getUserHomeInode(uid));
             }
         }
-        if (retry == 0) {
+        if ((retry == 0) && (currentUser == NULL)) {
             printf("\tInvalid password! Please try again.\n");
         }
     } while(!session_isLoggedIn());

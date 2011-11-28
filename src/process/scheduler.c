@@ -115,9 +115,11 @@ int getNextProcess(int oldESP) {
     next->lastCalled = 0;
     if (!firstTime) {
         saveESP(oldESP); 			// en el oldESP esta el stack pointer del proceso
-        log(L_INFO, "%s: ESPa: 0x%x", current->name, current->ESP);
-        process_checkStack();
-        log(L_INFO, "%s: ESPb: 0x%x", current->name, current->ESP);
+        if (current->pid > MAX_TTYs)
+            log(L_INFO, "%s: ESPa: 0x%x", current->name, current->ESP);
+        //process_checkStack();
+        if (current->pid > MAX_TTYs)
+            log(L_INFO, "%s: ESPb: 0x%x", current->name, current->ESP);
     } else {
         firstTime = false;
     }
@@ -183,6 +185,14 @@ void scheduler_blockCurrent(block_t waitFlag) {
     current->status = BLOCKED;
     current->waitingFlags = waitFlag;
     yield();
+}
+
+void scheduler_finalizeCurrent() {
+    if (current->parent == 0) {
+        // Parent pid 0 means, TTY o idle process (can not be killed)
+        return;
+    }
+    clean();
 }
 
 PRIVATE void clean() {

@@ -111,8 +111,9 @@ void testHeap() {
 extern PUBLIC void _expandStack();
 
 int testExpandStack_cmd(int argc, char **argv) {
-    printf("Expanding stack...\n");
+    log(L_INFO, "Expanding stack... Current ESP is 0x%x", _ESP);
     _expandStack();
+    log(L_INFO, "Stack expanded... Current ESP is 0x%x", _ESP);
     printf("Stack expanded...\n");
     return 0;
 }
