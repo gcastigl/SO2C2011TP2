@@ -12,7 +12,7 @@ PRIVATE boolean user_add(int uid);
 PRIVATE boolean user_del(int uid);
 PRIVATE boolean user_isValidFormat(char *token);
 PRIVATE boolean createUserDir(int uid);
-PRIVATE boolean deleteUserDir(int uid);
+//PRIVATE boolean deleteUserDir(int uid);
 PRIVATE void flushList();
 PRIVATE void loadList();
 
