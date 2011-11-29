@@ -168,7 +168,7 @@ char** getArguments(char* buffer, int* argc, int *background) {
 }
 
 void cleanBuffer(TTY *tty) {
-    tty->bufferOffset = 0;
+    tty->screenOffset = 0;
     tty->buffer[0] = '\0';
 }
 
