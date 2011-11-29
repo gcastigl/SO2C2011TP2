@@ -80,7 +80,7 @@ PUBLIC void _expandStack() {
     // FIXME: check for used pages.
     get_page(proc->stack, true, current_directory);
     log(L_DEBUG, "EXPANDED: %s starts at 0x%x to 0x%x", proc->name, proc->stack, proc->stack + proc->stacksize - 1);
-    printf("EXPANDED: %s starts at 0x%x to 0x%x (esp: 0x%x)\n", proc->name, proc->stack, proc->stack + proc->stacksize - 1, proc->ESP);
+    printf("STACK EXPANDED: %s starts at 0x%x to 0x%x (esp: 0x%x)\n", proc->name, proc->stack, proc->stack + proc->stacksize - 1, proc->ESP);
 }
 
 PUBLIC void process_checkStack() {
@@ -88,11 +88,11 @@ PUBLIC void process_checkStack() {
     if (proc == NULL)
         return;
     if (proc->pid > MAX_TTYs)
-        log(L_INFO, "Process %s: ESP: 0x%x stackStart: 0x%x", proc->name, proc->ESP, proc->stack);
+        log(L_TRACE, "Process %s: ESP: 0x%x stackStart: 0x%x", proc->name, proc->ESP, proc->stack);
   
     if (proc->ESP < proc->stack + 0x750) {
-        log(L_INFO, "Expanding stack(0x%x @ 0x%x) for %s", proc->stack, proc->ESP, proc->name);
+        log(L_TRACE, "Expanding stack(0x%x @ 0x%x) for %s", proc->stack, proc->ESP, proc->name);
         _expandStack();
-        log(L_INFO, "EXPANDED stack(0x%x) for %s", proc->stack, proc->name);
+        log(L_TRACE, "EXPANDED stack(0x%x) for %s", proc->stack, proc->name);
     }
 }
