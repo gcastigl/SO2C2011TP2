@@ -30,5 +30,4 @@ void alloc_frame(page_t *page, int is_kernel, int is_writeable);
 // Function to deallocate a frame.
 void free_frame(page_t *page);
 
-
 #endif // FRAME_H
