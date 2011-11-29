@@ -110,8 +110,8 @@ PUBLIC void process_checkStack() {
     if (proc->pid > MAX_TTYs)
         log(L_INFO, "Process %s: ESP: 0x%x stackStart: 0x%x", proc->name, proc->ESP, proc->stack);
   
-    if (proc->ESP < proc->stack + 0x500) {
-        log(L_INFO, "Expanding stack(0x%x @ 0x%x) for %s", proc->stack, proc->name);
+    if (proc->ESP < proc->stack + 0x750) {
+        log(L_INFO, "Expanding stack(0x%x @ 0x%x) for %s", proc->stack, proc->ESP, proc->name);
         _expandStack();
         log(L_INFO, "EXPANDED stack(0x%x) for %s", proc->stack, proc->name);
     }
