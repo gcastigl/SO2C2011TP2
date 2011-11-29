@@ -314,4 +314,6 @@ void testHeap();
 
 int DMTest2(int argc, char **argv);
 
+int processInfo_cmd(int argc, char **argv);
+
 #endif

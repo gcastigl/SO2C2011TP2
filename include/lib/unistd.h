@@ -45,4 +45,11 @@ int lseek(int fildes, int offset, int oflag);
 **/
 int mkfifo(char *name, int mode);
 
+/* growStack
+*
+* No recibe parámetros
+*
+* Aumenta el stack del proceso actual
+**/
+int growStack();
 #endif
