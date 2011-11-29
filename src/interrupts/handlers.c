@@ -1,5 +1,5 @@
 #include <interrupts/interrupts.h>
-
+extern PUBLIC void _expandStack();
 extern void switchProcess(void);
 int taskSwitch = true;
 static int ticksSinceLasfFlush = 0;
@@ -103,6 +103,9 @@ void *systemCallHandler(int sysCallNumber, void ** args) {
             break;
         case SYSTEM_CLOSE:
             ret = (void*)sysClose((char*)args[0], (int)args[1], (int)args[2]);
+            break;
+        case SYSTEM_ADDSTACK:
+            _expandStack();
             break;
 	}
 	
