@@ -771,5 +771,6 @@ int sudo_cmd(int argc, char **argv) {
         excecuteCmd(cmd, buffer);
     }
     session_sudoEnd();
+    free(buffer);
     return 0;
 }
