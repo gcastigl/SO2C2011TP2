@@ -9,7 +9,7 @@ int kmain(struct multiboot *mboot_ptr, u32int initial_stack) {
     init_descriptor_tables();
     _mascaraPIC1(0xFC);
     _mascaraPIC2(0xFF);
-    paging_init(0x1000000);
+    paging_init();
     keyboard_init();
     video_init();
     setFD(STD_OUT);

@@ -67,6 +67,37 @@ void paging_init() {
 
     // Initialise the kernel heap.
     kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xCFFFF000, 0, 0);
+
+}
+
+void _logPage(page_t page, int i, int j) {
+    log(L_INFO, "%d:%d (0x%x): f:0x%x ( %s%s%s%s) r:0x%x",
+        i,
+        j,
+        (i<<22)|(j<<12),
+        page.frame,
+        page.present ? "present " : "not-present ",
+        page.accessed ? "accessed " : "",
+        page.dirty ? "dirty " : "",
+        page.rw ? "read-write " : "",
+        page.unused
+    );
+}
+
+void _logTable(page_table_t *table, int i) {
+    if (table != NULL) {
+        for (int j = 0; j < PAGE_COUNT; ++j) {
+            _logPage(table->pages[j], i, j);
+        }
+    } else {
+        //log(L_INFO, "%d: UNMAPPED", i);
+    }
+}
+
+void _logDirectory(page_directory_t *dir) {
+    for (int i = 0; i < PAGE_TABLE_COUNT; ++i) {
+        _logTable(dir->tables[i], i);
+    }
 }
 
 void paging_enable(page_directory_t *dir) {
@@ -90,7 +121,7 @@ page_t *get_page(u32int address, int make, page_directory_t *dir) {
         u32int tmp;
         dir->tables[table_idx] = (page_table_t*)kmalloc_ap(sizeof(page_table_t), &tmp);
         memset(dir->tables[table_idx], 0, PAGE_SIZE);
-        dir->tablesPhysical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
+        dir->tablesPhysical[table_idx] = tmp | (PAGE_PRESENT | PAGE_READWRITE | PAGE_USERMODE);
         return &dir->tables[table_idx]->pages[address%PAGE_COUNT];
     } else {
         return 0;
@@ -105,13 +136,52 @@ void page_fault(registers_t regs) {
     __asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
     // The error code gives us details of what happened.
     log(L_ERROR, "PAGE-FAULT ( %s%s%s%s%s) at 0x%x",
-        regs.err_code & 0x1  ? "page-present " : "page-not-present ",
-        regs.err_code & 0x2  ? "write-on-read-only " : "",
-        regs.err_code & 0x4  ? "processor-was-in-user-mode " : "",
-        regs.err_code & 0x8  ? "overwritten-cpu-reserved-bits-of-page-entry " : "",
-        regs.err_code & 0x10 ? "instruction-fetch " : "",
+        regs.err_code & PAGE_PRESENT    ? "page-present " : "page-not-present ",
+        regs.err_code & PAGE_READWRITE  ? "write-on-read-only " : "",
+        regs.err_code & PAGE_USERMODE   ? "processor-was-in-user-mode " : "",
+        regs.err_code & PAGE_CORRUPTED  ? "overwritten-cpu-reserved-bits-of-page-entry " : "",
+        regs.err_code & PAGE_INST_FETCH ? "instruction-fetch " : "",
         faulting_address
     );
+    tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
+    _logPage(*get_page(faulting_address, 0, current_directory), faulting_address>>22, faulting_address>>12);
+    printf("Page fault @ 0x%x! killing current process\n", faulting_address);
     panic("Page fault", 1, false);
     killCurrent();
+}
+
+PRIVATE u32int create_stack(void *new_stack_start, u32int size) {
+    u32int i;
+    // Allocate some space for the new stack.
+    for (i = (u32int) new_stack_start; i >= ((u32int) new_stack_start - size -1);
+            i -= PAGE_SIZE) {
+        // General-purpose stack is in user-mode.
+        log(L_DEBUG, "alloc 0x%x", i);
+        alloc_frame(get_page(i, 1, current_directory), 1 /* User mode */, 1 /* Is writable */
+        );
+    }
+
+    // Flush the TLB by reading and writing the page directory address again.
+    u32int pd_addr;
+    __asm volatile("mov %%cr3, %0" : "=r" (pd_addr));
+    __asm volatile("mov %0, %%cr3" : : "r" (pd_addr));
+
+    for (i = (u32int) new_stack_start; i >= ((u32int) new_stack_start - size -1);
+                i -= PAGE_SIZE) {
+        _logPage(*get_page(i, 0, current_directory), 0, 0);
+        }
+    return i+PAGE_SIZE;
+}
+
+PUBLIC int paging_dropStack(int stack_startaddr, int stacksize) {
+    return -1;
+}
+
+PUBLIC int paging_reserveStack(int size) {
+    static int OLD = 0x11FFF000;
+    static int inc = 0x00100000;
+    log(L_DEBUG, "????? 0x%x p:%d", OLD, size/PAGE_SIZE);
+    int a = create_stack((void*)OLD, size);
+    OLD -= inc;
+    return a;
 }

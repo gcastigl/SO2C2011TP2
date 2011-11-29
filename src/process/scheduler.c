@@ -117,7 +117,7 @@ int getNextProcess(int oldESP) {
         saveESP(oldESP); 			// en el oldESP esta el stack pointer del proceso
         if (current->pid > MAX_TTYs)
             log(L_INFO, "%s: ESPa: 0x%x", current->name, current->ESP);
-        //process_checkStack();
+        process_checkStack();
         if (current->pid > MAX_TTYs)
             log(L_INFO, "%s: ESPb: 0x%x", current->name, current->ESP);
     } else {
@@ -274,7 +274,7 @@ void killCurrent() {
 }
 
 PRIVATE void killChildren(int pid) {
-    log(L_DEBUG, "killing child process PID: %d", pid);
+    log(L_DEBUG, "killing child processes of PID: %d", pid);
     for (int i = 0; i < MAX_PROCESSES; i++) {
         if (allProcess[i] != NULL && allProcess[i]->parent == pid) {
             kill(allProcess[i]->pid);

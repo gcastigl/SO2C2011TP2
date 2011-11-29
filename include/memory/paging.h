@@ -7,8 +7,15 @@
 #include <defs.h>
 #include <interrupts/interrupts.h>
 
-#define PAGE_SIZE  0x1000
 #define PAGE_COUNT 1024
+#define PAGE_TABLE_COUNT 1024
+#define PAGE_SIZE 0x1000
+
+#define PAGE_PRESENT 0x1
+#define PAGE_READWRITE 0x2
+#define PAGE_USERMODE 0x4
+#define PAGE_CORRUPTED 0x8
+#define PAGE_INST_FETCH 0x10
 
 typedef struct page
 {
@@ -33,12 +40,12 @@ typedef struct page_directory
     /**
        Array of pointers to pagetables.
     **/
-    page_table_t *tables[PAGE_COUNT];
+    page_table_t *tables[PAGE_TABLE_COUNT];
     /**
        Array of pointers to the pagetables above, but gives their *physical*
        location, for loading into the CR3 register.
     **/
-    u32int tablesPhysical[PAGE_COUNT];
+    u32int tablesPhysical[PAGE_TABLE_COUNT];
 
     /**
        The physical address of tablesPhysical. This comes into play
@@ -71,5 +78,12 @@ page_t *get_page(u32int address, int make, page_directory_t *dir);
    Handler for page faults.
 **/
 void page_fault(registers_t regs);
+
+void _logPage(page_t page, int i, int j);
+void _logTable(page_table_t *table, int i);
+void _logDirectory(page_directory_t *dir);
+
+PUBLIC int paging_reserveStack(int size);
+PUBLIC int paging_dropStack(int stack_startaddr, int stacksize);
 
 #endif
