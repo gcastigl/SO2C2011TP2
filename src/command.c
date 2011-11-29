@@ -479,6 +479,19 @@ int ln_cmd(int argc, char **argv) {
     }
     // create sym link
     u32int symLinkiNode = createdir_fs(&currentFsNode, argv[1], FS_SYMLINK);
+    if (symLinkiNode == -1) {
+        printf("ln: could not create link!\n");
+        return -1;
+    }
+    char name[MAX_NAME_LENGTH];
+    fs_node_t newLink;
+    fs_getFsNode(&newLink, symLinkiNode);
+    read_fs(target, 0, MAX_NAME_LENGTH, (u8int*) name);
+    if (strcmp(name, argv[1]) == 0) {
+        printf("ln: cant create recursive links!\n");
+        rm_cmd(1, &argv[1]);
+        return -1;
+    }
     if (symLinkiNode == E_FILE_EXISTS) {
         printf("ln: accessing \"%s\": File exists\n", argv[1]);
         return -1;
