@@ -319,4 +319,6 @@ int processInfo_cmd(int argc, char **argv);
 
 int sudo_cmd(int argc, char **argv);
 
+int tryToAccessAnotherProcess_cmd(int argc, char **argv);
+
 #endif

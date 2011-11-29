@@ -72,6 +72,7 @@ cmd_table_entry cmd_table[] = {
     {"expStack",        "Stack expand test", testExpandStack_cmd},
     {"getchar",         "Getchar test", getchar_cmd},
     {"pInfo",   "Shows all running processes stack and paging information", processInfo_cmd},
+    {"opp", "Tries to access another process page", tryToAccessAnotherProcess_cmd},
     {"", "", NULL}
 };
 

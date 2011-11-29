@@ -182,6 +182,18 @@ int processInfo_cmd(int argc, char **argv) {
     return 0;
 }
 
+int tryToAccessAnotherProcess_cmd(int argc, char **argv) {
+    PROCESS **process = scheduler_getAllProcesses();
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        if (process[i] != NULL) {
+            printf("Trying to access %s stack\n", process[i]->name);
+            u32int *ptr = (u32int*) (process[i]->stack + 100); // Invalid address
+            (*ptr)++;
+        }
+    }
+    return 0;
+}
+
 
 /////////////////// WAAAAARRRNINNNNGGGG!!!!! ////////////////////////////
 /////////////////// YOU'R EDITOR MAY DIE!!!! ////////////////////////////
