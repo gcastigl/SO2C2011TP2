@@ -1,4 +1,7 @@
 #include <interrupts/interrupts.h>
+#include <process/scheduler.h>
+#include <access/user.h>
+#include <session.h>
 
 extern void switchProcess(void);
 int taskSwitch = true;
@@ -105,7 +108,6 @@ void *systemCallHandler(int sysCallNumber, void ** args) {
             ret = (void*)sysClose((char*)args[0], (int)args[1], (int)args[2]);
             break;
 	}
-	
     return ret;
 }
 // This gets called from our ASM interrupt handler stub.

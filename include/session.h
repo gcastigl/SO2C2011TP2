@@ -21,4 +21,8 @@ PUBLIC int session_getEuid();
 
 PUBLIC int session_getEgid();
 
+PUBLIC void session_sudoEnd();
+
+PUBLIC void session_sudoStart();
+
 #endif

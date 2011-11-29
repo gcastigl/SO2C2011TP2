@@ -452,6 +452,7 @@ int touch_cmd(int argc, char **argv) {
         }
         if (errno != 0) {
             printf("touch: cannot create file %s: %s\n", argv[0], err);
+            return -1;
         }
         if (argc == 2) {
             TTY* tty = tty_getCurrentTTY();
@@ -693,18 +694,26 @@ int cp_cmd(int argc, char **argv) {
                 case E_FILE_EXISTS:
                     err = "file already exists";
                     break;
+                case E_FILE_IS_DIR:
+                    err = "File is a directory! (use -r)";
+                    break;
                 default:
                     err = "no se que paso!";
                     log(L_ERROR, "no se q paso: %d", errno);
 		    }
 		    if (err != NULL) {
-		        printf("cp: could not copy %s: %s", source, err);
+		        printf("cp: could not copy %s: %s\n", source, err);
 		        return -1;
 		    }
 		    return 0;
 		} else {
 			printf("cp: Source file: %s does not exists\n", source);
 		}
+	} else {
+	    tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
+	    printf("cp: This feature does not come with Gat O.S. free trial edition.\n");
+	    tty_setFormatToCurrTTY(video_getFormattedColor(MAGENTA, BLACK));
+	    printf("\t\t\tConsider Purchasing it - Ask for teacher discounts!!\n");
 	}
 	return -1;
 }
@@ -715,6 +724,8 @@ int mv_cmd(int argc, char **argv) {
 		if (copied == 0) {
 			rm_cmd(1, &argv[0]);
 		}
+	} else {
+	    cp_cmd(4, NULL);
 	}
 	return 0;
 }

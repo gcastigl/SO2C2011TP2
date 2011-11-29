@@ -86,6 +86,7 @@ typedef void*           type_t;
 #define E_FILE_NOT_EXISTS	-8
 #define E_DIR_NOT_EXISTS	-9
 #define E_MAX_FD_REACHED	-10
+#define E_FILE_IS_DIR       -11
 
 #define MAX_NAME_LENGTH		24
 
