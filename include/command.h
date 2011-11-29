@@ -312,4 +312,6 @@ int testExpandStack_cmd(int argc, char **argv);
 
 void testHeap();
 
+int DMTest2(int argc, char **argv);
+
 #endif
