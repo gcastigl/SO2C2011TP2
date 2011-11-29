@@ -762,3 +762,23 @@ int nice_cmd(int argc, char **argv) {
     }
     return -1;
 }
+
+int sudo_cmd(int argc, char **argv) {
+    session_sudoStart();
+    int i;
+    char buffer[128];
+    int totalLen = 0;
+    for(i = 0; i < argc; i++) {
+        int len = strlen(argv[i]);
+        strcpy(buffer + totalLen, argv[i]);
+        strcpy(buffer + totalLen + 1, " ");
+        totalLen += len + 1;
+    }
+    int cmd = parse_cmd(argv[0]);
+    if (cmd != -1) {
+        log(L_DEBUG, "parsed command: %d - %s", cmd, argv[0]);
+        excecuteCmd(cmd, buffer);
+    }
+    session_sudoEnd();
+    return 0;
+}

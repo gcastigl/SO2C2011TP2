@@ -28,5 +28,9 @@ cmd_table_entry* shell_getCmdsTable();
 
 int shell_getCmdIndex(char * cmdName);
 
+void excecuteCmd(int cmd, char* buffer);
+
+int parse_cmd(char* buffer);
+
 #endif
 

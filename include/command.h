@@ -13,6 +13,7 @@
 #include <lib/unistd.h>
 #include <lib/file.h>
 
+
 #define HELP_HELP			"Shows this help function"
 
 #define HELP_RESTART		"Restarts the OS"
@@ -315,5 +316,7 @@ void testHeap();
 int DMTest2(int argc, char **argv);
 
 int processInfo_cmd(int argc, char **argv);
+
+int sudo_cmd(int argc, char **argv);
 
 #endif

@@ -16,8 +16,6 @@
                 tty_getTTY(tty)->currPath);
 
 int shell_readCommand(TTY* tty);
-void excecuteCmd(int cmd, TTY* tty);
-int parse_cmd(char* buffer);
 char** getArguments(char* buffer, int* argc, int *background);
 void cleanBuffer(TTY* tty);
 void printShellLabel(TTY* tty);
@@ -63,6 +61,7 @@ cmd_table_entry cmd_table[] = {
     {"chgrp", 			"Changes file group: chgrp GROUPNAME FILE", chgrp_cmd},
     {"cache", 			"Prints the fs cache status", cacheStatus_cmd},
     {"random", 			HELP_RANDOM, random_cmd},
+    {"sudo",            "sudo", sudo_cmd},
     {"nice",            "Run COMMAND with an adjusted niceness, which affects process scheduling: nice PID PRIORITY", nice_cmd},
     // TESTS ====================================================================
     {"pfiles", 			"Prints the files opened by the specified process: pfiles PID", pfiles},
@@ -82,7 +81,10 @@ void shell_update() {
         session_login();
     }
     int cmd = shell_readCommand(tty);
-    excecuteCmd(cmd, tty);
+    if (cmd != -1) {
+        tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
+        excecuteCmd(cmd, tty->buffer);
+    }
     cleanBuffer(tty);
 }
 
@@ -112,14 +114,14 @@ void shell_cleanScreen() {
     video_write(tty->screen, TOTAL_VIDEO_SIZE);
 }
 
-void excecuteCmd(int cmd, TTY* tty) {
+void excecuteCmd(int cmd, char* buffer) {
+    log(L_DEBUG, "buffer: %s", buffer);
     int cmdLen, argc;
     char **argv;
     if (cmd != -1) {
-        tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
         cmdLen = strlen(cmd_table[cmd].name);
         int background;
-        argv = getArguments(tty->buffer + cmdLen, &argc, &background);
+        argv = getArguments(buffer + cmdLen, &argc, &background);
         // log(L_DEBUG, "Running %s in %s", cmd_table[cmd].name, (background == true ? "background" : "foreground"));
         scheduler_schedule(cmd_table[cmd].name, cmd_table[cmd].func, argc, argv, DEFAULT_STACK_SIZE, tty_getCurrent(),
             (background == true ? BACKGROUND : FOREGROUND), READY, NORMAL);
