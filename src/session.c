@@ -97,7 +97,7 @@ void prntWelcomeMsg() {
 }
 
 PUBLIC void session_sudoStart() {
-    if (sudoUser == NULL) {
+    if (sudoUser == NULL && currentUser != NULL) {
         sudoUser = currentUser;
         currentUser = user_get(SUPER_USER);
     }
