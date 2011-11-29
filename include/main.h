@@ -7,6 +7,7 @@
 #include <interrupts/interrupts.h>
 #include <fs/fs.h>
 #include <memory/paging.h>
+#include <access/user.h>
 
 #endif
 
