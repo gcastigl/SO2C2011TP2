@@ -283,7 +283,7 @@ void killCurrent() {
 }
 
 PRIVATE void killChildren(int pid) {
-    log(L_DEBUG, "killing child process PID: %d", pid);
+    log(L_DEBUG, "killing child processes of PID: %d", pid);
     for (int i = 0; i < MAX_PROCESSES; i++) {
         if (allProcess[i] != NULL && allProcess[i]->parent == pid) {
             kill(allProcess[i]->pid);
