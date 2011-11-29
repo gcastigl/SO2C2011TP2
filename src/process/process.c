@@ -5,6 +5,8 @@
 #include <lib/stdlib.h>
 #include <memory/paging.h>
 
+extern page_directory_t *current_directory;
+
 extern int loadStackFrame();
 int getNextPID();
 PRIVATE int nextPID = 0;
@@ -23,8 +25,8 @@ void process_initialize(PROCESS* newProcess, char* name, int(*processFunc)(int, 
     newProcess->ownerUid = session_getEuid();
     newProcess->pid = getNextPID();
     newProcess->stacksize = stacklength;
-    newProcess->stack = (int) kmalloc_a(stacklength);
-    log(L_DEBUG, "%s starts at 0x%x to 0x%x", name, newProcess->stack, newProcess->stack + stacklength - 1); 
+    newProcess->stack = paging_reserveStack(stacklength);
+    log(L_DEBUG, "%s starts at 0x%x to 0x%x", name, newProcess->stack, newProcess->stack + stacklength - 1);
     newProcess->ESP = loadStackFrame(processFunc, newProcess->stack + stacklength - 1, argc, newProcess->argv, cleaner);
     newProcess->tty = tty;
     newProcess->lastCalled = 0;
@@ -43,7 +45,7 @@ void process_finalize(PROCESS* newProcess) {
     for (int i = 0; i < newProcess->argc; i++) {
         kfree(newProcess->argv[i]);
     }
-    kfree((void*) (newProcess->stack));
+    paging_dropStack(newProcess->stack, newProcess->stacksize);
     kfree(newProcess);
 }
 
@@ -73,34 +75,12 @@ u32int yield() {
 PUBLIC void _expandStack() {
     _cli();
     PROCESS *proc = scheduler_getCurrentProcess();
-    int esp = _ESP;
-    int newSize = DEFAULT_STACK_SIZE + proc->stacksize;
-    void *new_stack_start = (void *)kmalloc_a(newSize);
-    int offset = (int)new_stack_start - proc->stack;
-    void *old_stack_start = (void*)proc->stack;
-
-    memcpy(new_stack_start, old_stack_start, proc->stacksize);
-    
-    // Backtrace through the original stack, copying new values into
-    // the new stack.
-    for (int i = (u32int)new_stack_start + proc->stacksize; i > (u32int)new_stack_start; i -= 4) {
-        u32int tmp = * (u32int*)i;
-        // If the value of tmp is inside the range of the old stack, assume it is a base pointer
-        // and remap it. This will unfortunately remap ANY value in this range, whether they are
-        // base pointers or not.
-        if ((proc->stack < tmp) && ((proc->stack + proc->stacksize) < esp)) {
-            tmp = tmp + offset;
-            u32int *tmp2 = (u32int*)i;
-            *tmp2 = tmp;
-        }
-    }
-
-    kfree((void*)proc->stack);
-    proc->stack = (int)new_stack_start;
-    proc->stacksize = newSize;
-    proc->ESP = proc->ESP + offset;
-    _sti();
-    __asm volatile("mov %0, %%esp" : : "r" (proc->ESP + offset));
+    proc->stack -= PAGE_SIZE;
+    proc->stacksize += PAGE_SIZE;
+    // FIXME: check for used pages.
+    get_page(proc->stack, true, current_directory);
+    log(L_DEBUG, "EXPANDED: %s starts at 0x%x to 0x%x", proc->name, proc->stack, proc->stack + proc->stacksize - 1);
+    printf("EXPANDED: %s starts at 0x%x to 0x%x (esp: 0x%x)\n", proc->name, proc->stack, proc->stack + proc->stacksize - 1, proc->ESP);
 }
 
 PUBLIC void process_checkStack() {

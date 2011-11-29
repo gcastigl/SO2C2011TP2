@@ -149,3 +149,39 @@ void page_fault(registers_t regs) {
     panic("Page fault", 1, false);
     killCurrent();
 }
+
+PRIVATE u32int create_stack(void *new_stack_start, u32int size) {
+    u32int i;
+    // Allocate some space for the new stack.
+    for (i = (u32int) new_stack_start; i >= ((u32int) new_stack_start - size -1);
+            i -= PAGE_SIZE) {
+        // General-purpose stack is in user-mode.
+        log(L_DEBUG, "alloc 0x%x", i);
+        alloc_frame(get_page(i, 1, current_directory), 1 /* User mode */, 1 /* Is writable */
+        );
+    }
+
+    // Flush the TLB by reading and writing the page directory address again.
+    u32int pd_addr;
+    __asm volatile("mov %%cr3, %0" : "=r" (pd_addr));
+    __asm volatile("mov %0, %%cr3" : : "r" (pd_addr));
+
+    for (i = (u32int) new_stack_start; i >= ((u32int) new_stack_start - size -1);
+                i -= PAGE_SIZE) {
+        _logPage(*get_page(i, 0, current_directory), 0, 0);
+        }
+    return i+PAGE_SIZE;
+}
+
+PUBLIC int paging_dropStack(int stack_startaddr, int stacksize) {
+    return -1;
+}
+
+PUBLIC int paging_reserveStack(int size) {
+    static int OLD = 0x11FFF000;
+    static int inc = 0x00100000;
+    log(L_DEBUG, "????? 0x%x p:%d", OLD, size/PAGE_SIZE);
+    int a = create_stack((void*)OLD, size);
+    OLD -= inc;
+    return a;
+}

@@ -117,7 +117,7 @@ int getNextProcess(int oldESP) {
         saveESP(oldESP); 			// en el oldESP esta el stack pointer del proceso
         if (current->pid > MAX_TTYs)
             log(L_INFO, "%s: ESPa: 0x%x", current->name, current->ESP);
-        //process_checkStack();
+        process_checkStack();
         if (current->pid > MAX_TTYs)
             log(L_INFO, "%s: ESPb: 0x%x", current->name, current->ESP);
     } else {

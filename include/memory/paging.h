@@ -82,4 +82,8 @@ void page_fault(registers_t regs);
 void _logPage(page_t page, int i, int j);
 void _logTable(page_table_t *table, int i);
 void _logDirectory(page_directory_t *dir);
+
+PUBLIC int paging_reserveStack(int size);
+PUBLIC int paging_dropStack(int stack_startaddr, int stacksize);
+
 #endif
