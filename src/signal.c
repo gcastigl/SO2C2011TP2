@@ -20,16 +20,16 @@ void signal_keyPressed(char c) {
             // Current TTY is waiting for a child, see if any child is waiting for input
             for (int i = 0; i < MAX_PROCESSES; i++) {
                 PROCESS* p = allProc[i];
-                if (p != NULL && p->tty == tty->id &&
-                        p->status == BLOCKED && p->waitingFlags == W_INPUT) {
+                if (p != NULL && p->tty == tty->id && p->parent != 0) { 
                     if (IS_CTRL() && c == 'c') {
                         kill(p->pid);
-                    } else {
+                    }
+                    if (p->status == BLOCKED && p->waitingFlags == W_INPUT) {
                         circularBuffer_add(&tty->input_buffer , c);
                         scheduler_setStatus(p->pid, READY);
                         log(L_DEBUG, "Sending  input to process: %s", p->name);
                     }
-                    return;
+                	return;
                 }
             }
         }

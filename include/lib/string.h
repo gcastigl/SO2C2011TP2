@@ -104,4 +104,8 @@ char *strtok(register char *string, const char *separators);
 
 int strreplace(char* str, char replace, char replacement);
 
+char *strcat(char *ret, register const char *s2);
+
+char* strjoin(char* strings[], char* seperator, int count);
+
 #endif

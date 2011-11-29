@@ -302,13 +302,17 @@ PRIVATE boolean createUserDir(int uid) {
         return false;
     }
     errno = OK;
+    session_sudoStart(); // to be able to write in home dir.
     int inode = createdir_fs(homeInode, user->userName, FS_DIRECTORY);
+    session_sudoEnd();
     if (inode == -1 && errno == E_FILE_EXISTS) {
         return true;
     } else if (errno == OK) {
+        session_sudoStart();
         fs_setFileUid(inode, user->uid);
         fs_setFileGid(inode, user->gid);
         fs_setFileMode(inode, 0x600);
+        session_sudoEnd();
         return true;
     } else {
         return false;

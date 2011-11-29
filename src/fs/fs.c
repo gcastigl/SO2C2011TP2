@@ -117,8 +117,7 @@ PRIVATE void fs_create() {
 	fs_node_t root;
 	fs_getRoot(&root);
 	fs_createdir(&root, "dev", FS_DIRECTORY);
-	u32int home = fs_createdir(&root, "home", FS_DIRECTORY);
-	fs_setFileMode(home, 0x777);
+	fs_createdir(&root, "home", FS_DIRECTORY);
 	fs_createdir(&root, "etc", FS_DIRECTORY);
 }
 

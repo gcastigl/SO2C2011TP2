@@ -1,8 +1,3 @@
-// kheap.c -- Kernel heap functions, also provides
-//            a placement malloc() for use before the heap is 
-//            initialised.
-//            Written for JamesM's kernel development tutorials.
-
 #include <memory/kheap.h>
 #include <memory/paging.h>
 #include <memory/frame.h>
