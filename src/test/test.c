@@ -93,8 +93,7 @@ int pageFault_cmd(int argc, char **argv) {
 }
 
 int infRecursion_cmd(int argc, char **argv) {
-    unsigned int a = 60000;
-    while (a--);
+    yield();
     infRecursion_cmd(argc, argv);
     return 0;
 }
