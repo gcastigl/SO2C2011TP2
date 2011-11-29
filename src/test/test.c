@@ -117,7 +117,27 @@ int testExpandStack_cmd(int argc, char **argv) {
     return 0;
 }
 
-
+int DMTest2(int argc, char **argv) {
+    char* fileName = "test";
+    // rm_cmd(1, &fileName);
+    fs_node_t root;
+    fs_getRoot(&root);
+    int inodeNumber = createdir_fs(&root, fileName, FS_FILE);
+    if (inodeNumber == -1) {
+        printf("file already exists\n");
+    }
+    fs_node_t* file = finddir_fs(&root, fileName);
+    u8int* contents = (u8int*) "Hola Manolo!";
+    u32int len = strlen((char*) contents) + 1;
+    printf("writing contents...");
+    // write_fs(file, 0, len, contents);
+    int offset = 0;
+    while(offset++ < len) {
+        write_fs(file, offset, 1, contents + offset);
+    }
+    kfree(file);
+    return 0;
+}
 
 
 

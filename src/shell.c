@@ -71,7 +71,7 @@ cmd_table_entry cmd_table[] = {
     {"pageFault", 		"pageFault test", pageFault_cmd},
     {"infRec", 		    "infinite recursion test", infRecursion_cmd},
     {"expStack",        "expand stack test", testExpandStack_cmd},
-    {"getchar",       "getchar test", getchar_cmd},
+    {"getchar",         "getchar test", getchar_cmd},
     {"", "", NULL}
 };
 

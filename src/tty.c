@@ -48,7 +48,6 @@ void tty_setCurrent(int tty) {
     if (tty == tty_getCurrent()) {
         return;
     }
-	_cli();
     TTY* currTTY = tty_getCurrentTTY();
     setPriority(currTTY->pid, inactiveTTYpriority);
     currentTTY = tty;
@@ -58,7 +57,6 @@ void tty_setCurrent(int tty) {
     video_clearScreen(video_getFormattedColor(currTTY->fgColor, currTTY->bgColor));
 	video_setOffset(0);
 	video_write(currTTY->screen, currTTY->offset);
-	_sti();
 }
 
 int tty_getCurrent() {

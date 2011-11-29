@@ -187,14 +187,6 @@ void scheduler_blockCurrent(block_t waitFlag) {
     yield();
 }
 
-void scheduler_finalizeCurrent() {
-    if (current->parent == 0) {
-        // Parent pid 0 means, TTY o idle process (can not be killed)
-        return;
-    }
-    clean();
-}
-
 PRIVATE void clean() {
     log(L_DEBUG, "finalized: %s (%d)", current->name, current->pid, current->parent);
     current->status = FINALIZED;
@@ -263,13 +255,12 @@ PRIVATE void showAllProcessInfo() {
 }
 
 void kill(int pid) {
-    if (pid < MAX_TTYs) {
-        log(L_ERROR, "Trying to kill TTY: %d (Not Allowed)", pid);
-        return;
-    }
-    log(L_DEBUG, "killing process PID: %d", pid);
     for (int i = 0; i < MAX_PROCESSES; i++) {
         if (allProcess[i] != NULL && allProcess[i]->pid == pid) {
+            if (allProcess[i]->parent == 0) {
+                log(L_ERROR, "Trying to kill TTY: %s (Not Allowed)", allProcess[i]->name);
+                return;
+            }
             killChildren(pid);
             scheduler_setStatus(allProcess[i]->parent, READY);
             allProcess[i]->status = FINALIZED;

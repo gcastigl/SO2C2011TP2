@@ -1,9 +1,6 @@
 #ifndef AT_WINI_H
 #define AT_WINI_H
 
-#include <asm/libasm.h>
-#include <lib/stdio.h>
-
 /* I/O Ports used by winchester disk controller. */
 #define ATA0 0x1f0
 #define ATA1 0x170
