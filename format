@@ -1,0 +1,3 @@
+#!/bin/sh
+git checkout -- img/disk0.img;
+./arma
