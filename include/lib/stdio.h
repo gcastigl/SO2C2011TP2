@@ -37,6 +37,8 @@ int gets(char* ans);
 int getd(int* n);
 int getf(double* n);
 
+int gets_max(char* str, int maxLen);
+
 int parseHexa(char c);
 int isDigit(char c);
 int isNumber(char c);

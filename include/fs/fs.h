@@ -6,7 +6,8 @@
 #include <lib/fifo.h>
 #include <fs/diskManager.h>
 
-#define INODES			25
+#define INODES			15
+#define STRATEGY 		S_LRU_CACHE
 
 /*
  * inicializa el file system
@@ -43,5 +44,7 @@ PUBLIC void fs_setFileUid(u32int inode, int uid);
  * Setea el gid del inodo
  */
 PUBLIC void fs_setFileGid(u32int inode, int gid);
+
+PUBLIC void fs_clone(fs_node_t *folder, fs_node_t *node, char *name);
 
 #endif

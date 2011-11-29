@@ -2,7 +2,7 @@
 #define STDLIB_H
 
 #include <defs.h>
-#include <lib/kheap.h>
+#include <memory/kheap.h>
 
 void* malloc(u32int neededMem);
 

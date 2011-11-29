@@ -13,6 +13,7 @@
 #include <lib/unistd.h>
 #include <lib/file.h>
 
+
 #define HELP_HELP			"Shows this help function"
 
 #define HELP_RESTART		"Restarts the OS"
@@ -111,16 +112,6 @@ int format(int argc, char **argv);
 * Cierra la sesión del usuario actual
 **/
 int logout(int argc, char **argv);
-
-/* idle_cmd
-*
-* Recibe como parametros:
-* - Cantidad de Argumentos
-* - Argumentos
-*
-* Proceso idle
-**/
-int idle_cmd(int argc, char **argv);
 
 /* top_cmd
 *
@@ -259,10 +250,14 @@ int cat_cmd(int argc, char **argv);
 int ln_cmd(int argc, char **argv);
 int rm_cmd(int argc, char **argv);
 int mkfifo_cmd(int argc, char **argv);
+int cp_cmd(int argc, char **argv);
+int mv_cmd(int argc, char **argv);
 
 int chmod_cmd(int argc, char **argv);
 int chown_cmd(int argc, char **argv);
 int chgrp_cmd(int argc, char **argv);
+
+int nice_cmd(int argc, char **argv);
 
 // TESTS
 
@@ -307,5 +302,21 @@ int pipeTest_cmd(int argc, char **argv);
 * Función de prueba para getchar
 **/
 int getchar_cmd(int argc, char **argv);
+
+/** infRecursion_cmd
+ * 
+ * Función de prueba para una recursión infinita. Chequeo de Stack dinámico.
+ **/
+int infRecursion_cmd(int argc, char **argv);
+
+int testExpandStack_cmd(int argc, char **argv);
+
+void testHeap();
+
+int DMTest2(int argc, char **argv);
+
+int processInfo_cmd(int argc, char **argv);
+
+int sudo_cmd(int argc, char **argv);
 
 #endif

@@ -2,7 +2,6 @@
 #define STRING_H
 
 #include <defs.h>
-#include <lib/stdlib.h>
 
 /* strlen
 *
@@ -85,7 +84,7 @@ void strncpy(char *to, const char *from, int size);
 *
 * Devuelve el índice del caracter 'c' en el string 'str'
 **/
-int strIndexOf(char* str, char c, int startIndex);
+int strindex(char* str, char c, int offset);
 
 /* strContains
 *
@@ -98,7 +97,11 @@ int strIndexOf(char* str, char c, int startIndex);
 int strContains(char* str, char c);
 
 int strspn(const char *string, const char *in);
+
 char *strpbrk(register const char *string, register const char *brk);
+
 char *strtok(register char *string, const char *separators);
+
+int strreplace(char* str, char replace, char replacement);
 
 #endif

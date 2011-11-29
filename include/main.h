@@ -6,8 +6,8 @@
 #include <asm/libasm.h>
 #include <interrupts/interrupts.h>
 #include <fs/fs.h>
-#include <paging/paging.h>
-#include <util/roundRobin.h>
+#include <memory/paging.h>
+#include <access/user.h>
 
 #endif
 

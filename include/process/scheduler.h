@@ -34,7 +34,7 @@ PROCESS* scheduler_getProcess(int pid);
 **/
 int scheduler_currentPID();
 
-void scheduler_setCurrent(int pid);
+void scheduler_setCurrent(PROCESS* p);
 
 /* kill
 *
@@ -43,7 +43,13 @@ void scheduler_setCurrent(int pid);
 *
 * Mata el proceso indicado por pid
 **/
-void process_kill(int pid);
+void kill(int pid);
+
+/* killCurrent
+*
+* Mata el proceso actual
+**/
+void killCurrent();
 
 /* getCurrentProcess
 *
@@ -59,9 +65,9 @@ PROCESS *scheduler_getCurrentProcess();
 *
 * Setea una nueva prioridad para el pid dado
 **/
-void setPriority(int pid, int newPriority);
+int setPriority(int pid, int newPriority);
 
-boolean scheduler_setStatus(u32int pid, u32int status);
+void scheduler_setStatus(u32int pid, u32int status);
 
 PROCESS **scheduler_getAllProcesses();
 
@@ -73,5 +79,7 @@ void scheduler_schedule(char* name, int(*processFunc)(int, char**), int argc,
         char** argv, int stacklength, int tty, int groundness, int status, int priority);
 
 u32int scheduler_activeProcesses();
+
+void scheduler_blockCurrent(block_t waitFlag);
 
 #endif

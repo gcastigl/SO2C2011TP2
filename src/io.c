@@ -1,4 +1,5 @@
 #include <io.h>
+#include <util/logger.h>
 
 PRIVATE int isTTY(int fd);
 PRIVATE fs_node_t* getFile(char* fileName);
@@ -12,7 +13,7 @@ void sysRead(int fd, void * buffer, u32int count) {
 		//COPIA DEL BUFFER DE TECLADO al BUFFER ENTREGADO
 		for (i = 0; i < count; i++) {
 			aux = (char*) buffer;
-			c = getKeyFromBuffer();
+			c = circularBuffer_get(&tty_getCurrentTTY()->input_buffer);
 			*(aux+i) = c;
 		}
 	} else if (fd >= MAX_TTYs) {
@@ -20,12 +21,7 @@ void sysRead(int fd, void * buffer, u32int count) {
 		u32int index = fd - FD_OFFSET;
 		file_descriptor_entry* file = &(scheduler_getCurrentProcess()->fd_table[index]);
 		fs_getFsNode(&node, file->inode);
-        int read = read_fs(&node, file->offset, count, buffer);
-        file->offset += read;
-        if (file->offset >= file->length) {
-        	log(L_DEBUG, "resetting offset: %d / length: %d", file->offset, file->length);
-        	file->offset = 0;
-        }
+        read_fs(&node, file->offset, count, buffer);
         return;
 	}
 }
@@ -41,15 +37,13 @@ void sysWrite(int fd, void * buffer, u32int count) {
     	u32int index = fd - FD_OFFSET;
     	file_descriptor_entry* file = &(scheduler_getCurrentProcess()->fd_table[index]);
     	fs_getFsNode(&node, file->inode);
-    	printf("File index: %d / offset: %d / count: %d / buff: %s\n", index, file->offset, count, buffer);
-        int written = write_fs(&node, file->offset, count, buffer);
-        file->length = written;
+        write_fs(&node, file->offset, count, buffer);
         return;
     }
 	tty_write(tty, (char*) buffer, count);
 	video_setOffset(0);
 	if (tty->id == tty_getCurrentTTY()->id) {
-		video_write(tty->terminal, tty->offset + 1);
+		video_write(tty->screen, tty->offset + 1);
 	}
 }
 

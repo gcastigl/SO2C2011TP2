@@ -2,21 +2,24 @@
 #define TTY_H
 
 #include <defs.h>
-#include <lib/kheap.h>
+#include <memory/kheap.h>
 #include <fs/fs.h>
 #include <lib/stdlib.h>
 #include <driver/video.h>
 #include <process/process.h>
+#include <util/circularBuffer.h>
 
-#define BUFFER_SIZE	128
+#define TTY_INPUT_BUFFER_SIZE	10
+#define TTY_BUFFER_SIZE			128
 
 typedef struct {
     int id;
     int pid;
-	char* terminal;
+	char* screen;
+    int screenOffset;
 	int offset;
-	char buffer[BUFFER_SIZE];
-    int bufferOffset;
+	c_buffer_t input_buffer;
+	char buffer[TTY_BUFFER_SIZE];
 	u32int currDirectory;
 	char currPath[64];
 	int currPathOffset;
@@ -24,12 +27,6 @@ typedef struct {
 	char bgColor;
 	char fgColor;
 } TTY;
-
-/* initTTY
-*
-* Inicializa una TTY
-**/
-int initTTY();
 
 /* tty_setCurrent
 *
@@ -75,6 +72,8 @@ TTY* tty_getTTY(int index);
 * Escribe en la tty 'tty' el contenido del buffer hasta 'size' caracteres
 **/
 void tty_write(TTY* tty, char* buffer, u32int size);
+
+boolean tty_hasInput(TTY* tty);
 
 /* tty_clean
 *

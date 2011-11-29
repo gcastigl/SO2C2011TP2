@@ -101,6 +101,8 @@ void diskManager_delete(u32int inode);
  */
 void diskManager_readInode(iNode *inode, u32int inodeNumber);
 
+void diskManager_writeInode(iNode *inode, u32int inodeNumber);
+
 /*
  * Escribe length bytes de contents con el offset indicado, en el contenido de inodeNumber. En caso que offset + length sea mayor al largo del contenido del nodo ya exitente, simplemente se exitende la memoria y el nuevo largo es ahora = offset + length.
  */

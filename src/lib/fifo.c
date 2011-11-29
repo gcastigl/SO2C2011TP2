@@ -1,17 +1,44 @@
 #include <lib/fifo.h>
 #include <lib/file.h>
+#include <util/logger.h>
 
-#define PIPE_BUF 200
+#define MAX_FIFOS	3
 
-PRIVATE char pipe_buffer[PIPE_BUF];
-PRIVATE int msgLen = 0;
-PRIVATE int inode = -1;
-PRIVATE boolean writing = false;
+PRIVATE fifo_t fifos[MAX_FIFOS];
 
-PRIVATE boolean _checkReadingProcess(int inode, PROCESS** list, int currentPID);
-PRIVATE boolean _checkWritingProcess(int inode, PROCESS** list, int currentPID);
-PRIVATE boolean _checkConditionProcess(int inode, PROCESS** list, int currentPID, int condition);
-PRIVATE int signalWriters(int inode, PROCESS** list, int currentPID);
+PRIVATE int pipe_index(u32int inode);
+
+PRIVATE int signalWriters(fifo_t* f);
+PRIVATE int signalReaders(fifo_t* f);
+PRIVATE int wakeUpWaiters(List* list, int condition);
+
+void fifo_init() {
+	for (int i = 0; i < MAX_FIFOS; ++i) {
+		sem_init(&fifos[i].readers, 0);
+		sem_init(&fifos[i].writers, 1);
+		sem_init(&fifos[i].lock, 1);
+		list_init(&fifos[i].waitingReaders, "waitingReaders");
+		list_init(&fifos[i].waitingWriters, "waitingWriters");
+		fifos[i].inode = -1;
+		fifos[i].offset = 0;
+		fifos[i].lenght = 0;
+	}
+}
+
+PRIVATE int pipe_index(u32int inode) {
+	for (int i = 0; i < MAX_FIFOS; ++i) {
+		if (fifos[i].inode == inode) {
+			return i;
+		}
+	}
+	for (int i = 0; i < MAX_FIFOS; ++i) {
+		if (fifos[i].inode == -1) {
+			fifos[i].inode = inode;
+			return i;
+		}
+	}
+	return -1;
+}
 
 u32int fifo_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 	if (FILE_TYPE(node->mask) != FS_PIPE) {
@@ -19,30 +46,29 @@ u32int fifo_read(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 		errno = E_INVALID_ARG;
 		return 0;
 	}
-	PROCESS* me = scheduler_getCurrentProcess();
-	int writers = signalWriters(node->inode, scheduler_getAllProcesses(), me->pid);
-	if (writers == 0) {
-		me->status = BLOCKED;
-		me->waitingFlags = W_FIFO;
-		me->waitingInfo = node->inode;
-		yield();
+	int index = pipe_index(node->inode);
+	if (index == -1) {
+		log(L_ERROR, "NO MORE SPACE IN SYSTEM FOR ANOTHER FIFO!");
+		return 0;
 	}
-	log(L_DEBUG, "Waiting for my turn!! - writers: %d / node: %s", writers, node->name);
-	while (writing || inode != node->inode) {
-		log(L_DEBUG, "%d || %d", writing, inode);
-		me->waitingFlags = W_FIFO;
-		me->waitingInfo = node->inode;
-		yield();	// Wait for my turn...
+	fifo_t* fifo = &fifos[index];
+	log(L_DEBUG, "< [Entering read]\n");
+
+	sem_signal(&fifo->readers);
+	if (sem_value(&fifo->writers) == 1) {       // if no writers, block
+        list_add(&fifo->waitingReaders, scheduler_getCurrentProcess());
+        scheduler_blockCurrent(W_FIFO);
 	}
-	if (size > PIPE_BUF) {
-		size = PIPE_BUF;
-	}
-	memcpy(buffer, pipe_buffer + offset, size);
-	if (offset >= msgLen) {
-		msgLen = 0;
-		inode = -1;
-	}
-	log(L_DEBUG, "READING from a pipe!!! - %d bytes / buff: %c / p: %s / offset: %d / msglen: %d", size, *buffer, pipe_buffer, offset, msgLen);
+	signalWriters(fifo);
+	sem_wait(&fifo->lock);                      // wait on lock until msg is written
+
+	log(L_DEBUG, "<-- I'm reading the buffer %d bytes from offset %d....\n", size, fifo->offset);
+    memcpy(buffer, fifo->buff + fifo->offset, size);
+
+    sem_signal(&fifo->lock);
+    sem_wait(&fifo->readers);                   // Decrement readers
+    fifo->offset += size;
+    yield();
 	return size;
 }
 
@@ -52,75 +78,55 @@ u32int fifo_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
 		errno = E_INVALID_ARG;
 		return 0;
 	}
-	log(L_DEBUG, "waiting for a process to read from the pipe...");
-	PROCESS* me = scheduler_getCurrentProcess();
-	if (!_checkReadingProcess(node->inode, scheduler_getAllProcesses(), me->pid)) {	// No process has this file opened for reading
-		log(L_DEBUG, "%d has gotten block!", me->pid);
-		me->status = BLOCKED;
-		me->waitingFlags = W_FIFO;
-		me->waitingInfo = node->inode;
-		yield();
+	int index = pipe_index(node->inode);
+	if (index == -1) {
+		log(L_ERROR, "NO MORE SPACE IN SYSTEM FOR ANOTHER FIFO!");
+		return 0;
 	}
-	log(L_DEBUG, "%d -> Somebody opened the pipe for READING!!");
-	while(writing || inode != -1)
-		yield();// Wait for my turn
-	writing = true;
-	if (size > PIPE_BUF) {
-		size = PIPE_BUF;
-	}
-	memcpy(pipe_buffer, buffer, size);
-
-	msgLen = size;
-	writing = false;
-	inode = node->inode;
-
-	log(L_DEBUG, "Data written to the pipe! : %s / bytes: %d", pipe_buffer, size);
-	while(msgLen != 0)
-		yield();
+	fifo_t* fifo = &fifos[index];
+	log(L_DEBUG, "> [Entering write]\n");
+    sem_wait(&fifo->writers);               // If there is already a writer, wait until it finishes
+    sem_wait(&fifo->lock);                  // Grab buffer lock
+    if (sem_value(&fifo->readers) == 0) {   // If there are no readers, wait until there are some
+        // Add current to the waiting list and block it
+	    list_add(&fifo->waitingWriters, scheduler_getCurrentProcess());
+        scheduler_blockCurrent(W_FIFO);
+    }
+    signalReaders(fifo);
+	memcpy(fifo->buff, buffer, size);
+	fifo->lenght = size;
+	sem_signal(&fifo->lock);                // Release the buffer lock
+    while(fifo->offset < size)
+        ; // FIXME: The writer should be set to BLOCKED here...
+    sem_signal(&fifo->writers);             // notify waiting writers the fifo is ready
+    if (fifo->writers.count == 1) {         // If last writer...
+        fifo->offset = 0;
+        fifo->inode = -1;
+    }
 	return size;
 }
 
-PRIVATE boolean _checkReadingProcess(int inode, PROCESS** list, int currentPID) {
-	return _checkConditionProcess(inode, list, currentPID, O_RDONLY);
+PRIVATE int signalWriters(fifo_t* fifo) {
+    return wakeUpWaiters(&fifo->waitingWriters, O_WRONLY);
 }
 
-PRIVATE boolean _checkWritingProcess(int inode, PROCESS** list, int currentPID) {
-	return _checkConditionProcess(inode, list, currentPID, O_WRONLY);
+PRIVATE int signalReaders(fifo_t* fifo) {
+    return wakeUpWaiters(&fifo->waitingReaders, O_RDONLY);
 }
 
-PRIVATE boolean _checkConditionProcess(int inode, PROCESS** list, int currentPID, int condition) {
-	for (int i = 0; i < MAX_PROCESSES; i++) {
-		PROCESS* p = list[i];
-		// p is not me, is waiting for a fifo with inode "inode"
-		if (p != NULL && p->pid != currentPID &&
-			p->waitingFlags == W_FIFO && p->waitingInfo == inode) {
-			for (int j = 0; j < MAX_FILES_PER_PROCESS; ++j) {
-				if (p->fd_table[j].mask != 0 && (p->fd_table[j].mode&&condition) != 0) {
-					log(L_DEBUG, "inode: %s, %d => %d", p->name, j, p->fd_table[j].inode);
-					return true;
-				}
-			}
-		}
-	}
-	return false;
-}
-
-PRIVATE int signalWriters(int inode, PROCESS** list, int currentPID) {
+PRIVATE int wakeUpWaiters(List* list, int condition) {
 	int signaled = 0;
-	for (int i = 0; i < MAX_PROCESSES; i++) {
-		PROCESS* p = list[i];
-		// p is not me, is waiting for a fifo with inode "inode"
-		if (p->pid != currentPID &&
-			p->waitingFlags == W_FIFO && p->waitingInfo == inode) {
-			for (int j = 0; j < MAX_FILES_PER_PROCESS; ++j) {
-				if (p->fd_table[j].mask != 0 && (p->fd_table[j].mode&&O_WRONLY) != 0) {
-					log(L_DEBUG, "inode: %s, %d => %d", p->name, j, p->fd_table[j].inode);
-					scheduler_setStatus(p->pid, RUNNING);
-					signaled++;
-				}
+	for (int i = 0; i < list_size(list); i++) {
+		PROCESS* p = list_get(list, i);
+		for (int j = 0; j < MAX_FILES_PER_PROCESS; ++j) {
+			if (p->fd_table[j].mask != 0 && (p->fd_table[j].mode&&condition) != 0) {
+				scheduler_setStatus(p->pid, READY);
+				list_remove(list, i);
+				log(L_DEBUG, "%d has been removed from the queue / size: %d", p->pid, list->size);
+				signaled++;
+				break;
 			}
 		}
 	}
 	return signaled;
 }
-

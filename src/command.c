@@ -114,28 +114,44 @@ int top_cmd(int argc, char**argv) {
             execCount[slot]++;
         }
     }
-    // FIXME: process switching has to be stopped because it uses a roundrobin and shoud not be switched while listing!
-    _cli();
     printf("Executions over 100\n\n[ACTIVE]\n");
-    printf("\n[ACTIVE]\n");
     printf("User\tName\tPID\tStatus\tPriority\texecCount\n");
     _top_cmd_print(scheduler_getAllProcesses(), execCount, RUNNING);
     _top_cmd_print(scheduler_getAllProcesses(), execCount, READY);
     printf("\n[BLOCKED]\n");
-    printf("User\tName\tPID\tStatus\tPriority\texecCount\n");
+    printf("User\tName\tPID\tStatus\tReason\tPriority\texecCount\n");
     _top_cmd_print(scheduler_getAllProcesses(), execCount, BLOCKED);
-    _sti();
     return 0;
 }
 
 PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus) {
-    char *status[] = {"Ready", "Blocked", "Running"};
-    char *priority[] = {"Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
+    char *status[] = {"Blocked", "Ready", "Running"};
+    char *priority[] = {"No Priority", "Very Low", "Low", "Normal", "High", "Very High", "Shell High"};
+    char *blockType[] = {"FIFO", "INPUT", "CHILD", "SEMAPHORE", "LOGIN", "????"};
+    char *nonBlockedProcessFormat = "%5s\t%5s\t%d\t%s\t%9s\t%d\n";
+    char *blockedProcessFormat =    "%5s\t%5s\t%d\t%s\t%5s\t%9s\t%d\n";
+
 	for (int i = 0; i < MAX_PROCESSES; i++) {
 		PROCESS* p = list[i];
 		if (p->status == pstatus) {
-			log(L_DEBUG, "%s\t%d\t%s\t%s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
-			printf("%5s\t%5s\t%d\t%s\t%9s\t%d\n", user_getName(p->ownerUid), p->name, p->pid, status[p->status], priority[p->priority % 10], execCount[i]);
+		    if (p->status == BLOCKED) {
+                printf(blockedProcessFormat,
+                        user_getName(p->ownerUid),
+                        p->name,
+                        p->pid,
+                        status[p->status],
+                        (0 <= p->waitingFlags && p->waitingFlags <= 4) ? blockType[p->waitingFlags] : blockType[5],
+                        priority[p->priority % 10],
+                        execCount[i]);
+		    } else {
+		        printf(nonBlockedProcessFormat,
+		                user_getName(p->ownerUid),
+		                p->name,
+		                p->pid,
+		                status[p->status],
+		                priority[p->priority % 10],
+		                execCount[i]);
+		    }
 		}
 	}
 }
@@ -151,21 +167,15 @@ int kill_cmd(int argc, char**argv) {
     		err = "Access denied";
     	}
     	if (err == NULL) {	// No error
-			process_kill(pid);
+			kill(pid);
     	} else {
-    		printf("Could not kill %d: %s", pid, err);
+    		printf("Could not kill %d: %s\n", pid, err);
     	}
     } else {
-        printf("Usage:\nkill PID");
+        printf("Usage:\nkill PID\n");
     }
     return 0;
 }
-
-int idle_cmd(int argc, char **argv) {
-    while(1) {}
-    return 0;
-}
-
 
 // Permissions
 int shell_useradd(int argc, char **argv) {
@@ -265,8 +275,7 @@ int cd_cmd(int argc, char **argv) {
         		char name[MAX_NAME_LENGTH];
         		read_fs(node, 0, MAX_NAME_LENGTH, (u8int*) name);
         		char* n = name;
-        		cd_cmd(1, (char**) &n);
-        		return 0;
+        		return cd_cmd(1, (char**) &n);;
         	}
             if (!permission_file_hasAccess(node, R_BIT)) {
                 printf("cd: You don't have read access to %s\n", argv[0]);
@@ -278,7 +287,7 @@ int cd_cmd(int argc, char **argv) {
             } else {
                 printf("cd: %s is not a directory\n", argv[0]);
             }
-            // free(node);
+            kfree(node);
         } else {
             printf("cd: The directory \"%s\" does not exist\n", argv[0]);
         }
@@ -287,40 +296,39 @@ int cd_cmd(int argc, char **argv) {
 }
 
 int ls_cmd(int argc, char **argv) {
-    u32int currentiNode = tty_getCurrentTTY()->currDirectory;
-    fs_node_t current;
-    fs_getFsNode(&current, currentiNode);
-    int i = 0;
-    fs_node_t *node = NULL;
+    boolean showHidden = false;
+    int i = 2;
+    if (argc == 1 && strcmp(argv[0], "-a") == 0) {
+        showHidden = true;
+        i = 0;
+    }
+    fs_node_t current, *node;
     char perm[MASK_STRING_LEN];
-    if (argc == 0) {
-        while ((node = readdir_fs(&current, i)) != NULL) {                 // get directory i
-        	tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
+    fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
+    while ((node = readdir_fs(&current, i)) != NULL) {                 // get directory i
+        tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
+        if (node->name[0] != '.' || (node->name[0] == '.' && showHidden)) {
+            if (showHidden) {
+                if (i == 0) strcpy(node->name, "."); else if (i == 1) strcpy(node->name, "..");
+            }
             mask_string(node->mask, perm);
-            /*log(L_DEBUG, "%s\t%s\t%s\t%s%s\n",
-                    perm,
-                    user_getName(node->uid),
-                    group_getName(node->gid),
-                    node->name,
-                    (FILE_TYPE(node->mask) == FS_DIRECTORY) ? "/": "");*/
             printf("%s\t%5s\t%5s",
-				perm,
-				user_getName(node->uid),
-				group_getName(node->gid));
-        	_ls_cmd_setColor(FILE_TYPE(node->mask));
+                perm,
+                user_getName(node->uid),
+                group_getName(node->gid));
+            _ls_cmd_setColor(FILE_TYPE(node->mask));
             printf("\t%s%s\n",
                 node->name,
                 _ls_cmd_EndingString(FILE_TYPE(node->mask))
             );
-            i++;
         }
+        i++;
     }
-    // while(1);
     return 0;
 }
 
 PRIVATE char* _ls_cmd_EndingString(u32int fileType) {
-	log(L_DEBUG, "%x - %x", fileType, FS_DIRECTORY);
+	// log(L_DEBUG, "%x - %x", fileType, FS_DIRECTORY);
 	if (fileType == FS_DIRECTORY) {
 		return "/";
 	}
@@ -389,11 +397,25 @@ int rm_cmd(int argc, char **argv) {
         } else if (!permission_file_hasAccess(node, W_BIT)){
         	err = "Don't have write access";
         }
+        int removed = 0;
+        if (err == NULL) {
+            removed = removedir_fs(&current, node->inode);
+        }
+		switch(removed) {
+		case 0:
+		       // OK
+		    break;
+		case E_FILE_NOT_EXISTS:
+		    err = "No such file or directory";
+		    break;
+		case E_ACCESS:
+		    err = "No such file or directory";
+		    break;
+		}
         if (err != NULL) {
-			printf("rm: cannot remove \"%s\": %s\n", argv[0], err);
+            printf("rm: cannot remove \"%s\": %s\n", argv[0], err);
             return -1;
         }
-		int removed = removedir_fs(&current, node->inode);
         	log(L_DEBUG, "rm: remove file returned: %d", removed);
 		kfree(node);
 	}
@@ -430,6 +452,7 @@ int touch_cmd(int argc, char **argv) {
         }
         if (errno != 0) {
             printf("touch: cannot create file %s: %s\n", argv[0], err);
+            return -1;
         }
         if (argc == 2) {
             TTY* tty = tty_getCurrentTTY();
@@ -474,10 +497,8 @@ int ln_cmd(int argc, char **argv) {
 
 int cat_cmd(int argc, char **argv) {
     if (argc == 1) {
-        TTY* tty = tty_getCurrentTTY();
-        u32int currentiNode = tty->currDirectory;
         fs_node_t current;
-        fs_getFsNode(&current, currentiNode);
+        fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
         fs_node_t* file = finddir_fs(&current, argv[0]);
         char* err = NULL;
         if (file == NULL) {
@@ -653,4 +674,111 @@ int pfiles(int argc, char **argv) {
 	}
 	printf("\n");
 	return 0;
+}
+
+int cp_cmd(int argc, char **argv) {
+	if (argc == 2) {
+		char* source = argv[0];
+		char* dest = argv[1];
+		fs_node_t current, *sourceNode;
+		fs_getFsNode(&current, tty_getCurrentTTY()->currDirectory);
+		sourceNode = finddir_fs(&current, source);
+		if (sourceNode != NULL) {
+		    char* err = NULL;
+		    errno = 0;
+		    fs_clone(&current, sourceNode, dest);
+		    switch(errno) {
+                case 0:
+                    // OK
+                    break;
+                case E_FILE_EXISTS:
+                    err = "file already exists";
+                    break;
+                case E_FILE_IS_DIR:
+                    err = "File is a directory! (use -r)";
+                    break;
+                default:
+                    err = "no se que paso!";
+                    log(L_ERROR, "no se q paso: %d", errno);
+		    }
+		    if (err != NULL) {
+		        printf("cp: could not copy %s: %s\n", source, err);
+		        return -1;
+		    }
+		    return 0;
+		} else {
+			printf("cp: Source file: %s does not exists\n", source);
+		}
+	} else {
+	    tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
+	    printf("cp: This feature does not come with Gat O.S. free trial edition.\n");
+	    tty_setFormatToCurrTTY(video_getFormattedColor(MAGENTA, BLACK));
+	    printf("\t\t\tConsider Purchasing it - Ask for teacher discounts!!\n");
+	}
+	return -1;
+}
+
+int mv_cmd(int argc, char **argv) {
+	if (argc == 2) {
+		int copied = cp_cmd(2, argv);
+		if (copied == 0) {
+			rm_cmd(1, &argv[0]);
+		}
+	} else {
+	    cp_cmd(4, NULL);
+	}
+	return 0;
+}
+
+int nice_cmd(int argc, char **argv) {
+    char *priorityName[] = {"No priority", "Very Low", "Low", "Normal", "High", "Very High", "Shell High", "Sky High"};
+    if (argc == 0) {
+        char* pname = priorityName[scheduler_getCurrentProcess()->priority];
+        printf("Current priority: %s\n", pname);
+        return 0;
+    } else if (argc == 2) {
+        int pid = atoi(argv[0]);
+        int priority = atoi(argv[1]);
+        if (0 <= priority && priority < 6) {
+            PROCESS* p = scheduler_getProcess(pid);
+            if (p != NULL) {
+                if (setPriority(p->pid, priority) != -1) {
+                    char* pname = priorityName[priority];
+                    printf("nice: %s now has priority: %s\n", p->name, pname);
+                } else {
+                    printf("nice: Error: Could not set priority\n");
+                }
+            } else {
+                printf("nice: Could not process with pid: %d", pid);
+                return -1;
+            }
+            return 0;
+        } else {
+            printf("nice: Invalid priority %d. Priority must be between 0 and 6\n", priority);
+            return -1;
+        }
+    } else {
+        printf("nice: Run COMMAND with an adjusted niceness, which affects process scheduling\n");
+    }
+    return -1;
+}
+
+int sudo_cmd(int argc, char **argv) {
+    session_sudoStart();
+    int i;
+    char buffer[128];
+    int totalLen = 0;
+    for(i = 0; i < argc; i++) {
+        int len = strlen(argv[i]);
+        strcpy(buffer + totalLen, argv[i]);
+        strcpy(buffer + totalLen + 1, " ");
+        totalLen += len + 1;
+    }
+    int cmd = parse_cmd(argv[0]);
+    if (cmd != -1) {
+        log(L_DEBUG, "parsed command: %d - %s", cmd, argv[0]);
+        excecuteCmd(cmd, buffer);
+    }
+    session_sudoEnd();
+    return 0;
 }

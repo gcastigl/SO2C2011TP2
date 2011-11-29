@@ -38,7 +38,6 @@
 typedef enum { false = 0, true } boolean;
 
 #define NULL	((void *)0)
-#define ASSERT(b) 
 
 #define ERROR -1
 
@@ -55,6 +54,7 @@ typedef void*           type_t;
 #define SYSTEM_OPEN     5
 #define SYSTEM_YIELD    6
 #define SYSTEM_CLOSE	7
+#define SYSTEM_ADDSTACK 8
 
 #define SYSTEM_USERLIST     9
 #define SYSTEM_USERADD      10
@@ -66,9 +66,9 @@ typedef void*           type_t;
 
 #define SYSTEM_CHMOD        20
 
-// File descriptors for STD in-out-error
-#define MAX_TTYs		4
+#define MAX_TTYs		    4
 
+// File descriptors for STD in-out-error
 #define STD_IN		MAX_TTYs + 0
 #define STD_OUT		MAX_TTYs + 1
 #define STD_ERROR	MAX_TTYs + 2
@@ -83,9 +83,11 @@ typedef void*           type_t;
 #define E_OUT_OF_MEMORY		-4
 #define E_CORRUPTED_FILE	-5
 #define E_INVALID_ARG		-6
-#define E_ACCESS			-7
+#define E_ACCESS            -7
 #define E_FILE_NOT_EXISTS	-8
-#define E_MAX_FD_REACHED	-9
+#define E_DIR_NOT_EXISTS	-9
+#define E_MAX_FD_REACHED	-10
+#define E_FILE_IS_DIR       -11
 
 #define MAX_NAME_LENGTH		24
 

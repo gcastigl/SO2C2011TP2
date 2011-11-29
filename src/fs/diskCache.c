@@ -1,4 +1,5 @@
 #include <fs/diskCache.h>
+#include <util/logger.h>
 
 #define MIN(x,y)	((x) < (y) ? (x) : (y))
 

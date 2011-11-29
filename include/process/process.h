@@ -2,23 +2,26 @@
 #define PROCESS_H
 
 #include <defs.h>
-#include <lib/kheap.h>
-#include <util/logger.h>
+#include <memory/kheap.h>
 
-#define DEFAULT_STACK_SIZE 0x400
+#define DEFAULT_STACK_SIZE 0x2000
+
+#define INIFL 	0x200
+#define FP_SEG(fptr) 	((unsigned)((unsigned long)(fptr) >> 16))
+#define FP_OFF(fptr)	((unsigned)(fptr))
+
 // I think there is one like this already defined...
-#define MAX_PROCESS_NAME 	16
-#define MAX_PROCESSES		32
-#define MAX_ARG             16
-#define P_RATIO             2
-
-typedef enum {BLOCKED = 0, READY, RUNNING} status;
-typedef enum {BACKGROUND = 0, FOREGROUND} groundness;
-typedef enum {PNONE = 0, VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SKY_HIGH} priority;
-typedef enum {W_FIFO = 0} block_type;
-
-#define MAX_PRIORITY HIGH
+#define MAX_PROCESS_NAME 		16
+#define MAX_PROCESSES			32
+#define MAX_ARG             	16
+#define P_RATIO             	2
 #define MAX_FILES_PER_PROCESS	10
+
+typedef enum {PNONE = 0, VERY_LOW, LOW, NORMAL, HIGH, VERY_HIGH, SKY_HIGH} priority_t;
+typedef enum {BACKGROUND = 0, FOREGROUND} 	            groundness_t;
+typedef enum {BLOCKED = 0, READY, RUNNING, FINALIZED} 	status_t;
+typedef enum {W_FIFO = 0, W_INPUT, W_CHILD, W_SEM, W_LOGIN} 	block_t;
+
 
 typedef struct {
 	char name[MAX_NAME_LENGTH];
@@ -39,17 +42,15 @@ typedef struct {
 	char *argv[MAX_ARG];
 	int ESP;
 	int stacksize;
-	int stackstart;
+	int stack;
 	// Process state
 	int pid;
 	int parent;
-	int groundness;
-	int priority;
-	int sleep;
-	int status;
+	groundness_t groundness;
+	priority_t priority;
+	status_t status;
 	int lastCalled;
-	int waitingFlags;
-	int waitingInfo;
+	block_t waitingFlags;
 	// I/O
 	int tty;
 	file_descriptor_entry fd_table[MAX_FILES_PER_PROCESS];
@@ -78,5 +79,7 @@ void process_finalize(PROCESS* newProcess);
 u32int yield();
 
 u32int fork();
+
+PUBLIC void process_checkStack();
 
 #endif

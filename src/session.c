@@ -1,6 +1,13 @@
 #include <session.h>
+#include <tty.h>
+#include <shell.h>
+#include <driver/video.h>
+#include <lib/stdio.h>
+#include <lib/string.h>
+#include <signal.h>
 
 PRIVATE user_t *currentUser = NULL;
+PRIVATE user_t *sudoUser = NULL;
 
 void prntWelcomeMsg();
 
@@ -8,8 +15,8 @@ void session_login() {
     TTY* tty = tty_getCurrentTTY();
     tty_clean(tty);
     prntWelcomeMsg();
-    static char user[NAME_MAX_LENGTH] = {"\0"};
-    static char password[PASS_MAX_LENGTH] = {"\0"};
+    char password[PASS_MAX_LENGTH] = {"\0"};
+    char user[NAME_MAX_LENGTH] = {"\0"};
     do {
         int uid = NO_USER;
         while (uid == NO_USER) {
@@ -31,12 +38,13 @@ void session_login() {
                 tty_setCurrentNode(*user_getUserHomeInode(uid));
             }
         }
-        if (retry == 0) {
+        if ((retry == 0) && (currentUser == NULL)) {
             printf("\tInvalid password! Please try again.\n");
         }
     } while(!session_isLoggedIn());
 
     printf("\nLogged in as: %s\n", session_getName());
+    signal(W_LOGIN);
 }
 
 int session_isLoggedIn() {
@@ -87,3 +95,18 @@ void prntWelcomeMsg() {
     currTty->fgColor = video_getFGcolor(format);
     printf("\n\n");
 }
+
+PUBLIC void session_sudoStart() {
+    if (sudoUser == NULL) {
+        sudoUser = currentUser;
+        currentUser = user_get(SUPER_USER);
+    }
+}
+
+PUBLIC void session_sudoEnd() {
+    if (sudoUser != NULL) {
+        currentUser = sudoUser;
+        sudoUser = NULL;
+    }
+}
+

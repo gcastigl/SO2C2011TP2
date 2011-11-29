@@ -1,4 +1,5 @@
 #include <lib/string.h>
+#include <lib/stdlib.h>
 
 u32int strlen(char* string) {
 	u32int count = 0;
@@ -59,13 +60,13 @@ void strncpy(char *to, const char *from, int size) {
 	*to = '\0';
 }
 
-int strIndexOf(char* str, char c, int startIndex) {
+int strindex(char* str, char c, int offset) {
 	boolean searchBackwards = false;
-	if (startIndex < 0) {	// searching backwards...
-		startIndex = -startIndex;
+	if (offset < 0) {	// searching backwards...
+		offset = -offset;
 		searchBackwards = true;
 	}
-	int i = startIndex;
+	int i = offset;
 	while(str[i] != '\0' && i >= 0) {
 		if (str[i] == c) {
 			return i;
@@ -132,4 +133,16 @@ char *strpbrk(register const char *string, register const char *brk) {
 		string++;
 	}
 	return (char *) NULL;
+}
+
+int strreplace(char* str, char replace, char replacement) {
+	int replaces = 0;
+	while(*str != '\0') {
+		if (*str == replace) {
+			*str = replacement;
+			replaces++;
+		}
+		str++;
+	}
+	return replaces;
 }

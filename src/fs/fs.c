@@ -28,10 +28,10 @@ PRIVATE int _indexOf(u32int inode);
 PRIVATE int _loadInode(u32int inode);
 
 void fs_init() {
-	diskManager_init(S_LRU_CACHE);
+	diskManager_init(STRATEGY);
 	diskCache_init();
-	int i;
-	for (i = 0; i < INODES; i++) {
+	fifo_init();
+	for (int i = 0; i < INODES; i++) {
 		inodes[i].inodeId = -1;
 		inodes[i].length = 0;
 	}
@@ -52,7 +52,7 @@ void fs_getFsNode(fs_node_t* fsNode, u32int inodeNumber) {
 		return;
 	}
 	iNode* inode = &inodes[index];
-	memcpy(fsNode->name, inode->name, strlen(inode->name) + 1);
+	memcpy(fsNode->name, inode->name, MAX_NAME_LENGTH);
 	fsNode->flags = inode->flags;
 	fsNode->gid = inode->gid;
 	fsNode->uid = inode->uid;
@@ -117,7 +117,8 @@ PRIVATE void fs_create() {
 	fs_node_t root;
 	fs_getRoot(&root);
 	fs_createdir(&root, "dev", FS_DIRECTORY);
-	fs_createdir(&root, "home", FS_DIRECTORY);
+	u32int home = fs_createdir(&root, "home", FS_DIRECTORY);
+	fs_setFileMode(home, 0x777);
 	fs_createdir(&root, "etc", FS_DIRECTORY);
 }
 
@@ -136,6 +137,7 @@ PRIVATE void _initInode(u32int inodeNumber, char* name, u32int mask) {
 
 PRIVATE void _initInode_dir(u32int inodeNumber, char* name, u32int parent) {
 	_initInode(inodeNumber, name, FS_DIRECTORY | DEF_PERM);
+	_appendFile(inodeNumber, 0, "\\");			// link to root
 	_appendFile(inodeNumber, inodeNumber, ".");	// link to self
 	_appendFile(inodeNumber, parent, "..");		// link to parent
 }
@@ -197,7 +199,7 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 	u32int i, offset, inodeNumber = -1;
 
 	i = 0;
-	offset = 2 * (sizeof(u32int) + MAX_NAME_LENGTH); // skip "." and ".."
+	offset = (sizeof(u32int) + MAX_NAME_LENGTH); // skip "/", "." and ".."
 	while (i <= index && offset < length) {
 		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
 		//	log(L_DEBUG, "file: %s - %d", contents + offset + sizeof(u32int), inodeNumber);
@@ -210,7 +212,7 @@ PRIVATE fs_node_t *fs_readdir(fs_node_t *node, u32int index) {
 	//	log(L_DEBUG, "inode: %d, idnex: %d, i: %d", inodeNumber, index, i);
 	if (i - 1 == index) {
 		//	log(L_DEBUG, "directory %d... inode: %d\n", i, inodeNumber);
-		fsNode = kmalloc(sizeof(fs_node_t));
+		fsNode = (fs_node_t*)kmalloc(sizeof(fs_node_t));
 		fs_getFsNode(fsNode, inodeNumber);
 	}
 	return fsNode;
@@ -225,7 +227,7 @@ PRIVATE fs_node_t *fs_finddir(fs_node_t *node, char *name) {
 		memcpy(&inodeNumber, contents + offset, sizeof(u32int));
 		offset += sizeof(u32int);					// skip inodeNumber
 		if (inodeNumber != -1 && strcmp(name, contents + offset) == 0) {
-			fs_node_t* fsnode = kmalloc(sizeof(fs_node_t));
+			fs_node_t* fsnode = (fs_node_t*)kmalloc(sizeof(fs_node_t));
 			fs_getFsNode(fsnode, inodeNumber);
 			return fsnode;
 		}
@@ -262,10 +264,9 @@ PRIVATE u32int fs_removedir(fs_node_t* node, u32int inode) {
 		log(L_DEBUG, "removing inode: %d, length: %d", inode, inodes[index].length);
 	char contents[inodes[index].length];
 	diskManager_readContents(node->inode, contents, inodes[index].length, 0);
-	int offset = 0, readinode;
+	int offset = 3 * (MAX_NAME_LENGTH + sizeof(u32int)), readinode;
 	while (offset < inodes[index].length) {
 		memcpy(&readinode, contents + offset, sizeof(u32int));
-		//	log(L_DEBUG, "delete: read inode %d - %s", readinode, contents + offset + sizeof(u32int));
 		if (readinode == inode) {
 			readinode = -1;
 			memcpy(contents + offset, &readinode, sizeof(u32int));
@@ -394,4 +395,38 @@ PUBLIC void fs_setFileGid(u32int inode, int gid) {
     }
 }
 
+PUBLIC void fs_clone(fs_node_t *folder, fs_node_t *node, char *name) {
+    if (FILE_TYPE(node->mask) == FS_DIRECTORY) {
+        errno = E_FILE_IS_DIR;
+        return;
+    }
+    int created = fs_createdir(folder, name, FILE_TYPE(node->mask));
+    if (created == -1) {
+        return;
+    }
+    fs_node_t* destNode = finddir_fs(folder, name);
 
+	int index = _indexOf(destNode->inode);
+	if (index == -1) {
+		log(L_ERROR, "could not load inode: %d / %d", node->inode, destNode->inode);
+		return;
+	}
+	iNode *inode = &inodes[index];
+	inode->flags = node->flags;
+	inode->impl = node->impl;
+	strcpy(inode->name, destNode->name);
+	errno = 0;
+	diskManager_writeInode(inode, destNode->inode);
+	if (errno != 0) {
+		log(L_ERROR, "Could not write inode to disk, errno %d", errno);
+		return;
+	}
+	u8int buff[512];
+	int offset = 0;
+	int read;
+	while((read = fs_read(node, offset, 512, buff)) != 0) {
+		fs_write(destNode, offset, 512, buff);
+		offset += read;
+	}
+    kfree(destNode);
+}

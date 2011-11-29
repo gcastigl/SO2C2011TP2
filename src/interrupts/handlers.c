@@ -1,5 +1,9 @@
 #include <interrupts/interrupts.h>
+#include <process/scheduler.h>
+#include <access/user.h>
+#include <session.h>
 
+extern PUBLIC void _expandStack();
 extern void switchProcess(void);
 int taskSwitch = true;
 static int ticksSinceLasfFlush = 0;
@@ -55,7 +59,7 @@ void timerTickHandler(registers_t regs) {
     	ticksSinceLasfFlush = 0;
     }
     if (scheduler_isActive() && taskSwitch) {
-		switchProcess();
+        switchProcess();
     }
 }
 
@@ -104,27 +108,32 @@ void *systemCallHandler(int sysCallNumber, void ** args) {
         case SYSTEM_CLOSE:
             ret = (void*)sysClose((char*)args[0], (int)args[1], (int)args[2]);
             break;
+        case SYSTEM_ADDSTACK:
+            _expandStack();
+            break;
 	}
-	
     return ret;
 }
 // This gets called from our ASM interrupt handler stub.
 void isr_handler(registers_t regs) {
-    
-    if (regs.int_no < 32) {
+    if (interruptHandlers[regs.int_no] != 0)
+    {
+        isr_t handler = interruptHandlers[regs.int_no];
+        handler(regs);
+    } else if (regs.int_no < 32) {
         log(L_ERROR, "%s (%d): \n\
- ds: %d\n\
- edi: %d\n\
- esi: %d\n\
- ebp: %d\n\
- esp: %d\n\
- ebx: %d\n\
- edx: %d\n\
- ecx: %d\n\
- eax: %d\n\
- eip: %d\n\
- cs: %d\n\
- ss: %d", exceptionString[regs.int_no], regs.err_code, regs.ds, \
+ ds: %x\n\
+ edi: %x\n\
+ esi: %x\n\
+ ebp: %x\n\
+ esp: %x\n\
+ ebx: %x\n\
+ edx: %x\n\
+ ecx: %x\n\
+ eax: %x\n\
+ eip: %x\n\
+ cs: %x\n\
+ ss: %x", exceptionString[regs.int_no], regs.err_code, regs.ds, \
 regs.edi, regs.esi, regs.ebp, regs.esp, regs.ebx, regs.edx, regs.ecx,\
 regs.eax, regs.eip, regs.cs, regs.ss);
         panic(exceptionString[regs.int_no], 1, true);
