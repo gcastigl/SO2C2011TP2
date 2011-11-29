@@ -16,7 +16,6 @@ void process_initialize(PROCESS* newProcess, char* name, int(*processFunc)(int, 
 		int tty, int groundness, int status, int priority, int parentPID) {
     for (int i = 0; i < argc; i++) {
     	int len = strlen(argv[i]) + 1;
-    	log(L_DEBUG, "argument %d has %d bytes", i, len);
         newProcess->argv[i] = (char*) kmalloc(len);
         memcpy(newProcess->argv[i], argv[i], len);
     }
