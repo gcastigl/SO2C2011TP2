@@ -107,12 +107,9 @@ int top_cmd(int argc, char**argv) {
     int slot;
     int execCount[MAX_PROCESSES] = { 0 };
     printf("Last 100:\n");
-    PROCESS** all = scheduler_getAllProcesses();
     for (int i = 0; i < 100; i++) {
         slot = last100[i];
-        if (all[slot] != NULL) {
-            execCount[slot]++;
-        }
+        execCount[slot]++;
     }
     printf("Executions over 100\n\n[ACTIVE]\n");
     printf("User\tName\tPID\tStatus\tPriority\texecCount\n");
@@ -142,7 +139,7 @@ PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus) {
                         status[p->status],
                         (0 <= p->waitingFlags && p->waitingFlags <= 4) ? blockType[p->waitingFlags] : blockType[5],
                         priority[p->priority % 10],
-                        execCount[i]);
+                        execCount[p->pid]);
 		    } else {
 		        printf(nonBlockedProcessFormat,
 		                user_getName(p->ownerUid),
@@ -150,7 +147,7 @@ PRIVATE void _top_cmd_print(PROCESS** list, int* execCount, int pstatus) {
 		                p->pid,
 		                status[p->status],
 		                priority[p->priority % 10],
-		                execCount[i]);
+		                execCount[p->pid]);
 		    }
 		}
 	}
