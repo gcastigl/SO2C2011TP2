@@ -1,0 +1,184 @@
+
+
+% ----- Informacion sobre el package para el sistema -----------------------
+\NeedsTeXFormat{LaTeX2e} %Requiere la ultima version de LaTeX.
+\ProvidesPackage{caratula}[2009/07/11 v0.6 Para componer caratulas] %Descripcion Paquete.
+
+% ----- Paquetes necesarios para la caratula -----
+% Nota: no se usa \usepackage para evitar errores. Son todos REQUIRED
+\RequirePackage[pdftex]{graphicx} 
+\RequirePackage{framed} 
+\RequirePackage{wallpaper} %Marca de agua atras de la hoja.
+
+% ----- Echo -----
+\typeout{Cargando package 'Caratula' v0.6 (11/07/2009)}
+
+% ----- Algunas variables --------------------------------------------------
+\let\Universidad\relax 
+\let\Facultad\relax 
+\let\Departamento\relax 
+\let\Materia\relax 
+\let\Titulo\relax 
+\let\Fecha\relax 
+\let\Footspace\relax
+
+% ----- Comandos para que el usuario defina las variables ------------------
+\def\universidad#1{\def\Universidad{#1}} 
+\def\facultad#1{\def\Facultad{#1}} 
+\def\departamento#1{\def\Departamento{#1}} 
+\def\materia#1{\def\Materia{#1}}
+%\def\resumen#1{\def\Resumen{#1}}
+%\def\keys#1{\def\Keys{#1}}
+\def\titulo#1{\def\Titulo{#1}} 
+\def\subtitulo#1{\def\Subtitulo{#1}} 
+\def\fecha#1{\def\Fecha{#1}} 
+\def\footspace#1{\def\Footspace{#1}}
+
+% ----- Token list para los integrantes ------------------------------------
+\newtoks\intlist\intlist={}
+
+% ----- Comando para que el usuario agregue integrantes --------------------
+\def\integrante#1#2{\intlist=\expandafter{\the\intlist \rule{0pt}{1.2em}#1&\tt #2\\[0.2em]}}
+
+% ----- Macro para generar la tabla de integrantes -------------------------
+\def\tablaints{
+
+%
+\begin{tabular}
+	[t]{ l @{\hspace{4ex}} c @{\hspace{4ex}} l}
+	
+	%\multicolumn{1}{|c}{\rule{0pt}{1.2em} Integrante} & LU &  \multicolumn{1}{c|}{Correo electr\'onico} \\[0.2em]
+	\the\intlist 
+\end{tabular}
+}
+
+%% ----- Codigo para manejo de errores --------------------------------------
+\def\se{\let\ifsetuperror\iftrue} 
+\def\ifsetuperror{
+
+%
+\let\ifsetuperror\iffalse 
+	\ifx\Materia\relax\se\errhelp={Te olvidaste de proveer una \materia{}.}\fi 
+	\ifx\Universidad\relax\se\errhelp={Te olvidaste de proveer una \universidad{}.}\fi 
+	\ifx\Titulo\relax\se\errhelp={Te olvidaste de proveer un \titulo{}.}\fi 
+	\ifx\Facultad\relax\se\errhelp={Te olvidaste de proveer un \facultad{}.}\fi 
+	\ifx\Departamento\relax\se\errhelp={Te olvidaste de proveer un \departamento{}.}\fi
+	%\ifx\Resumen\relax\se\errhelp={Te olvidaste de proveer un \resumen{}.}\fi
+	%\ifx\Keys\relax\se\errhelp={Te olvidaste de proveer un \keys{}.}\fi
+	\ifx\Fecha\relax\se\errhelp={Te olvidaste de proveer un \fecha{}.}\fi 
+	\ifx\Fecha\relax\se\errhelp={Te olvidaste de proveer un \footspace{}.}\fi
+
+\edef\mlist{\the\intlist}\ifx\mlist\empty\se
+
+%
+\errhelp={Tenes que proveer al menos un \integrante{nombre}{email}.}\fi \expandafter\ifsetuperror}
+
+\def 
+\maketitlegraf{
+
+%
+\ifsetuperror\errmessage{Faltan datos de la caratula!}\fi
+
+\thispagestyle{empty}
+
+%\begin{framed}	
+\begin{minipage}
+	[t]{1.0 
+	\textwidth} 
+	\begin{minipage}
+		[t]{0.0 
+		\textwidth} 
+		\includegraphics{logop.jpg} 
+	\end{minipage}
+	
+	%%
+	\begin{minipage}
+		[b]{1.0 
+		\textwidth} 
+		\begin{center}
+			\textbf{\small \Universidad} 
+		\end{center}
+		\begin{center}
+			\textbf{\small \Facultad} 
+		\end{center}
+		\begin{center}
+			\textbf{\small \Departamento} 
+		\end{center}
+	\end{minipage}
+	
+	%%
+\end{minipage}
+
+%
+\vskip3.0cm 
+\begin{minipage}
+	[t]{1.0 
+	\textwidth} 
+	\begin{minipage}
+		[t]{1.0 
+		\textwidth} 
+		\begin{center}
+			\textbf{\Large \Materia} 
+		\end{center}
+		\begin{center}
+			\textbf{\huge \Titulo}\\
+			
+			%				\textbf{\LARGE \Subtitulo}
+		\end{center}
+		
+		\vskip3.0cm 
+	\end{minipage}
+	
+	%%
+\end{minipage}
+
+%
+\begin{minipage}
+	[t]{1.0 
+	\textwidth} 
+	
+	%%
+	\begin{minipage}
+		[t]{1.0 
+		\textwidth}
+		
+		\vskip5.0cm 
+		
+		%		    \begin{center}
+		%		    	\textbf{Resumen / Abstract}
+		%		    	\vskip0.3cm 
+		%		    	\begin{minipage}[t]{.55 \textwidth}
+		%		            {\small \Resumen}
+		%		    	\end{minipage}
+		%		    \end{center}  
+		%		    \vskip1.0cm 
+		\begin{center}
+			\textbf{Autores} \vskip0.3cm \tablaints 
+		\end{center}
+		
+		\vskip\Footspace
+		
+		%		    \begin{center}
+		%		        \textbf{Palabras clave / Keys}
+		%		        \vskip0.3cm 
+		%		    	\begin{minipage}[t]{.55 \textwidth}
+		%		            \textbf{\Keys}
+		%		    	\end{minipage}
+		%		    \end{center}
+		\vskip1.0cm 
+		\begin{center}
+			{\small \Fecha} 
+		\end{center}
+	\end{minipage}
+	
+	%%
+	% ----- Ubica Marca de Agua al final de la pagina ----
+	\ThisLRCornerWallPaper{0.8}{logog.jpg} 
+\end{minipage}
+
+%
+%\end{framed}	
+\newpage}
+
+% ----- Reemplazamos el comando \maketitle de LaTeX con el nuestro ---------    
+\def \maketitle{\maketitlegraf} 
