@@ -71,7 +71,7 @@ void paging_init() {
 }
 
 void _logPage(page_t page, int i, int j) {
-    log(L_INFO, "%d:%d (0x%x): f:0x%x ( %s%s%s%s) r:0x%x",
+    log(L_TRACE, "%d:%d (0x%x): f:0x%x ( %s%s%s%s) r:0x%x",
         i,
         j,
         (i<<22)|(j<<12),
@@ -156,7 +156,6 @@ PRIVATE u32int create_stack(void *new_stack_start, u32int size) {
     for (i = (u32int) new_stack_start; i >= ((u32int) new_stack_start - size -1);
             i -= PAGE_SIZE) {
         // General-purpose stack is in user-mode.
-        log(L_DEBUG, "alloc 0x%x", i);
         alloc_frame(get_page(i, 1, current_directory), 1 /* User mode */, 1 /* Is writable */
         );
     }
@@ -169,7 +168,7 @@ PRIVATE u32int create_stack(void *new_stack_start, u32int size) {
     for (i = (u32int) new_stack_start; i >= ((u32int) new_stack_start - size -1);
                 i -= PAGE_SIZE) {
         _logPage(*get_page(i, 0, current_directory), 0, 0);
-        }
+    }
     return i+PAGE_SIZE;
 }
 
@@ -180,7 +179,6 @@ PUBLIC int paging_dropStack(int stack_startaddr, int stacksize) {
 PUBLIC int paging_reserveStack(int size) {
     static int OLD = 0x11FFF000;
     static int inc = 0x00100000;
-    log(L_DEBUG, "????? 0x%x p:%d", OLD, size/PAGE_SIZE);
     int a = create_stack((void*)OLD, size);
     OLD -= inc;
     return a;

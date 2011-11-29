@@ -16,10 +16,10 @@ typedef struct {
     int id;
     int pid;
 	char* screen;
+    int screenOffset;
 	int offset;
 	c_buffer_t input_buffer;
 	char buffer[TTY_BUFFER_SIZE];
-    int bufferOffset;
 	u32int currDirectory;
 	char currPath[64];
 	int currPathOffset;

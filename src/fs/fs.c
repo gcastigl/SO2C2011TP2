@@ -117,7 +117,8 @@ PRIVATE void fs_create() {
 	fs_node_t root;
 	fs_getRoot(&root);
 	fs_createdir(&root, "dev", FS_DIRECTORY);
-	fs_createdir(&root, "home", FS_DIRECTORY);
+	u32int home = fs_createdir(&root, "home", FS_DIRECTORY);
+	fs_setFileMode(home, 0x777);
 	fs_createdir(&root, "etc", FS_DIRECTORY);
 }
 
@@ -395,8 +396,8 @@ PUBLIC void fs_setFileGid(u32int inode, int gid) {
 }
 
 PUBLIC void fs_clone(fs_node_t *folder, fs_node_t *node, char *name) {
-    if (FILE_TYPE(folder->mask) != FS_DIRECTORY) {
-        errno = E_INVALID_ARG;
+    if (FILE_TYPE(node->mask) == FS_DIRECTORY) {
+        errno = E_FILE_IS_DIR;
         return;
     }
     int created = fs_createdir(folder, name, FILE_TYPE(node->mask));

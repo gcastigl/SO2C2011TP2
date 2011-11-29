@@ -2,13 +2,12 @@
 #define INTERRUPTS_H
 
 #include <defs.h>
-#include <io.h>
-#include <asm/interrupts.h>
-#include <util/logger.h>
 #include <interrupts/defs.h>
-#include <process/scheduler.h>
-#include <access/user.h>
+#include <util/logger.h>
+#include <asm/interrupts.h>
 #include <lib/file.h>
+#include <io.h>
+
 
 void initBasicHandlers();
 

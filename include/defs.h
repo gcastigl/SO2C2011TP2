@@ -54,6 +54,7 @@ typedef void*           type_t;
 #define SYSTEM_OPEN     5
 #define SYSTEM_YIELD    6
 #define SYSTEM_CLOSE	7
+#define SYSTEM_ADDSTACK 8
 
 #define SYSTEM_USERLIST     9
 #define SYSTEM_USERADD      10
@@ -86,6 +87,7 @@ typedef void*           type_t;
 #define E_FILE_NOT_EXISTS	-8
 #define E_DIR_NOT_EXISTS	-9
 #define E_MAX_FD_REACHED	-10
+#define E_FILE_IS_DIR       -11
 
 #define MAX_NAME_LENGTH		24
 

@@ -16,8 +16,6 @@
                 tty_getTTY(tty)->currPath);
 
 int shell_readCommand(TTY* tty);
-void excecuteCmd(int cmd, TTY* tty);
-int parse_cmd(char* buffer);
 char** getArguments(char* buffer, int* argc, int *background);
 void cleanBuffer(TTY* tty);
 void printShellLabel(TTY* tty);
@@ -36,53 +34,57 @@ cmd_table_entry cmd_table[] = {
     {"clear", 			HELP_CLEAR, clear_cmd},
     {"getCPUspeed", 	HELP_GETCPUSPEED, getCPUspeed_cmd},
     {"echo", 			HELP_ECHO, echo_cmd},
-    {"cd", 				"switch current directory", cd_cmd},
-    {"ls", 				"List information about the FILEs (the current directory by default).", ls_cmd},
-    {"mkdir", 			"Create the DIRECTORY(ies), if they do not already exist.", mkdir_cmd},
-    {"mkfifo", 			"Create named pipes (FIFOs) with the given NAMEs.", mkfifo_cmd},
+    {"cd", 				"switch current directory: cd DIRECTORY", cd_cmd},
+    {"ls", 				"List information about the FILEs (the current directory by default). Use -a modifier to show hidden files", ls_cmd},
+    {"mkdir", 			"Create the DIRECTORY(ies), if they do not already exist: mkdir DIRECTORY", mkdir_cmd},
+    {"mkfifo", 			"Create named pipes (FIFOs) with the given NAMEs: mkfifo FIFO", mkfifo_cmd},
     {"pwd",				"Show current user path", pwd_cmd},
-    {"touch",			"Creates a new empty file", touch_cmd},
-    {"cat",				"Shows the content for a specified filename", cat_cmd},
-    {"ln",              "make links between files", ln_cmd},
-    {"rm",              "Removes the file specified by the parameter", rm_cmd},
-    {"cp",              "Copy SOURCE to DEST", cp_cmd},
-    {"mv",              "Rename SOURCE to DEST", mv_cmd},
+    {"touch",			"Creates a new empty file: touch FILE CONTENT", touch_cmd},
+    {"cat",				"Shows the content for a specified filename: cat FILE", cat_cmd},
+    {"ln",              "make links between files: ln SOURCE TARGET", ln_cmd},
+    {"rm",              "Removes the file specified by the parameter: rm TARGET", rm_cmd},
+    {"cp",              "Copy SOURCE to DEST: cp SOURCE DEST", cp_cmd},
+    {"mv",              "Rename SOURCE to DEST: mv SOURCE DEST", mv_cmd},
     {"logout", 			"Logout current user\n", logout},
     {"top", 			"Shows the current running processes", top_cmd},
-    {"kill", 			"Kills process with given PID", kill_cmd},
+    {"kill", 			"Kills process with given PID: kill PID", kill_cmd},
     {"infWhile", 		"Process that loops till the end of time!", eternumWhile_cmd},
-    {"useradd", 		"usage: useradd USERNAME PASSWORD", shell_useradd},
-    {"userdel", 		"usage: userdel USERNAME", shell_userdel},
-    {"userlist", 		"usage: userlist", shell_userlist},
-    {"usersetgid", 		"usage: usersetgid USERNAME GID", shell_usersetgid},
-    {"groupadd", 		"usage: groupadd GROUP PASSWORD", shell_groupadd},
-    {"groupdel", 		"usage: groupdel GROUP", shell_groupdel},
-    {"grouplist", 		"usage: grouplist", shell_grouplist},
-    {"chmod", 			"usage: OCTALMODE FILE", chmod_cmd},
-    {"chown", 			"usage: USERNAME FILE", chown_cmd},
-    {"chgrp", 			"usage: GROUPNAME FILE", chgrp_cmd},
-    {"cache", 			"prints the fs cache status", cacheStatus_cmd},
+    {"useradd", 		"Adds a user: useradd USERNAME PASSWORD", shell_useradd},
+    {"userdel", 		"Deletes a user: userdel USERNAME", shell_userdel},
+    {"userlist", 		"Lists all available users: userlist", shell_userlist},
+    {"usersetgid", 		"Set's user group id: usersetgid USERNAME GID", shell_usersetgid},
+    {"groupadd", 		"Adds a group: groupadd GROUP PASSWORD", shell_groupadd},
+    {"groupdel", 		"Deletes a group: groupdel GROUP", shell_groupdel},
+    {"grouplist", 		"Lists all available groups: grouplist", shell_grouplist},
+    {"chmod", 			"Changes file permissions: chmod OCTALMODE FILE", chmod_cmd},
+    {"chown", 			"Changes file owner: chown USERNAME FILE", chown_cmd},
+    {"chgrp", 			"Changes file group: chgrp GROUPNAME FILE", chgrp_cmd},
+    {"cache", 			"Prints the fs cache status", cacheStatus_cmd},
     {"random", 			HELP_RANDOM, random_cmd},
-    {"nice",            "Run COMMAND with an adjusted niceness, which affects process scheduling", nice_cmd},
+    {"sudo",            "sudo", sudo_cmd},
+    {"nice",            "Run COMMAND with an adjusted niceness, which affects process scheduling: nice PID PRIORITY", nice_cmd},
     // TESTS ====================================================================
-    {"pfiles", 			"prints the files opened by the current process", pfiles},
-    {"DMtest", 			"disk manager test", diskManagerTest},
-    {"pitest", 			"pipes test", pipeTest_cmd},
-    {"pageFault", 		"pageFault test", pageFault_cmd},
-    {"infRec", 		    "infinite recursion test", infRecursion_cmd},
-    {"expStack",        "expand stack test", testExpandStack_cmd},
-    {"getchar",         "getchar test", getchar_cmd},
+    {"pfiles", 			"Prints the files opened by the specified process: pfiles PID", pfiles},
+    {"DMtest", 			"Disk manager test, creates a very big file", diskManagerTest},
+    {"pitest", 			"Pipe test: pitest r/w", pipeTest_cmd},
+    {"pageFault", 		"Page fault test", pageFault_cmd},
+    {"infRec", 		    "Infinite recursion test", infRecursion_cmd},
+    {"expStack",        "Stack expand test", testExpandStack_cmd},
+    {"getchar",         "Getchar test", getchar_cmd},
+    {"pInfo",   "Shows all running processes stack and paging information", processInfo_cmd},
     {"", "", NULL}
 };
 
 void shell_update() {
-    // FIXME: not really nice...
     TTY* tty = tty_getTTY(scheduler_getCurrentProcess()->tty);
     if (!session_isLoggedIn()) {
         session_login();
     }
     int cmd = shell_readCommand(tty);
-    excecuteCmd(cmd, tty);
+    if (cmd != -1) {
+        tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
+        excecuteCmd(cmd, tty->buffer);
+    }
     cleanBuffer(tty);
 }
 
@@ -112,14 +114,14 @@ void shell_cleanScreen() {
     video_write(tty->screen, TOTAL_VIDEO_SIZE);
 }
 
-void excecuteCmd(int cmd, TTY* tty) {
+void excecuteCmd(int cmd, char* buffer) {
+    log(L_DEBUG, "buffer: %s", buffer);
     int cmdLen, argc;
     char **argv;
     if (cmd != -1) {
-        tty_setFormatToCurrTTY(video_getFormattedColor(LIGHT_BLUE, BLACK));
         cmdLen = strlen(cmd_table[cmd].name);
         int background;
-        argv = getArguments(tty->buffer + cmdLen, &argc, &background);
+        argv = getArguments(buffer + cmdLen, &argc, &background);
         // log(L_DEBUG, "Running %s in %s", cmd_table[cmd].name, (background == true ? "background" : "foreground"));
         scheduler_schedule(cmd_table[cmd].name, cmd_table[cmd].func, argc, argv, DEFAULT_STACK_SIZE, tty_getCurrent(),
             (background == true ? BACKGROUND : FOREGROUND), READY, NORMAL);
@@ -169,7 +171,7 @@ char** getArguments(char* buffer, int* argc, int *background) {
 }
 
 void cleanBuffer(TTY *tty) {
-    tty->bufferOffset = 0;
+    tty->screenOffset = 0;
     tty->buffer[0] = '\0';
 }
 

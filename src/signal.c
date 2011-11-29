@@ -8,14 +8,11 @@
 
 void checkReset();
 void checkTTY();
-void checkKill(char c) ;
 
 static int newTTY = -1;
 
 void signal_keyPressed(char c) {
-    checkKill(c);
 	TTY* tty = tty_getCurrentTTY();
-
     PROCESS* tty_process = scheduler_getProcess(tty ->pid);
 	PROCESS** allProc = scheduler_getAllProcesses();
     if (tty_process->status == BLOCKED) {
@@ -25,9 +22,13 @@ void signal_keyPressed(char c) {
                 PROCESS* p = allProc[i];
                 if (p != NULL && p->tty == tty->id &&
                         p->status == BLOCKED && p->waitingFlags == W_INPUT) {
-                    circularBuffer_add(&tty->input_buffer , c);
-                    scheduler_setStatus(p->pid, READY);
-                    log(L_DEBUG, "Sending  input to process: %s", p->name);
+                    if (IS_CTRL() && c == 'c') {
+                        kill(p->pid);
+                    } else {
+                        circularBuffer_add(&tty->input_buffer , c);
+                        scheduler_setStatus(p->pid, READY);
+                        log(L_DEBUG, "Sending  input to process: %s", p->name);
+                    }
                     return;
                 }
             }
@@ -69,12 +70,6 @@ void checkTTY() {
 		}
 		newTTY = -1;
 	}
-}
-
-void checkKill(char c) {
-    if (IS_CTRL() && c == 'c') {
-        killCurrent();
-    }
 }
 
 int signal(int signum) {

@@ -169,10 +169,10 @@ int kill_cmd(int argc, char**argv) {
     	if (err == NULL) {	// No error
 			kill(pid);
     	} else {
-    		printf("Could not kill %d: %s", pid, err);
+    		printf("Could not kill %d: %s\n", pid, err);
     	}
     } else {
-        printf("Usage:\nkill PID");
+        printf("Usage:\nkill PID\n");
     }
     return 0;
 }
@@ -452,6 +452,7 @@ int touch_cmd(int argc, char **argv) {
         }
         if (errno != 0) {
             printf("touch: cannot create file %s: %s\n", argv[0], err);
+            return -1;
         }
         if (argc == 2) {
             TTY* tty = tty_getCurrentTTY();
@@ -693,18 +694,26 @@ int cp_cmd(int argc, char **argv) {
                 case E_FILE_EXISTS:
                     err = "file already exists";
                     break;
+                case E_FILE_IS_DIR:
+                    err = "File is a directory! (use -r)";
+                    break;
                 default:
                     err = "no se que paso!";
                     log(L_ERROR, "no se q paso: %d", errno);
 		    }
 		    if (err != NULL) {
-		        printf("cp: could not copy %s: %s", source, err);
+		        printf("cp: could not copy %s: %s\n", source, err);
 		        return -1;
 		    }
 		    return 0;
 		} else {
 			printf("cp: Source file: %s does not exists\n", source);
 		}
+	} else {
+	    tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
+	    printf("cp: This feature does not come with Gat O.S. free trial edition.\n");
+	    tty_setFormatToCurrTTY(video_getFormattedColor(MAGENTA, BLACK));
+	    printf("\t\t\tConsider Purchasing it - Ask for teacher discounts!!\n");
 	}
 	return -1;
 }
@@ -715,6 +724,8 @@ int mv_cmd(int argc, char **argv) {
 		if (copied == 0) {
 			rm_cmd(1, &argv[0]);
 		}
+	} else {
+	    cp_cmd(4, NULL);
 	}
 	return 0;
 }
@@ -750,4 +761,24 @@ int nice_cmd(int argc, char **argv) {
         printf("nice: Run COMMAND with an adjusted niceness, which affects process scheduling\n");
     }
     return -1;
+}
+
+int sudo_cmd(int argc, char **argv) {
+    session_sudoStart();
+    int i;
+    char buffer[128];
+    int totalLen = 0;
+    for(i = 0; i < argc; i++) {
+        int len = strlen(argv[i]);
+        strcpy(buffer + totalLen, argv[i]);
+        strcpy(buffer + totalLen + 1, " ");
+        totalLen += len + 1;
+    }
+    int cmd = parse_cmd(argv[0]);
+    if (cmd != -1) {
+        log(L_DEBUG, "parsed command: %d - %s", cmd, argv[0]);
+        excecuteCmd(cmd, buffer);
+    }
+    session_sudoEnd();
+    return 0;
 }

@@ -1,0 +1,102 @@
+Available commands:
+    help         |  restart
+    clear        |  getCPUspeed
+    echo         |  cd
+    ls           |  mkdir
+    mkfifo       |  pwd
+    touch        |  cat
+    ln           |  rm
+    cp           |  mv
+    logout       |  top
+    kill         |  infWhile
+    useradd      |  userdel
+    userlist     |  usersetgid
+    groupadd     |  groupdel
+    grouplist    |  chmod
+    chown        |  chgrp
+    cache        |  random
+    nice         |  pfiles
+    DMtest       |  pitest
+    pageFault    |  infRec
+    expStack     |  getchar
+    pInfo        |
+
+Script
+log with qcho (contraseña incorrecta y después correcta)
+help
+clear
+ls
+cd \
+ls
+cd home
+cd a
+mkdir test
+touch file1
+ls
+cd test
+ls
+touch file2
+ls
+reset
+(back to start and show that files still exist)
+
+
+PROCESOS
+top
+infWhile
+top
+nice (infWhile) 5
+top
+(switch tty)
+kill (infWhile pid)
+infWhile ()
+<Ctrl+C>
+getchar (Blocked process)
+(switch shell)
+top (see that it's blocked)
+(switch shell back)
+<Ctr+C>
+
+PIPES
+pitest w
+pfiles
+top
+(change shell 2)
+pitest r
+(change shell 3)
+
+USERS & GROUPS
+useradd pepe asd
+logout
+log with pepe
+touch x a
+ls (see that the owner is the new dude)
+
+FILES AND CACHE (REMEMBER TO TEST CACHE AFTER ANY "touch" or "ln")
+touch b
+cache (very quick to see dirty cache)
+DMtest
+cat "archivo de DMtest"
+touch pepe kljrglekrjger;lkg
+cat pepe
+copy pepe pepe2
+cat pepe2
+mv pepe pepito
+rm pepito
+ls
+touch .hidden wfwef
+ls
+ls -a
+touch linked TestText
+ln linked link
+cat link
+rm linked
+cat link
+rm link
+
+PAGING & STACK
+pageFault
+expStack
+infRec (dejar que expanda) (opcional: varios infRec corriendo)
+(Switch tty)
+pInfo (Notar que el proceso infRec tiene su stack más grande)

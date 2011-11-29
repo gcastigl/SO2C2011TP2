@@ -12,7 +12,7 @@ PRIVATE boolean user_add(int uid);
 PRIVATE boolean user_del(int uid);
 PRIVATE boolean user_isValidFormat(char *token);
 PRIVATE boolean createUserDir(int uid);
-PRIVATE boolean deleteUserDir(int uid);
+//PRIVATE boolean deleteUserDir(int uid);
 PRIVATE void flushList();
 PRIVATE void loadList();
 
@@ -217,9 +217,11 @@ PRIVATE void flushList() {
     char userstring[128];
     for (int i = 0; i < USER_MAX; ++i) {
         user_string(i, userstring);
-        write_fs(passwd, offset, strlen(userstring) + 1, (u8int*) userstring);
-        offset += strlen(userstring) + 1;
-        write_fs(passwd, offset++, 1, (u8int*)"\n");
+        if (strlen(userstring)) {
+            write_fs(passwd, offset, strlen(userstring), (u8int*) userstring);
+            offset += strlen(userstring);
+            write_fs(passwd, offset++, 1, (u8int*)"\n");
+        }
     }
 }
 
@@ -313,9 +315,9 @@ PRIVATE boolean createUserDir(int uid) {
     }
 }
 
-PRIVATE boolean deleteUserDir(int uid) {
-    return false;
-}
+//PRIVATE boolean deleteUserDir(int uid) {
+//    return false;
+//}
 
 PUBLIC boolean do_useradd(char *userName, char *password) {
     boolean addOk = true;

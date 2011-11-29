@@ -7,6 +7,7 @@
 #include <signal.h>
 
 PRIVATE user_t *currentUser = NULL;
+PRIVATE user_t *sudoUser = NULL;
 
 void prntWelcomeMsg();
 
@@ -94,3 +95,18 @@ void prntWelcomeMsg() {
     currTty->fgColor = video_getFGcolor(format);
     printf("\n\n");
 }
+
+PUBLIC void session_sudoStart() {
+    if (sudoUser == NULL) {
+        sudoUser = currentUser;
+        currentUser = user_get(SUPER_USER);
+    }
+}
+
+PUBLIC void session_sudoEnd() {
+    if (sudoUser != NULL) {
+        currentUser = sudoUser;
+        sudoUser = NULL;
+    }
+}
+

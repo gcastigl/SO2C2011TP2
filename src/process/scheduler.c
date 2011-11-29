@@ -6,9 +6,6 @@
 PRIVATE PROCESS* _nextTask(int withPriority);
 PRIVATE void saveESP(int oldESP);
 PRIVATE void killChildren(int pid);
-PRIVATE void showPages(PROCESS *process);
-PRIVATE void showAllProcessInfo();
-PRIVATE void showStackInfo(PROCESS *process);
 void downPages(PROCESS *p);
 void upPages(PROCESS *p);
 /*
@@ -27,13 +24,9 @@ PRIVATE int firstTime = true;
 
 extern page_directory_t *current_directory;
 extern u32int initial_esp;
-PRIVATE void move_stack(void *new_stack_start, u32int size);
 PRIVATE int idle_cmd(int argc, char **argv);
 
 void scheduler_init(int withPriority) {
-    log(L_DEBUG, "PRE. ESP:0x%x, EBP:0x%x", _ESP, _EBP);
-    //move_stack((void*)0xE0000000, 0x2000);
-    log(L_DEBUG, "POST. ESP:0x%x, EBP:0x%x", _ESP, _EBP);
     count100 = 0;
     usePriority = withPriority;
     for (int i = 0; i < MAX_PROCESSES; i++) {
@@ -115,11 +108,7 @@ int getNextProcess(int oldESP) {
     next->lastCalled = 0;
     if (!firstTime) {
         saveESP(oldESP); 			// en el oldESP esta el stack pointer del proceso
-        if (current->pid > MAX_TTYs)
-            log(L_INFO, "%s: ESPa: 0x%x", current->name, current->ESP);
         process_checkStack();
-        if (current->pid > MAX_TTYs)
-            log(L_INFO, "%s: ESPb: 0x%x", current->name, current->ESP);
     } else {
         firstTime = false;
     }
@@ -216,42 +205,7 @@ void scheduler_setCurrent(PROCESS* p) {
         }
         current = p;
         upPages(current);
-        //showAllProcessInfo();
     }
-}
-
-PRIVATE void showPages(PROCESS *process) {
-    page_t* page;
-    int pages = process->stacksize / PAGE_SIZE; // cuantas paginas tiene ese proceso
-    int up = 0, down = 0;
-	//direccion de memoria donde comienza el stack ( operacion inversa de create process )
-	int mem_dir = process->stack;
-	for (int p = 0; p < pages; ++p) {
-		page = get_page(mem_dir, 0, current_directory);
-		if (page->present) {
-            up++;
-        } else {
-            down++;
-        }
-		mem_dir += PAGE_SIZE; 	// 4kb step!
-	}
-    log(L_INFO, "Paging: %d pages %d/%d (up/down)", pages, up, down);
-}
-
-PRIVATE void showStackInfo(PROCESS *process) {
-    log(L_INFO, "Stack: start: 0x%x end: 0x%x size: 0x%x ESP: 0x%x", process->stack, process->stack + process->stacksize - 1, process->stacksize, process->ESP);
-}
-
-PRIVATE void showAllProcessInfo() {
-    log(L_INFO, "-------------------------SHOWING ALL PROCESSES PAGES-------------------------");
-    for (int i = 0; i < MAX_PROCESSES; i++) {
-        if (allProcess[i] != NULL) {
-            log(L_INFO, "%s %s Info:", (current == allProcess[i] ? "Current process" : "Process"), allProcess[i]->name);
-            showPages(allProcess[i]);
-            showStackInfo(allProcess[i]);
-        }
-    }
-    log(L_INFO, "--------------------FINISHED SHOWING ALL PROCESSES PAGES---------------------");
 }
 
 void kill(int pid) {
@@ -300,62 +254,10 @@ u32int scheduler_activeProcesses() {
     return active;
 }
 
-PRIVATE void move_stack(void *new_stack_start, u32int size)
-{
-  u32int i;
-  // Allocate some space for the new stack.
-  for( i = (u32int)new_stack_start;
-       i >= ((u32int)new_stack_start-size);
-       i -= 0x1000)
-  {
-    // General-purpose stack is in user-mode.
-    alloc_frame( get_page(i, 1, current_directory), 0 /* User mode */, 1 /* Is writable */ );
-  }
-  
-  // Flush the TLB by reading and writing the page directory address again.
-  u32int pd_addr;
-  __asm volatile("mov %%cr3, %0" : "=r" (pd_addr));
-  __asm volatile("mov %0, %%cr3" : : "r" (pd_addr));
-
-  // Old ESP and EBP, read from registers.
-  u32int old_stack_pointer; __asm volatile("mov %%esp, %0" : "=r" (old_stack_pointer));
-  u32int old_base_pointer;  __asm volatile("mov %%ebp, %0" : "=r" (old_base_pointer));
-
-  // Offset to add to old stack addresses to get a new stack address.
-  u32int offset            = (u32int)new_stack_start - initial_esp;
-
-  // New ESP and EBP.
-  u32int new_stack_pointer = old_stack_pointer + offset;
-  u32int new_base_pointer  = old_base_pointer  + offset;
-
-  // Copy the stack.
-  memcpy((void*)new_stack_pointer, (void*)old_stack_pointer, initial_esp-old_stack_pointer);
-
-  // Backtrace through the original stack, copying new values into
-  // the new stack.  
-  for(i = (u32int)new_stack_start; i > (u32int)new_stack_start-size; i -= 4)
-  {
-    u32int tmp = * (u32int*)i;
-    // If the value of tmp is inside the range of the old stack, assume it is a base pointer
-    // and remap it. This will unfortunately remap ANY value in this range, whether they are
-    // base pointers or not.
-    if (( old_stack_pointer < tmp) && (tmp < initial_esp))
-    {
-      tmp = tmp + offset;
-      u32int *tmp2 = (u32int*)i;
-      *tmp2 = tmp;
-    }
-  }
-
-  // Change stacks.
-  __asm volatile("mov %0, %%esp" : : "r" (new_stack_pointer));
-  __asm volatile("mov %0, %%ebp" : : "r" (new_base_pointer));
-}
-
 // a partir de un proceso dado setea como presentes o ausentes todas las paginas de un proceso ademas 
 // de las paginas de sus ancestros
 
-void flushPages	(PROCESS *process , int action) {
+void flushPages(PROCESS *process , int action) {
 	PROCESS *proc_parent;
 	int pages, mem_dir, p;
 	page_t *page;

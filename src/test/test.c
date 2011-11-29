@@ -1,4 +1,7 @@
 #include <command.h>
+#include <memory/paging.h>
+
+extern page_directory_t *current_directory;
 
 int getchar_cmd(int argc, char **argv) {
 	printf("Please type in a character\n");
@@ -111,7 +114,7 @@ extern PUBLIC void _expandStack();
 
 int testExpandStack_cmd(int argc, char **argv) {
     log(L_INFO, "Expanding stack... Current ESP is 0x%x", _ESP);
-    _expandStack();
+    growStack();
     log(L_INFO, "Stack expanded... Current ESP is 0x%x", _ESP);
     printf("Stack expanded...\n");
     return 0;
@@ -139,9 +142,45 @@ int DMTest2(int argc, char **argv) {
     return 0;
 }
 
+PRIVATE void showPages(PROCESS *process) {
+    page_t* page;
+    int pages = process->stacksize / PAGE_SIZE; // cuantas paginas tiene ese proceso
+    int up = 0, down = 0;
+	//direccion de memoria donde comienza el stack ( operacion inversa de create process )
+	int mem_dir = process->stack;
+	for (int p = 0; p < pages; ++p) {
+		page = get_page(mem_dir, 0, current_directory);
+		if (page->present) {
+            up++;
+        } else {
+            down++;
+        }
+		mem_dir += PAGE_SIZE; 	// 4kb step!
+	}
+    printf("Paging: %d pages %d/%d (up/down)\n", pages, up, down);
+}
 
+PRIVATE void showStackInfo(PROCESS *process) {
+    printf("Stack: start: 0x%x end: 0x%x size: 0x%x ESP: 0x%x\n", process->stack, process->stack + process->stacksize - 1, process->stacksize, process->ESP);
+}
 
+PRIVATE void showAllProcessInfo() {
+    PROCESS **process = scheduler_getAllProcesses();
+    PROCESS *current = scheduler_getCurrentProcess();
+    
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        if (process[i] != NULL) {
+            printf("%s %s Info:\n", (current == process[i] ? "Current process" : "Process"), process[i]->name);
+            showPages(process[i]);
+            showStackInfo(process[i]);
+        }
+    }
+}
 
+int processInfo_cmd(int argc, char **argv) {
+    showAllProcessInfo();
+    return 0;
+}
 
 
 /////////////////// WAAAAARRRNINNNNGGGG!!!!! ////////////////////////////

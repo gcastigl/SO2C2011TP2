@@ -3,6 +3,11 @@
 #include <fs/fs.h>
 #include <tty.h>
 
+int growStack() {
+    _SysCall(SYSTEM_ADDSTACK);
+    return 0;
+}
+
 int open(const char *path, int oflags, ...) {
     int create_flags = -1;
     if (oflags & O_CREAT) {

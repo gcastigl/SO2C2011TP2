@@ -30,7 +30,7 @@ void initTTY(int pid) {
         tty[index].screen[i + 1] = 0;
     }
 	tty[index].offset = 0;
-    tty[index].bufferOffset = 0;
+    tty[index].screenOffset = 0;
 	tty[index].bgColor = BLACK;
 	tty[index].fgColor = WHITE;
     tty[index].pid = pid;
