@@ -144,7 +144,7 @@ void page_fault(registers_t regs) {
         faulting_address
     );
     tty_setFormatToCurrTTY(video_getFormattedColor(RED, BLACK));
-    _logPage(*get_page(faulting_address, 0, current_directory), faulting_address<<22, faulting_address<<12);
+    _logPage(*get_page(faulting_address, 0, current_directory), faulting_address>>22, faulting_address>>12);
     printf("Page fault @ 0x%x! killing current process\n", faulting_address);
     panic("Page fault", 1, false);
     killCurrent();
