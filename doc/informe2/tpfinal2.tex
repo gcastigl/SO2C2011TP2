@@ -1,0 +1,118 @@
+% Preview source code
+
+%% LyX 2.0.0 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{babel}
+\begin{document}
+
+\section{PIPES}
+
+El principal obstáculo de la implementación fue decidir donde escribir
+el mensaje enviado por el escritor a los receptores. Como primera
+alternativa se pensó en guardarlo en el mismo fifo, dado que es un
+file y puede tener contenido. Si bién esta era una implementación
+es sencilla, hacía que la transmisión del mensaje sea extremadamente
+lenta (lectura y escritua a disco). Para superar esto se optó por
+guardar el mensaje en una zona de memoria especialmente destinada
+para esto. La principal limitación es que se pueden abrir sólo un
+número fijo de fifos al mismo tiempo. Al estar el mensaje en memoria,
+la transmisión es mucho más rápida. Otro problema que traen los fifos
+es que deben ser bloqueados tanto para lectura como para escritura.
+Se utilizaron los semáforos dados en el ejemplo mtask1 de la cátedra
+para esto. Se crearon los comandos mkfifo para crear el fifo y pitest
+para realizar pruebas cobre el mismo.
+
+El comando pitest crea el fifo con nombre \textquotedblleft{}test.pipe\textquotedblright{}
+si no existe, en caso contrario se conecta al mismo. Y bloquea al
+proceso para el modo en que se conectó al pipe. Pitest w: modo escritura.
+Pitest r: modo lectura. NOTA: ambos procesos deben estar en el mismo
+directorio dado que el fifo se crea en el directorio actual.
+
+CACHE Gran parte de la implementación del cache fue realizada (y detallada)
+durante el tp anterior. Sin embargo se mejoraron algunos aspectos
+en el algoritmo de reemplazo de sectores (Least Recently Used). Antes
+se tenía un contador por cada sector del disco y cada vez que era
+accedido ya sea para lectura o escritura, era incrementado. El problema
+de esto es que sectores eran ordenados por cantidad de accesos y podían
+persistir en cache por mucho tiempo hasta que otro file tuviera mayor
+o igual cantidad. Esto traía el problema de que los sectores más accedidos
+nunca eran removidos del cache. En la nueva implementación se optó
+por agregar un contador de edad en cache para que si un sector cacheado
+supera la edad tope, se elimine.
+
+
+\section{FILE SYSTEM}
+
+Se implementó el manejo de inodos por medio de un bitmap, por sobre
+el bitmap de contenidos que ya existía, lo que permitió la implementación
+como mv y rm.
+
+Se agregaron los comandos standard de linux que faltaban en el tp
+anterior. Mv desde hasta: mueve el archivo desde a hasta. Rm nombre:
+elimina el archivo nombre. cp desde hasta: copia el archivo desde
+a hasta. Ls: se mejoró la forma de mostrar archivos, agregando colores
+y caracteres especiales para diferenciar los tipos (ej: $link@$ )
+
+
+\section{PROCESOS / SCHEDULING}
+
+Se le agregaron a los procesos una lista de file descriptors para
+mantener un registro de los archivos abiertos por el mismo. Cuando
+un proceso se bloquea se le setea un flag para saber a causa de qué
+se bloqueo. Puede ser bloqueado para input, fifos, wait-child, wait-semaphore.
+Gracias a estos cambios se pudo remover el busy-waiting en todos los
+procesos, en especial, la shell que permanece bloqueada por input. 
+
+
+\section{PAGING}
+
+
+\subsection{Virtual Address}
+
+Se implementaron directorios y tablas de páginas. Se dividió la memoria
+de a $4K$ ($0x1000$). Cuando se inicializa paging se crea un heap
+de kernel en la dirección $0xC00000000$. En una primera implementación
+los procesos creaban sus stacks con malloc, estro traía el problema
+de que el stack estaba dentro del heap, lo que limitaba mucho la memoria.
+Se optó por mover los stacks de los procesos a una zona de memoria
+dedicada para esto, cerca del final del address space. De esta manera
+al tener el heap arriba que avanza en forma decreciente y el stack
+abajo que avanza en forma creciente, la memoria queda mucho más organizada.
+Cada vez que se crea un proceso se alocan dos páginas de memoria.
+No obstante adelantando que el proceso seguramente pida más páginas
+los nuevos procesos no son creados inmediatamente después sino que
+se dejan un número de páginas en blanco entre los dos. 
+
+
+\subsection{Physical Address}
+
+Cuando hablamos de páginas, estamos hablando de direcciones virtuales
+de memoria, una página puede querer ir a la dirección de memoria $0x8000000$
+($128MB$) pero para que esto funcione en nuestra máquina virtual
+que le dimos $16MB$ de memoria necesita hacer un mapeo de la misma.
+Los bloques reales de memoria los llamamos frames y son manejados
+mediante un bitmap.
+
+
+\subsection{Heap}
+
+El algoritmo que maneja el heap utiliza dos conceptos: blocks \& holes.
+Llamamos blocks a aquellas zonas de memoria que contienen información
+(mallocs no liberados) y holes a las zonas de memoria libre. En un
+principio la memoria del heap es un gran hole. Por cada hole existe
+un indice en la tabla ordenada de holes. El orden es necesario porque
+luego buscaremos los espacios mínimos a ocupar a la hora de hacer
+mallocs. Tantos los blocks como los holes tienen un header y un footer
+para guardar información de la porción de memoria a la cual pertenecen.
+A medida que se hacen mallocs en el sistema, el heap puede ir quedando
+chico, para poder detectar esto se agregaron una serie de assertions
+para poder expandir las páginas reservadas para el heap. También se
+agregó la posibilidad de que se contraiga en caso de que se libere
+la misma.
+
+
+\end{document}
+
