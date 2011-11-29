@@ -197,9 +197,14 @@ int diskManager_writeContents(u32int inodeNumber, char *contents, u32int length,
 		return -1;
 	}
 	if (offset + length > _availableMem(&inode)) {
-		//	log(L_DEBUG, "%d -> Memory is not enough, have: %d, extending memory to %d bytes", inodeNumber, _availableMem(&inode), offset + length);
+		log(L_TRACE, "%d -> Memory is not enough, have: %d, extending memory to %d bytes", inodeNumber, _availableMem(&inode), offset + length);
 		int extrablocks = _extendMemory(&inode.data, offset + length, FILE_CONTENTS_INITAL_SECTOR, 0);
-		inode.blocks += extrablocks;
+		if (extrablocks != -1) {
+		    inode.blocks += extrablocks;
+		} else {
+		    log(L_ERROR, "There was an error reserving blocks!");
+		    return 0;
+		}
 	}
 	if (offset + length > inode.usedBytes) {
 		inode.usedBytes = offset + length;
@@ -236,13 +241,13 @@ PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int off
 		errno = E_CORRUPTED_FILE;
 		return -1;
 	}
-	// log(L_DEBUG,"reading File contents: [%d, %d] %d\n", page->nextSector, page->nextOffset + offset, page->usedBytes);
+	//log(L_DEBUG,"offet: %d / reading File contents: [%d, %d] used: %d\n", offset, page->nextSector, page->nextOffset + offset, currPage.usedBytes - FILE_BLOCK_OVERHEAD_SIZE_BYTES);
 	int bytesFromContent;
 	if (offset < (currPage.usedBytes - FILE_BLOCK_OVERHEAD_SIZE_BYTES)) {
 		// Start reading from current page
 		bytesFromContent = MIN(currPage.totalLength - FILE_BLOCK_OVERHEAD_SIZE_BYTES - offset, length);
 		length -= bytesFromContent;
-			// log(L_DEBUG, "reading contents, %d bytes from [%d, %d]", bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
+		//	log(L_DEBUG, "reading contents, %d bytes from [%d, %d]", bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
 		strategy.read(page->disk, contents, bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
 		contents += bytesFromContent;
 		offset = 0;
@@ -259,7 +264,7 @@ PRIVATE int _readBlock(DiskPage *page, char *contents, u32int length, u32int off
 		strategy.read(currPage.disk, &currPage, sizeof(DiskPage), currPage.nextSector, currPage.nextOffset);
 		if (offset < currPage.usedBytes - sizeof(DiskPage)) {			// Read from beginning
 			bytesFromContent = MIN(currPage.usedBytes - sizeof(DiskPage) - offset, length);
-				// log(L_DEBUG, "reading %d bytes from [%d, %d]", bytesFromContent, currPageSector, currPageOffset + sizeof(DiskPage) + offset);
+			//	log(L_DEBUG, "reading %d bytes from [%d, %d]", bytesFromContent, currPageSector, currPageOffset + sizeof(DiskPage) + offset);
 			strategy.read(page->disk, contents, bytesFromContent, currPageSector, currPageOffset + sizeof(DiskPage) + offset);
 			contents += bytesFromContent;
 			length -= bytesFromContent;
@@ -281,18 +286,18 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 	}
 
 	int bytesFromContent;
-	//	log(L_DEBUG, "offset: %d <? usedBytes: %d- overhead: %d", offset, currPage.totalLength, FILE_BLOCK_OVERHEAD_SIZE_BYTES);
+	//   log(L_DEBUG, "offset: %d / usedBytes: %d, lenght: %d", offset, currPage.usedBytes, length);
 	if (offset < (currPage.totalLength - FILE_BLOCK_OVERHEAD_SIZE_BYTES)) {
 		// Start reading from current page
 		bytesFromContent = MIN(currPage.totalLength - offset - FILE_BLOCK_OVERHEAD_SIZE_BYTES, length);
 		length -= bytesFromContent;
-		//	log(L_DEBUG, "writing contents, %d bytes to [%d, %d]", bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
+			//  log(L_DEBUG, "writing contents, %d bytes to [%d, %d]", bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
 		strategy.write(page->disk, contents, bytesFromContent, page->nextSector, page->nextOffset + FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset);
 		contents += bytesFromContent;
 
 		if (FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset + bytesFromContent > currPage.usedBytes) {
 			currPage.usedBytes = FILE_BLOCK_OVERHEAD_SIZE_BYTES + offset + bytesFromContent;
-			//	log(L_DEBUG, "updating DiskPage, usedBytes = %d + %d + %d", FILE_BLOCK_OVERHEAD_SIZE_BYTES, offset, bytesFromContent);
+			//  log(L_DEBUG, "updating DiskPage, usedBytes = %d + %d + %d = %d", FILE_BLOCK_OVERHEAD_SIZE_BYTES, offset, bytesFromContent, currPage.usedBytes);
 			strategy.write(page->disk, &currPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
 		}
 		offset = 0;
@@ -317,10 +322,10 @@ PRIVATE int _writeBlock(DiskPage *page, char *contents, u32int length, u32int of
 			return -1;
 		}
 			//log(L_DEBUG, "writing (%d) to [%d, %d]", bytesFromContent, pageSector, pageOffset + sizeof(DiskPage));
-		if (offset < (currPage.usedBytes - sizeof(DiskPage))) {
-			bytesFromContent = MIN(currPage.totalLength - sizeof(DiskPage), length);
+		if (offset < (currPage.totalLength - sizeof(DiskPage))) {
+			bytesFromContent = MIN(currPage.totalLength - sizeof(DiskPage) - offset, length);
 			length -= bytesFromContent;
-			//	log(L_DEBUG, "writing contents, %d bytes to [%d, %d]", bytesFromContent, page->nextSector, page->nextOffset + sizeof(DiskPage) + offset);
+			//    log(L_DEBUG, "writing contents, %d bytes to [%d, %d]", bytesFromContent, page->nextSector, page->nextOffset + sizeof(DiskPage) + offset);
 			strategy.write(page->disk, contents, bytesFromContent, pageSector, pageOffset + sizeof(DiskPage) + offset);
 			contents += bytesFromContent;
 
@@ -354,11 +359,10 @@ PRIVATE int _reserveMemoryBitMap(DiskPage *page, int blocks, u32int initialSecto
 		for (int j = 0; j < 8 && reservedBlocks < blocks; j++) {					// each char has 8 bits!
 			currSector = initialSector;
 			currOffset = initialOffset + ((i * 8) + j) * DISK_BLOCK_SIZE_BYTES;
-				log(L_DEBUG, "[%d, %d] -> %s", currSector, currOffset, (BIT(block[i], j) == 0) ? "Free" : "Used");
 			if (BIT(block[i], j) == 0) {											// if block is not used
 				block[i] |= (1 << j);
 				reservedBlocks++;
-				log(L_DEBUG, " => Used %d", reservedBlocks);
+				log(L_DEBUG, "Used: [%d, %d] - No: %d / %d", currSector, currOffset, reservedBlocks, blocks);
 				currPage.magic = MAGIC_NUMBER;
 				currPage.disk = disk;
 				currPage.usedBytes = 0;
@@ -417,29 +421,28 @@ PRIVATE void _freeMemory(DiskPage* page) {
 		currPageSector = curr.nextSector;
 		currPageoffset = curr.nextOffset;
 		strategy.read(curr.disk, &curr, sizeof(DiskPage), curr.nextSector, curr.nextOffset);
-			log(L_DEBUG, "Freeing memory, [%d, %d]", currPageSector, currPageoffset);
+		//	log(L_DEBUG, "Freeing memory, [%d, %d]", currPageSector, currPageoffset);
 			currPageoffset /= DISK_BLOCK_SIZE_BYTES;
 		int charPos = currPageoffset / 8;
 		int bit = currPageoffset % 8;
 		block[charPos] &= ~(1 << bit);
-			log(L_DEBUG, "char: %d, bit: %d", charPos, bit);
+		//	log(L_DEBUG, "char: %d, bit: %d", charPos, bit);
 	} while (curr.hasNextPage);
 	strategy.write(ATA0, block, numberOfblocks, FILES_BIT_MAP_SECTOR, 0);
 }
 
 PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int initialOffset) {
-	u32int disk = ATA0;
 	DiskPage lastPage;
 	u32int lastPageSector = page->nextSector,
-			lastPageOffset = page->nextOffset;
-		// log(L_DEBUG, "last: sector: %d, offset: %d", lastPageSector, lastPageOffset);
-	memcpy(&lastPage, page, sizeof(DiskPage));
+	       lastPageOffset = page->nextOffset;
+	// log(L_DEBUG, "last: sector: %d, offset: %d", lastPageSector, lastPageOffset);
+	strategy.read(page->disk, &lastPage, sizeof(DiskPage), page->nextSector, page->nextOffset);
 	// Get the end of this memory segment...
 	while(lastPage.hasNextPage) {
 		lastPageSector = lastPage.nextSector;
 		lastPageOffset = lastPage.nextOffset;
-			// log(L_DEBUG, "reading from [%d, %d]", lastPage.nextSector, lastPage.nextOffset);
-		strategy.read(disk, &lastPage, sizeof(DiskPage), lastPage.nextSector, lastPage.nextOffset);
+		//	log(L_DEBUG, "next page: [%d, %d]", lastPage.nextSector, lastPage.nextOffset);
+		strategy.read(lastPage.disk, &lastPage, sizeof(DiskPage), lastPage.nextSector, lastPage.nextOffset);
 	}
 
 	int neededBlocks = (size / (DISK_BLOCK_SIZE_BYTES + 1)) + 1;
@@ -450,16 +453,16 @@ PRIVATE int _extendMemory(DiskPage *page, int size, u32int initialSector, u32int
 	DiskPage cont;
 	int reserved = _reserveMemoryBitMap(&cont, neededBlocks, initialSector, initialOffset);
 	if (reserved == -1) {		// There was a problem reserving the memory
-		return 0;
+		return -1;
 	}
 	page->totalLength = cont.totalLength;
 	// Attach extra memory to the end of this segment
 	lastPage.hasNextPage = true;
 	lastPage.nextSector = cont.nextSector;
 	lastPage.nextOffset = cont.nextOffset;
-	//	log(L_DEBUG, "saving new DiskPage to: [%d, %d, %d]", disk, lastPageSector, lastPageOffset);
-	//	log(L_DEBUG, "new DiskPage points to: [%d, %d, %d]", disk, lastPage.nextSector, lastPage.nextOffset);
-	strategy.write(disk, &lastPage, sizeof(DiskPage), lastPageSector, lastPageOffset);
+	//	log(L_DEBUG, "saving new DiskPage to: [%d, %d, %d]", lastPage.disk, lastPageSector, lastPageOffset);
+	//	log(L_DEBUG, "new DiskPage points to: [%d, %d, %d]", lastPage.disk, lastPage.nextSector, lastPage.nextOffset);
+	strategy.write(page->disk, &lastPage, sizeof(DiskPage), lastPageSector, lastPageOffset);
 	return neededBlocks;
 }
 
