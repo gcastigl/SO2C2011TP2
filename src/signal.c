@@ -24,13 +24,12 @@ void signal_keyPressed(char c) {
                         p->status == BLOCKED && p->waitingFlags == W_INPUT) {
                     if (IS_CTRL() && c == 'c') {
                         kill(p->pid);
-                        return;
                     } else {
                         circularBuffer_add(&tty->input_buffer , c);
                         scheduler_setStatus(p->pid, READY);
                         log(L_DEBUG, "Sending  input to process: %s", p->name);
-                        return;
                     }
+                    return;
                 }
             }
         }
