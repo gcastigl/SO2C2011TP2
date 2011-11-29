@@ -2,7 +2,7 @@
 #include <lib/file.h>
 #include <util/logger.h>
 
-#define MAX_FIFOS	1
+#define MAX_FIFOS	3
 
 PRIVATE fifo_t fifos[MAX_FIFOS];
 
@@ -99,9 +99,9 @@ u32int fifo_write(fs_node_t *node, u32int offset, u32int size, u8int *buffer) {
     while(fifo->offset < size)
         ; // FIXME: The writer should be set to BLOCKED here...
     sem_signal(&fifo->writers);             // notify waiting writers the fifo is ready
-    // TODO: close pipe....
     if (fifo->writers.count == 1) {         // If last writer...
         fifo->offset = 0;
+        fifo->inode = -1;
     }
 	return size;
 }

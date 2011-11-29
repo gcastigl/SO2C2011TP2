@@ -76,7 +76,6 @@ cmd_table_entry cmd_table[] = {
 };
 
 void shell_update() {
-    // FIXME: not really nice...
     TTY* tty = tty_getTTY(scheduler_getCurrentProcess()->tty);
     if (!session_isLoggedIn()) {
         session_login();

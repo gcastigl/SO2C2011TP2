@@ -169,10 +169,10 @@ int kill_cmd(int argc, char**argv) {
     	if (err == NULL) {	// No error
 			kill(pid);
     	} else {
-    		printf("Could not kill %d: %s", pid, err);
+    		printf("Could not kill %d: %s\n", pid, err);
     	}
     } else {
-        printf("Usage:\nkill PID");
+        printf("Usage:\nkill PID\n");
     }
     return 0;
 }
