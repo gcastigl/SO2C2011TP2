@@ -1,0 +1,99 @@
+Available commands:
+    help         |  restart
+    clear        |  getCPUspeed
+    echo         |  cd
+    ls           |  mkdir
+    mkfifo       |  pwd
+    touch        |  cat
+    ln           |  rm
+    cp           |  mv
+    logout       |  top
+    kill         |  infWhile
+    useradd      |  userdel
+    userlist     |  usersetgid
+    groupadd     |  groupdel
+    grouplist    |  chmod
+    chown        |  chgrp
+    cache        |  random
+    nice         |  pfiles
+    DMtest       |  pitest
+    pageFault    |  infRec
+    expStack     |  getchar
+    pInfo        | 	sudo
+    opp			 |
+
+Script
+	try to swich tty (not allowed since not logged in)
+	log with qcho (contraseña incorrecta y después correcta)
+	help
+	clear
+	ls
+	cd \
+	ls
+	cd home
+	cd a
+	mkdir test
+	touch file1
+	ls
+	cd test
+	ls
+	touch file2
+	ls
+	reset
+	(back to start and show that files still exist)
+
+
+PROCESOS
+	top
+	infWhile&
+	infWhile
+	switch tty
+	getchar
+	switch tty
+	top
+	nice (infWhile) 5
+	top
+	kill (infWhile pid)
+	kill (infWhile pid2)
+	back to tty 2, press character
+	
+PIPES
+	pitest w
+	pfiles
+	top
+	(change shell 2)
+	pitest r
+	(change shell 3)
+
+USERS & GROUPS
+	useradd pepe asd
+	logout
+	log with pepe
+	touch x a
+	ls (see that the owner is the new dude)
+	cd to home folder
+	ls
+	sudo touch ooo
+	ls (ver permisos)
+	rm ooo	(cant be done)
+	sudo rm oooo
+
+FILES AND CACHE
+	touch b lksañdkasldkasñkdlasklñdskadklasñkdasklñ
+	cache (very quick to see dirty cache)
+	cp b test
+	cat test
+	touch pepe kljrglekrjger;lkg
+	cat pepe
+	mv pepe pepito
+	rm pepito
+
+PAGING & STACK
+	pageFault
+	expStack
+	opp
+	infRec (ver q expande)
+	matar ctrl c
+	(Switch tty)
+	pInfo (Notar que el proceso infRec tiene su stack más grande)
+	
