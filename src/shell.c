@@ -72,6 +72,7 @@ cmd_table_entry cmd_table[] = {
     {"infRec", 		    "infinite recursion test", infRecursion_cmd},
     {"expStack",        "expand stack test", testExpandStack_cmd},
     {"getchar",         "getchar test", getchar_cmd},
+    {"pInfo",   "Shows all running processes stack and paging information", processInfo_cmd},
     {"", "", NULL}
 };
 
