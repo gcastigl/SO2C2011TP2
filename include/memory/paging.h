@@ -1,6 +1,3 @@
-// paging.h -- Defines the interface for and structures relating to paging.
-//             Written for JamesM's kernel development tutorials.
-
 #ifndef PAGING_H
 #define PAGING_H
 
@@ -17,73 +14,92 @@
 #define PAGE_CORRUPTED 0x8
 #define PAGE_INST_FETCH 0x10
 
-typedef struct page
-{
-    u32int present    : 1;   // Page present in memory
-    u32int rw         : 1;   // Read-only if clear, readwrite if set
-    u32int user       : 1;   // Supervisor level only if clear
-    u32int reservedA  : 2;
-    u32int accessed   : 1;   // Has the page been accessed since last refresh?
-    u32int dirty      : 1;   // Has the page been written to since last refresh?
-    u32int reservedB  : 2;
-    u32int unused     : 3;   // Amalgamation of unused and reserved bits
-    u32int frame      : 20;  // Frame address (shifted right 12 bits)
+typedef struct page {
+    u32int present :1; // Page present in memory
+    u32int rw :1; // Read-only if clear, readwrite if set
+    u32int user :1; // Supervisor level only if clear
+    u32int reservedA :2;
+    u32int accessed :1; // Has the page been accessed since last refresh?
+    u32int dirty :1; // Has the page been written to since last refresh?
+    u32int reservedB :2;
+    u32int unused :3; // Amalgamation of unused and reserved bits
+    u32int frame :20; // Frame address (shifted right 12 bits)
 } page_t;
 
-typedef struct page_table
-{
+typedef struct page_table {
     page_t pages[PAGE_COUNT];
 } page_table_t;
 
-typedef struct page_directory
-{
+typedef struct page_directory {
     /**
-       Array of pointers to pagetables.
-    **/
+     * Array of pointers to pagetables.
+     **/
     page_table_t *tables[PAGE_TABLE_COUNT];
     /**
-       Array of pointers to the pagetables above, but gives their *physical*
-       location, for loading into the CR3 register.
-    **/
+     * Array of pointers to the pagetables above, but gives their *physical*
+     * location, for loading into the CR3 register.
+     **/
     u32int tablesPhysical[PAGE_TABLE_COUNT];
 
     /**
-       The physical address of tablesPhysical. This comes into play
-       when we get our kernel heap allocated and the directory
-       may be in a different location in virtual memory.
-    **/
+     * The physical address of tablesPhysical. This comes into play
+     * when we get our kernel heap allocated and the directory
+     * may be in a different location in virtual memory.
+     **/
     u32int physicalAddr;
 } page_directory_t;
 
 /**
-   Sets up the environment, page directories etc and
-   enables paging.
-**/
+ * Sets up the environment, page directories etc and
+ * enables paging.
+ **/
 void paging_init();
 
 /**
-   Causes the specified page directory to be loaded into the
-   CR3 register.
-**/
+ * Causes the specified page directory to be loaded into the
+ * CR3 register.
+ **/
 void paging_enable(page_directory_t *new);
 
 /**
-   Retrieves a pointer to the page required.
-   If make == 1, if the page-table in which this page should
-   reside isn't created, create it!
-**/
+ * Retrieves a pointer to the page required.
+ * If make == 1, if the page-table in which this page should
+ * reside isn't created, create it!
+ **/
 page_t *get_page(u32int address, int make, page_directory_t *dir);
 
 /**
-   Handler for page faults.
-**/
+ * Handler for page faults.
+ **/
 void page_fault(registers_t regs);
 
+/**
+ * Logs the page.
+ * i and j are logged too. (usefull for page and table index)
+ **/
 void _logPage(page_t page, int i, int j);
+
+/**
+ * Logs the table.
+ * i and is logged too. (usefull for table index)
+ **/
 void _logTable(page_table_t *table, int i);
+
+/**
+ * Logs the entire directory.
+ **/
 void _logDirectory(page_directory_t *dir);
 
+/**
+ * Reserves the stack and returns the address.
+ * This functions is needed because we are not using the heap for stack allocation.
+ **/
 PUBLIC int paging_reserveStack(int size);
+
+/**
+ * Frees the stack
+ * This functions is needed because we are not using the heap for stack allocation.
+ **/
 PUBLIC int paging_dropStack(int stack_startaddr, int stacksize);
 
 #endif

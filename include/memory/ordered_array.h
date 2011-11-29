@@ -1,7 +1,3 @@
-// ordered_array.h -- Interface for creating, inserting and deleting
-//                    from ordered arrays.
-//                    Written for JamesM's kernel development tutorials.
-
 #ifndef ORDERED_ARRAY_H
 #define ORDERED_ARRAY_H
 
