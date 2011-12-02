@@ -23,7 +23,6 @@ PRIVATE int count100;
 PRIVATE int firstTime = true;
 
 extern page_directory_t *current_directory;
-extern u32int initial_esp;
 PRIVATE int idle_cmd(int argc, char **argv);
 
 void scheduler_init(int withPriority) {
@@ -127,9 +126,9 @@ int getNextProcess(int oldESP) {
 **/
 PRIVATE PROCESS* _nextTask(int withPriority) {
     // Schdule tasks...
-    PROCESS *current = NULL, *nextReady;
+    PROCESS *current, *nextReady = NULL;
     int bestScore = 0, temp;
-    for (int i = 0; i < MAX_PROCESSES; ++i) {
+    for (int i = 1; i < MAX_PROCESSES; ++i) {
         current = allProcess[i];
         if (current == NULL) {				// slot is empty...
             continue;
@@ -154,6 +153,9 @@ PRIVATE PROCESS* _nextTask(int withPriority) {
                nextReady = current;
             }
         }
+    }
+    if (nextReady == NULL) {
+        nextReady = allProcess[0];      // idle
     }
     last100[(count100 = (count100 + 1) % 100)] = nextReady->pid;
     return nextReady;
